@@ -1,0 +1,62 @@
+# ══════════════════════════════════════════════════════════════
+#  Qué NO entra en el repositorio
+#  Este archivo es lo único que separa el proyecto de una fuga de
+#  datos, así que conviene leerlo antes de añadir nada nuevo.
+# ══════════════════════════════════════════════════════════════
+
+# ── DATOS DE PERSONAS ──────────────────────────────────────────
+# Las exportaciones de rondas llevan nombre, correo, facultad,
+# programa y la transcripción literal de lo que alguien dijo. Eso
+# es dato personal: no va a GitHub ni con el repositorio privado.
+*.xlsx
+*.xls
+*.csv
+consolidado*
+export*
+historial*
+
+# ── CLAVES ─────────────────────────────────────────────────────
+# Ninguna clave debería llegar a escribirse en un archivo, pero
+# si alguna vez se crea un .env, que no salga de tu equipo.
+.env
+.env.*
+*.key
+*.pem
+secrets*
+
+# ── ANDAMIO DE DESARROLLO ──────────────────────────────────────
+# Scripts sueltos de depuración, servidores simulados y registros.
+# Suelen contener correos y respuestas de prueba.
+*.log
+dbg*.mjs
+fix*.mjs
+test*.mjs
+mock*.mjs
+shot.mjs
+final.mjs
+flujo.mjs
+_check*.js
+node_modules/
+package-lock.json
+
+# ── CAPTURAS Y BORRADORES ──────────────────────────────────────
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pptx
+!src/**/logos/*.png
+
+# ── SISTEMA ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vercel/
+__pycache__/
+*.pyc
+
+# ── SALIDAS INTERMEDIAS DE LOS BUILD ───────────────────────────
+# Cada build.sh escribe su HTML junto a sus fuentes y construir.sh
+# lo copia a la raíz. La copia buena es la de la raíz; esta sobra.
+src/portada/herramientas-alumni-sabana.html
+src/pitch/estudio-de-pitch.html
+src/portafolio/portafolio-alumni-sabana.html

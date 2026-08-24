@@ -1,0 +1,577 @@
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<div class="shell">
+
+<!-- ══════════════════ ÍNDICE LATERAL ══════════════════ -->
+<nav class="toc" id="toc" aria-label="Índice de hojas">
+
+  <div class="toc-top">
+    <div class="logo">
+      <img class="logo-claro" src="LOGO_CLARO" alt="Alumni Sabana · Universidad de La Sabana" width="150" height="84">
+    </div>
+    <div class="brand">Construye tu portafolio<small>Centro de Desarrollo Profesional</small></div>
+
+    <!-- Quién ha entrado. Sin «data-cuenta="completa"» auth.js no
+         pinta aquí los botones de crear cuenta: la cuenta se abre
+         desde la portada, para que haya un solo sitio donde se hace. -->
+    <div class="zona-cuenta" id="zona-cuenta"></div>
+
+    <button class="icon-btn menu" id="btn-menu" type="button" aria-expanded="false" aria-controls="toc-body" aria-label="Abrir el índice de hojas">☰</button>
+  </div>
+
+  <hr>
+
+  <div class="toc-body" id="toc-body">
+
+    <!-- Vuelta a la página de entrada del CDP. La dirección se
+         asigna desde el script, en el bloque VUELTA. -->
+    <a class="volver" id="volver-inicio" href="#"><span class="fl" aria-hidden="true">←</span> Herramientas del CDP</a>
+
+    <!-- FUTURA CONEXIÓN SUPABASE: PROGRESO DEL USUARIO
+         El avance se calcula hoy con lo que hay en el formulario.
+         Cuando exista cuenta, se leerá del progreso guardado en el
+         servidor para que continúe entre dispositivos. -->
+    <div class="nav-progreso">
+      <div class="rot-fila">
+        <span class="rot">Tu avance</span>
+        <span class="num" id="nav-num">0 de 5</span>
+      </div>
+      <span class="track"><span class="fill" id="nav-fill"></span></span>
+    </div>
+
+    <!-- Índice plegable: en reposo solo se ven los tres grupos. Se
+         abre el que contiene la hoja actual, así que el índice siempre
+         muestra dónde estás sin obligar a recorrer once enlaces. -->
+    <button class="navlabel" type="button" aria-expanded="false" aria-controls="g-empezar">
+      <span>Para empezar</span><span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="navgrupo" id="g-empezar">
+      <a class="simple" href="#que-es">¿Qué es un portafolio?</a>
+      <a class="simple" href="#programa">Tu programa</a>
+    </div>
+
+    <button class="navlabel" type="button" aria-expanded="false" aria-controls="g-secciones">
+      <span>Construcción de tu portafolio</span><span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="navgrupo" id="g-secciones">
+      <a href="#identidad" data-step="identidad"><span class="marca" aria-hidden="true"><span class="n">1</span></span>Identidad</a>
+      <a href="#perfil" data-step="perfil"><span class="marca" aria-hidden="true"><span class="n">2</span></span>Perfil profesional</a>
+      <a href="#proyectos" data-step="proyectos"><span class="marca" aria-hidden="true"><span class="n">3</span></span>Proyectos y evidencias</a>
+      <a href="#impacto" data-step="impacto"><span class="marca" aria-hidden="true"><span class="n">4</span></span>Impacto</a>
+      <a href="#contacto" data-step="contacto"><span class="marca" aria-hidden="true"><span class="n">5</span></span>Contacto</a>
+    </div>
+
+    <button class="navlabel" type="button" aria-expanded="false" aria-controls="g-publicar">
+      <span>Revisar y publicar</span><span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="navgrupo" id="g-publicar">
+      <a class="simple" href="#checklist">Antes de publicar</a>
+      <a class="simple" href="#resultado">Tu portafolio</a>
+      <a class="simple" href="#plataformas">¿Dónde publicarlo?</a>
+      <a class="simple" href="#asesoria">Hablar con un asesor</a>
+    </div>
+
+    <span class="guardado" id="guardado"><span class="punto" aria-hidden="true"></span><span id="guardado-txt">Sin cambios todavía</span></span>
+  </div>
+</nav>
+
+<!-- ══════════════════ CONTENIDO ══════════════════ -->
+<main id="contenido">
+
+<div class="hojas-barra" id="barra" aria-hidden="true"></div>
+
+<noscript>
+  <div class="warn prose" style="margin-bottom:1.4rem">
+    <b>Esta herramienta necesita JavaScript.</b> Sin él no se pueden mostrar las hojas,
+    adaptar el contenido a tu programa ni generar tu portafolio. Actívalo en tu navegador
+    y vuelve a cargar la página.
+  </div>
+</noscript>
+
+<!-- ─────────── QUÉ ES UN PORTAFOLIO (portada + concepto) ─────────── -->
+<section id="que-es" class="hoja" data-titulo="¿Qué es un portafolio?">
+  <span class="eyebrow">Universidad de La Sabana · Alumni Sabana</span>
+  <h1 style="font-size: clamp(2rem, 4.4vw, 2.9rem); letter-spacing: -.015em; max-width: 20ch; margin-top:.6rem; font-style: italic; color: var(--azul)">¿Qué es un portafolio?</h1>
+  <p style="border-left: 3px solid var(--azul); padding: .1rem 0 .1rem 1.1rem; font-family: var(--serif); font-size: 1.2rem; line-height: 1.45; max-width: 46ch">Tu hoja de vida resume lo que has hecho. Tu portafolio lo demuestra.</p>
+  <p class="prose" style="font-size:1.05rem;color:var(--ink-soft)">Un portafolio profesional es una colección organizada de trabajos, proyectos, experiencias, productos y resultados que muestra de forma directa tus habilidades, tu experiencia y tus logros. No reemplaza la hoja de vida: la complementa, porque demuestra con evidencias aquello que la hoja de vida solo enuncia.</p>
+
+  <div class="two">
+    <div class="card">
+      <span class="eyebrow" style="color: var(--ink-faint)">La hoja de vida</span><h3>Resume</h3>
+      <ul><li>Formación y titulaciones</li><li>Cargos y fechas</li><li>Responsabilidades y funciones</li><li>Trayectoria en orden cronológico</li></ul>
+    </div>
+    <div class="card" style="border-color: var(--azul)">
+      <span class="eyebrow">El portafolio</span><h3>Demuestra</h3>
+      <ul><li>Proyectos, productos y procesos</li><li>Tu rol individual y tus decisiones</li><li>Competencias en acción, no adjetivos</li><li>Resultados e impacto verificable</li></ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:.7rem">¿Cómo se estructura?</h3>
+  <p class="prose">Todo portafolio responde a cinco preguntas, en este orden. Cerca del 70 % de esta estructura es común a cualquier profesión; el resto se adapta a tu disciplina, tu audiencia y tu objetivo. Eso es justo lo que hace esta herramienta.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Sección</th><th>Pregunta que responde</th><th>Qué logra</th></tr></thead>
+      <tbody>
+        <tr><td><b>1 · Identidad</b></td><td>¿Quién eres?</td><td>Que te ubiquen en menos de 30 segundos.</td></tr>
+        <tr><td><b>2 · Perfil profesional</b></td><td>¿Qué puedes aportar?</td><td>Que entiendan tus capacidades y tu enfoque.</td></tr>
+        <tr><td><b>3 · Proyectos y evidencias</b></td><td>¿Cómo demuestras lo que dices?</td><td>Que vean qué hiciste y cuál fue tu rol.</td></tr>
+        <tr><td><b>4 · Impacto</b></td><td>¿Qué cambió gracias a tu trabajo?</td><td>Que reconozcan tu aporte real.</td></tr>
+        <tr><td><b>5 · Contacto</b></td><td>¿Cómo te contactan?</td><td>Que sepan cuál es el siguiente paso.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:.7rem">¿Cómo se reparte el espacio? 70-20-10</h3>
+  <p class="prose">No es una regla matemática, es un criterio de prioridad. El error más común es dedicar mucho espacio a contar quién eres y poco a mostrar lo que has hecho.</p>
+  <div class="prop-bar" role="img" aria-label="Distribución recomendada: 70 por ciento evidencias y proyectos, 20 por ciento perfil profesional, 10 por ciento contacto">
+    <div class="p70"><strong>70 %</strong><span>Evidencias y proyectos</span></div>
+    <div class="p20"><strong>20 %</strong><span>Perfil profesional</span></div>
+    <div class="p10"><strong>10 %</strong><span>Contacto</span></div>
+  </div>
+
+  <h3 style="margin-top:.7rem">¿Cómo funciona esta herramienta?</h3>
+  <p class="prose">Cada hoja trabaja una parte: eliges tu programa, completas las cinco secciones y te llevas el texto listo para montarlo en la plataforma que prefieras. La herramienta se ajusta a las características propias de tu programa académico.</p>
+
+  <div class="two">
+    <div class="card"><span class="eyebrow">Cómo avanzar</span><h3>Once hojas</h3><p style="font-size:.92rem;color:var(--ink-soft)">Avanza con los botones del pie o salta directo desde el índice de la izquierda. Puedes volver cuando quieras.</p></div>
+    <div class="card"><span class="eyebrow" style="color:var(--ink-faint)">Antes de empezar</span><h3>Ten a mano</h3><p style="font-size:.92rem;color:var(--ink-soft)">Los trabajos, proyectos o prácticas que quieras mostrar, y los enlaces o archivos que los respaldan.</p></div>
+  </div>
+
+  <div class="warn prose"><b>Tu borrador se guarda en este navegador.</b> Lo que escribas queda en este equipo y en este navegador; no se envía a ningún servidor ni viaja a otro dispositivo. Si usas un computador compartido o quieres borrarlo, usa «Empezar de nuevo» en la hoja «Antes de publicar». Y descarga tu portafolio cuando lo tengas listo: es la única copia que te llevas contigo.</div>
+</section>
+
+<!-- ─────────── TU PROGRAMA ─────────── -->
+<section id="programa" class="hoja" data-titulo="Tu programa">
+  <span class="eyebrow">Paso 1 de 6</span>
+  <h2 class="sec">¡Explora si los portafolios son típicos en tu programa académico!</h2>
+  <p class="prose">Lo que cuenta como evidencia no es igual en Derecho que en Ingeniería o en Enfermería. Elige tu programa y el resto de las hojas se ajusta: los tipos de evidencia sugeridos, los ejemplos de proyecto, las advertencias de confidencialidad, la plataforma recomendada y la lista de verificación final.</p>
+
+  <!-- FUTURA CONEXIÓN SUPABASE: PERFIL DEL USUARIO
+       Programa, etapa y objetivo se rellenarán solos con los datos
+       del perfil cuando la persona tenga cuenta. -->
+  <div class="setup">
+    <div class="grid2">
+      <div class="field" style="grid-column: 1 / -1">
+        <label for="f-programa">Tu programa académico</label>
+        <select id="f-programa">
+          <option value="">Selecciona tu programa…</option>
+          <optgroup label="Escuela Internacional de Ciencias Económicas y Administrativas">
+            <option value="eco|Administración de Empresas">Administración de Empresas</option>
+            <option value="eco|Administración &amp; Servicio">Administración &amp; Servicio</option>
+            <option value="eco|Administración de Mercadeo y Logística Internacionales">Administración de Mercadeo y Logística Internacionales</option>
+            <option value="eco|Administración de Negocios Internacionales">Administración de Negocios Internacionales</option>
+            <option value="eco|Economía y Finanzas Internacionales">Economía y Finanzas Internacionales</option>
+            <option value="eco|Economía y Finanzas Internacionales (virtual)">Economía y Finanzas Internacionales, modalidad virtual</option>
+            <option value="gas|Gastronomía">Gastronomía</option>
+          </optgroup>
+          <optgroup label="Facultad de Ciencias del Comportamiento">
+            <option value="org|Comportamiento Organizacional">Comportamiento Organizacional</option>
+            <option value="psi|Psicología">Psicología</option>
+          </optgroup>
+          <optgroup label="Facultad de Comunicación">
+            <option value="com|Comunicación Audiovisual y Multimedios">Comunicación Audiovisual y Multimedios</option>
+            <option value="com|Comunicación Corporativa">Comunicación Corporativa</option>
+            <option value="com|Comunicación Social y Periodismo">Comunicación Social y Periodismo</option>
+          </optgroup>
+          <optgroup label="Facultad de Educación">
+            <option value="edu|Licenciatura en Educación Infantil">Licenciatura en Educación Infantil</option>
+          </optgroup>
+          <optgroup label="Facultad de Ciencias de la Vida y el Bienestar">
+            <option value="vid|Enfermería">Enfermería</option>
+            <option value="vid|Fisioterapia">Fisioterapia</option>
+          </optgroup>
+          <optgroup label="Facultad de Estudios Jurídicos, Políticos e Internacionales">
+            <option value="der|Ciencias Políticas">Ciencias Políticas</option>
+            <option value="der|Derecho">Derecho</option>
+            <option value="der|Relaciones Internacionales">Relaciones Internacionales</option>
+          </optgroup>
+          <optgroup label="Facultad de Filosofía y Ciencias Humanas">
+            <option value="hum|Filosofía">Filosofía</option>
+          </optgroup>
+          <optgroup label="Facultad de Ingeniería">
+            <option value="inf|Ciencia de Datos">Ciencia de Datos</option>
+            <option value="ing|Ingeniería Civil">Ingeniería Civil</option>
+            <option value="ing|Ingeniería de Bioproducción">Ingeniería de Bioproducción</option>
+            <option value="ing|Ingeniería de Diseño e Innovación">Ingeniería de Diseño e Innovación</option>
+            <option value="ing|Ingeniería Industrial">Ingeniería Industrial</option>
+            <option value="inf|Ingeniería Informática">Ingeniería Informática</option>
+            <option value="ing|Ingeniería Mecánica">Ingeniería Mecánica</option>
+            <option value="ing|Ingeniería Química">Ingeniería Química</option>
+            <option value="inf|Ingeniería en Inteligencia Artificial">Ingeniería en Inteligencia Artificial</option>
+          </optgroup>
+          <optgroup label="Facultad de Medicina">
+            <option value="med|Medicina">Medicina</option>
+          </optgroup>
+          <optgroup label="Otros">
+            <option value="pos|">Posgrado o investigación</option>
+            <option value="tec|">Programa técnico laboral</option>
+            <option value="otro|">Otro programa</option>
+          </optgroup>
+        </select>
+        <span class="hint">La herramienta se ajustará a las características de los portafolios de tu programa.</span>
+      </div>
+
+      <!-- La facultad no se pregunta: sale del grupo al que pertenece
+           el programa dentro del desplegable de arriba. -->
+      <div class="field" id="facultad-wrap" hidden>
+        <label for="f-facultad">Facultad o escuela</label>
+        <input type="text" id="f-facultad" readonly data-siempre-readonly tabindex="-1" aria-readonly="true">
+        <span class="hint">Se completa según el programa que elegiste.</span>
+      </div>
+
+      <div class="field" id="otro-wrap" hidden>
+        <label for="f-programa-otro">Nombre de tu programa</label>
+        <input type="text" id="f-programa-otro" placeholder="Escríbelo tal como quieres que aparezca">
+      </div>
+
+      <div class="field" id="area-wrap" hidden>
+        <label for="f-area-otro">Área más cercana</label>
+        <select id="f-area-otro">
+          <option value="eco">Ciencias Económicas, Administrativas y Negocios</option>
+          <option value="gas">Gastronomía</option>
+          <option value="com">Comunicación</option>
+          <option value="der">Derecho, Ciencia Política y Relaciones Internacionales</option>
+          <option value="edu">Educación</option>
+          <option value="vid">Salud y bienestar</option>
+          <option value="hum">Filosofía y Ciencias Humanas</option>
+          <option value="ing">Ingeniería</option>
+          <option value="inf">Informática, datos e Inteligencia Artificial</option>
+          <option value="med">Medicina y áreas clínicas</option>
+          <option value="org">Comportamiento organizacional</option>
+          <option value="psi">Psicología</option>
+          <option value="pos">Posgrados e investigación</option>
+          <option value="tec">Programas técnicos laborales</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f-etapa">Tu etapa</label>
+        <select id="f-etapa">
+          <option value="estudiante">Estudiante</option>
+          <option value="graduado">Graduado</option>
+          <option value="transicion">En transición laboral</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f-objetivo">Objetivo del portafolio</label>
+        <select id="f-objetivo">
+          <option value="practica">Conseguir práctica</option>
+          <option value="empleo">Buscar empleo</option>
+          <option value="transicion">Cambiar de área o sector</option>
+          <option value="independiente">Ofrecer servicios como independiente</option>
+          <option value="emprendimiento">Presentar mi emprendimiento</option>
+          <option value="academico">Posicionamiento académico o posgrado</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f-audiencia">¿Quién lo va a leer?</label>
+        <input type="text" id="f-audiencia" placeholder="Ej.: reclutadores de agencias de comunicación">
+      </div>
+    </div>
+
+    <div class="adapt-note" id="adapt-intro"><b>Aún sin seleccionar</b>Elige tu programa para que la herramienta se ajuste a las características de los portafolios de tu disciplina.</div>
+  </div>
+</section>
+
+<!-- ─────────── 1 · IDENTIDAD ─────────── -->
+<section id="identidad" class="hoja" data-titulo="Identidad">
+  <span class="eyebrow">Paso 2 de 6 · Sección 1</span>
+  <h2 class="sec">Identidad</h2>
+  <p class="q">¿Quién eres?</p>
+  <p class="prose">Máximo tres o cuatro líneas. Quien abre tu portafolio debe entender quién eres y hacia dónde vas de inmediato. La fotografía profesional es opcional y no todos los portafolios la necesitan.</p>
+  <div class="warn prose"><b>La propuesta de valor</b> tiene entre 10 y 12 palabras. No es tu cargo: expresa qué haces, sobre qué necesidad trabajas o qué valor generas. Estructura útil: <em>Profesional en [campo] que [acción o capacidad] para [público, problema o resultado].</em> Evita "apasionado", "innovador" o "destacado" si no tienes cómo demostrarlo.</div>
+
+  <fieldset>
+    <legend>Tu identidad</legend>
+    <div class="grid2">
+      <div class="field"><label for="f-nombre">Nombre completo</label><input type="text" id="f-nombre" placeholder="Como quieres que te nombren profesionalmente"></div>
+      <div class="field"><label for="f-campo">Campo de desempeño</label><input type="text" id="f-campo" placeholder="Ej.: comunicación estratégica, ingeniería de procesos"></div>
+    </div>
+    <div class="field">
+      <label for="f-valor">Propuesta de valor</label>
+      <textarea id="f-valor" rows="2" placeholder="Profesional en [campo] que [acción o capacidad] para [público, problema o resultado]."></textarea>
+      <span class="hint"><span id="cont-valor">0</span> palabras · recomendado entre 10 y 12.</span>
+    </div>
+  </fieldset>
+</section>
+
+<!-- ─────────── 2 · PERFIL PROFESIONAL ─────────── -->
+<section id="perfil" class="hoja" data-titulo="Perfil profesional">
+  <span class="eyebrow">Paso 3 de 6 · Sección 2</span>
+  <h2 class="sec">Perfil profesional</h2>
+  <p class="q">¿Qué puedes aportar?</p>
+  <p class="prose">Entre cuatro y seis líneas, orientadas al valor, no una autobiografía. El orden que mejor funciona: quién eres y cuál es tu enfoque, qué sabes hacer, qué herramientas usas, qué logro o certificación te fortalece y qué te diferencia en tu forma de trabajar.</p>
+  <div class="adapt-note" id="adapt-perfil"><b>Sugerencia para tu programa</b>Vuelve a la hoja «Tu programa» y elige tu programa para ver qué conviene destacar aquí.</div>
+
+  <fieldset>
+    <legend>Tu perfil</legend>
+    <div class="field">
+      <label for="f-perfil">Perfil profesional</label>
+      <textarea id="f-perfil" rows="5" placeholder="Escribe en primera persona, con verbos de acción y sin frases vacías."></textarea>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label for="f-capacidades">Capacidades principales</label>
+        <textarea id="f-capacidades" rows="3" placeholder="Una por línea. Formúlalas como capacidades demostradas, no como adjetivos."></textarea>
+      </div>
+      <div class="field">
+        <label for="f-herramientas">Herramientas o metodologías</label>
+        <textarea id="f-herramientas" rows="3" placeholder="Una por línea. Máximo 6 a 8."></textarea>
+        <span class="hint">Incluye niveles de dominio solo si puedes sustentarlos.</span>
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-formacion">Formación, curso o certificación relevante</label>
+      <input type="text" id="f-formacion" placeholder="Solo lo que puedas respaldar con evidencia">
+    </div>
+  </fieldset>
+</section>
+
+<!-- ─────────── 3 · PROYECTOS Y EVIDENCIAS ─────────── -->
+<section id="proyectos" class="hoja" data-titulo="Proyectos y evidencias">
+  <span class="eyebrow">Paso 4 de 6 · Sección 3</span>
+  <h2 class="sec">Proyectos y evidencias</h2>
+  <p class="q">¿Cómo demuestras lo que dices?</p>
+  <p class="prose">Es el núcleo del portafolio y donde debe estar el 70 % del peso. Para un portafolio conciso, tres proyectos bien contados valen más que diez enumerados.</p>
+
+  <h3>¿Qué cuenta como evidencia en tu programa?</h3>
+  <div class="evi" id="adapt-evidencias">
+    <div class="card"><h3>Selecciona tu programa</h3><p style="font-size:.92rem;color:var(--ink-soft)">Aquí aparecerán los tipos de evidencia propios de tu disciplina, diferenciados según tu etapa.</p></div>
+  </div>
+  <div class="warn prose" id="adapt-aviso" hidden></div>
+
+  <h3 style="margin-top:.8rem">¿Cómo elegir cuáles incluir?</h3>
+  <p class="prose">Cuando tengas más experiencias que espacio, evalúa cada una con estos ocho criterios y quédate con las tres que mejor los cumplan.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Criterio</th><th>Pregunta que debes hacerte</th></tr></thead>
+      <tbody>
+        <tr><td><b>Pertinencia</b></td><td>¿Se relaciona con el objetivo que persigo hoy?</td></tr>
+        <tr><td><b>Participación</b></td><td>¿Puedo explicar con claridad cuál fue mi aporte individual?</td></tr>
+        <tr><td><b>Evidencia</b></td><td>¿Tengo un producto, soporte o muestra que lo respalde?</td></tr>
+        <tr><td><b>Resultado</b></td><td>¿Hubo un logro, cambio o aprendizaje demostrable?</td></tr>
+        <tr><td><b>Representatividad</b></td><td>¿Muestra una competencia importante para mi campo?</td></tr>
+        <tr><td><b>Diversidad</b></td><td>¿Aporta algo distinto frente a los demás proyectos?</td></tr>
+        <tr><td><b>Actualidad</b></td><td>¿Sigue vigente para mi objetivo actual?</td></tr>
+        <tr><td><b>Confidencialidad</b></td><td>¿Puedo presentarlo sin vulnerar información protegida?</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:.8rem">Redacta tus fichas</h3>
+  <p class="prose">Cada proyecto se cuenta igual: contexto, objetivo, tu rol, lo que hiciste, el resultado y la evidencia que lo respalda.</p>
+  <p class="prose">Cada campo lleva un mínimo de palabras debajo. No es un trámite: por debajo de ese umbral la ficha no le dice nada a quien la lee. <b>Para pasar a la siguiente hoja necesitas al menos una ficha completa.</b> Las demás puedes dejarlas a medias: lo que falte aparecerá como marcador pendiente en tu portafolio, y eso es preferible a inventar.</p>
+
+  <!-- FUTURA CONEXIÓN SUPABASE: PROYECTOS
+       Cada ficha de proyecto será una fila propia, con su identificador,
+       para poder editarla y recuperarla entre sesiones.
+       FUTURA CONEXIÓN SUPABASE: EVIDENCIAS
+       El campo «Evidencia» aceptará además archivos subidos al
+       almacenamiento, no solo un enlace escrito a mano. -->
+  <div id="proyectos-wrap" class="stack"></div>
+
+  <div class="actions">
+    <button id="add-proy" type="button">Añadir otro proyecto</button>
+    <span style="font-size:.85rem;color:var(--ink-faint)" id="proy-cuenta">Recomendado: tres principales.</span>
+  </div>
+
+  <!-- Estado de la regla de avance. Lo escribe puertaProyectos(). -->
+  <p class="puerta" id="proy-puerta" role="status">Añade una ficha de proyecto para continuar.</p>
+
+  <!-- Descarga parcial: quien solo quiere las fichas de proyecto no
+       tiene que esperar a la hoja final ni llevarse el portafolio
+       entero. Sale el mismo texto que después se integra al documento. -->
+  <div class="actions" style="margin-top:.2rem; padding-top:.9rem; border-top: 1px solid var(--rule)">
+    <button id="dl-proy" type="button" class="solid" disabled>Descargar proyectos (PDF)</button>
+    <button id="copy-proy" type="button" disabled>Copiar proyectos</button>
+    <span style="font-size:.85rem;color:var(--ink-faint)" id="proy-aviso">Redacta al menos una ficha para poder descargarlas.</span>
+  </div>
+</section>
+
+<!-- ─────────── 4 · IMPACTO ─────────── -->
+<section id="impacto" class="hoja" data-titulo="Impacto">
+  <span class="eyebrow">Paso 5 de 6 · Sección 4</span>
+  <h2 class="sec">Impacto</h2>
+  <p class="q">¿Qué cambió gracias a tu trabajo?</p>
+  <p class="prose">El impacto suele funcionar mejor dentro de cada proyecto. Usa esta hoja solo si tienes logros transversales que no pertenecen a un único trabajo: reconocimientos, publicaciones, certificaciones o resultados acumulados.</p>
+  <div class="adapt-note" id="adapt-impacto"><b>Cómo se mide en tu programa</b>Vuelve a la hoja «Tu programa» y elige tu programa para ver qué tipo de resultado es el pertinente.</div>
+  <div class="warn prose"><b>Si no tienes cifras, no las inventes.</b> Pregúntate: ¿qué cambió después de mi intervención? ¿cuántas personas o áreas participaron? ¿qué producto quedó implementado? ¿qué retroalimentación recibí? ¿mi trabajo fue aprobado, publicado, utilizado o presentado? Un resultado cualitativo verificable vale más que un porcentaje inventado.</div>
+
+  <fieldset>
+    <legend>Logros transversales</legend>
+    <div class="field">
+      <label for="f-logros">Logros, reconocimientos o publicaciones</label>
+      <textarea id="f-logros" rows="3" placeholder="Uno por línea. Solo lo que puedas sustentar."></textarea>
+    </div>
+    <div class="field">
+      <label for="f-testimonio">Testimonio o recomendación (autorizado)</label>
+      <textarea id="f-testimonio" rows="2" placeholder="Breve, con nombre y cargo de quien lo emite, y con su autorización."></textarea>
+    </div>
+  </fieldset>
+</section>
+
+<!-- ─────────── 5 · CONTACTO ─────────── -->
+<section id="contacto" class="hoja" data-titulo="Contacto">
+  <span class="eyebrow">Paso 6 de 6 · Sección 5</span>
+  <h2 class="sec">Contacto</h2>
+  <p class="q">¿Cómo te contactan y qué esperas que hagan?</p>
+  <p class="prose">Máximo tres o cuatro líneas, con canales pertinentes y un llamado a la acción que corresponda a tu objetivo. Usa datos profesionales y evita información personal innecesaria.</p>
+  <div class="adapt-note" id="adapt-contacto"><b>Canales para tu programa</b>Vuelve a la hoja «Tu programa» y elige tu programa para ver qué canales conviene incluir.</div>
+
+  <fieldset>
+    <legend>Tus canales</legend>
+    <div class="grid2">
+      <div class="field"><label for="f-correo">Correo profesional</label><input type="email" id="f-correo" placeholder="nombre@correo.com"></div>
+      <div class="field"><label for="f-linkedin">LinkedIn</label><input type="text" id="f-linkedin" placeholder="linkedin.com/in/tu-perfil"></div>
+      <div class="field"><label for="f-otro">Otro canal pertinente</label><input type="text" id="f-otro" placeholder="GitHub, Behance, sitio web, perfil académico"></div>
+      <div class="field"><label for="f-cta">Llamado a la acción</label><input type="text" id="f-cta" placeholder="Conversemos sobre oportunidades en…"></div>
+    </div>
+  </fieldset>
+</section>
+
+<!-- ─────────── ANTES DE PUBLICAR ─────────── -->
+<section id="checklist" class="hoja" data-titulo="Antes de publicar">
+  <span class="eyebrow">Validación final</span>
+  <h2 class="sec">Antes de publicar</h2>
+  <p class="prose">Recorre esta lista con tu portafolio abierto al lado. Los puntos marcados con una línea azul a la izquierda son propios de tu programa.</p>
+
+  <div class="progress">
+    <span class="num" id="c-count">0 de 12</span>
+    <span class="track"><span class="fill" id="c-fill"></span></span>
+  </div>
+
+  <div class="check" id="check"></div>
+
+  <!-- ─────────── REVISIÓN CON INTELIGENCIA ARTIFICIAL ───────────
+       La lista de arriba comprueba que las cosas existan. Esto
+       comprueba que digan algo, que es la otra mitad del trabajo.
+       Empieza siempre por las fichas de proyecto: son el 70 % del
+       portafolio y donde de verdad se cae. -->
+  <div class="revision" id="revision">
+    <div class="revision-cab">
+      <div>
+        <span class="eyebrow">Segunda opinión</span>
+        <h3>¿Qué diría un asesor de tu portafolio?</h3>
+      </div>
+      <button class="solid" id="rev-pedir" type="button">Revisar mi portafolio</button>
+    </div>
+
+    <p class="prose">Lee lo que has escrito y te señala qué no aguantaría una entrevista. Empieza por las fichas de proyecto. <b>No reescribe tu texto</b>: te dice qué falta y te pregunta lo que tendrías que responder, porque el portafolio tiene que seguir siendo tuyo.</p>
+
+    <p class="revision-nota" id="rev-nota"></p>
+
+    <div class="revision-salida" id="rev-salida" hidden></div>
+  </div>
+
+  <div class="actions">
+    <button class="solid" id="dl-all" type="button">Descargar portafolio y checklist (PDF)</button>
+    <button id="reset" type="button">Empezar de nuevo</button>
+  </div>
+</section>
+
+<!-- ─────────── TU PORTAFOLIO ─────────── -->
+<section id="resultado" class="hoja" data-titulo="Tu portafolio">
+  <span class="eyebrow">Tu resultado</span>
+  <h2 class="sec">Tu portafolio</h2>
+  <p class="prose">Este es el texto que has construido, listo para copiar en la plataforma que elijas. Los marcadores entre corchetes señalan lo que aún falta confirmar: déjalos visibles mientras no tengas el dato real.</p>
+
+  <div class="progress">
+    <span class="num" id="p-count">0 de 5 secciones</span>
+    <span class="track"><span class="fill" id="p-fill"></span></span>
+  </div>
+
+  <!-- FUTURA CONEXIÓN IA: RETROALIMENTACIÓN DEL PORTAFOLIO
+       Aquí irá el botón que pide una revisión del texto construido
+       (claridad de la propuesta de valor, verbos de acción, resultados
+       verificables) con su respuesta debajo de la vista previa.
+       El texto lo escribe siempre la persona: la IA solo comenta. -->
+  <p class="trad-nota" id="trad-port-nota">La traducción al inglés la hace tu propio navegador cuando lo trae, sin que el texto salga de tu equipo. Si no lo trae, la hace la inteligencia artificial de la Universidad y para eso necesitas tu cuenta abierta.</p>
+
+  <div class="preview">
+    <div class="preview-head">
+      <h3>Vista previa</h3>
+      <div class="actions">
+        <button id="copy-port" type="button">Copiar</button>
+        <button class="solid" id="dl-port" type="button">Descargar PDF</button>
+        <button id="dl-port-en" type="button">Descargar en inglés (PDF)</button>
+      </div>
+    </div>
+    <pre id="salida" class="empty">Completa las hojas anteriores y tu portafolio aparecerá aquí.</pre>
+  </div>
+</section>
+
+<!-- ─────────── DÓNDE PUBLICARLO ─────────── -->
+<section id="plataformas" class="hoja" data-titulo="¿Dónde publicarlo?">
+  <span class="eyebrow">Formato</span>
+  <h2 class="sec">¿Dónde publicarlo?</h2>
+  <p class="prose">Elige según el tipo de evidencia que vas a mostrar y el tiempo que puedas dedicarle. Ninguna plataforma reemplaza el contenido: verifica siempre las funciones y condiciones vigentes al momento de crear tu cuenta.</p>
+  <div class="adapt-note" id="adapt-plataforma"><b>Recomendación</b>Elige tu programa para ver cuál se ajusta mejor a tus evidencias.</div>
+  <div class="plats" id="plats"></div>
+</section>
+
+<!-- ─────────── HABLAR CON UN ASESOR ─────────── -->
+<section id="asesoria" class="hoja" data-titulo="Hablar con un asesor">
+  <span class="eyebrow">Acompañamiento</span>
+  <h2 class="sec">Hablar con un asesor</h2>
+
+  <div class="sello">
+    <img src="LOGO_USABANA_NAVY" alt="Universidad de La Sabana" width="362" height="96">
+    <p>Centro de Desarrollo Profesional · Alumni Sabana</p>
+  </div>
+  <p class="prose">Si necesitas revisión especializada de tu portafolio, orientación sobre una decisión de carrera o tienes dudas que esta herramienta no resuelve, escríbenos a <a href="mailto:desarrolloprofesional@unisabana.edu.co">desarrolloprofesional@unisabana.edu.co</a>. Incluye una descripción breve de tu necesidad y, si corresponde, adjunta la versión de tu portafolio que quieres revisar.</p>
+  <div class="warn prose"><b>Sobre el uso de inteligencia artificial:</b> puede ayudarte a redactar borradores y estructuras, pero no debe inventar experiencia. Todo texto generado debe reflejar tu voz y tu trayectoria reales, las evidencias las aportas tú, y el resultado siempre requiere tu revisión antes de publicarlo.</div>
+</section>
+
+<!-- El pie va fuera de las hojas: antes vivía dentro de la última
+     sección y solo se veía allí, además de quedar por encima de su
+     propia paginación. -->
+
+
+</main>
+</div>
+
+<footer class="pie">
+  <div class="pie-envoltura">
+    <div class="pie-rejilla">
+
+      <div class="pie-col pie-marca">
+        <img class="pie-logo" src="LOGO_USABANA_BLANCO" alt="Universidad de La Sabana" width="241" height="64">
+        <p>Institución de educación superior sujeta a inspección y vigilancia por el Ministerio de Educación Nacional.</p>
+        <p>Carácter Académico: Universidad.</p>
+      </div>
+
+      <div class="pie-col">
+        <h4>El servicio</h4>
+        <p><strong>Construye tu portafolio profesional</strong> es una herramienta de trabajo autónomo del Centro de Desarrollo Profesional, Alumni Sabana, de acceso abierto para la comunidad universitaria.</p>
+        <p>Te acompaña hoja por hoja en la estructura de un portafolio y ajusta los ejemplos, los tipos de evidencia y la lista de verificación a tu programa académico. No evalúa la calidad de tu trabajo, no certifica competencias ni sustituye una asesoría personalizada.</p>
+      </div>
+
+      <div class="pie-col">
+        <h4>Tratamiento de datos</h4>
+        <p>Lo que escribes se guarda <strong>únicamente en este navegador</strong> y en este equipo: no se envía a ningún servidor, no viaja a otro dispositivo y nadie más puede consultarlo.</p>
+        <p><strong>El PDF que descargas es la única copia que te llevas contigo.</strong> Con «Empezar de nuevo» borras el borrador de este navegador cuando quieras.</p>
+        <p>La veracidad de la información y de las evidencias que incluyas es tu responsabilidad.</p>
+        <p><a class="pie-enlace" href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos" target="_blank" rel="noopener">Política de Protección de Datos de la Universidad ↗</a></p>
+      </div>
+
+      <div class="pie-col">
+        <h4>Contacto</h4>
+        <p>Centro de Desarrollo Profesional<br>Alumni Sabana</p>
+        <p><a class="pie-enlace" href="mailto:desarrolloprofesional@unisabana.edu.co">desarrolloprofesional@unisabana.edu.co</a></p>
+        <p>Contact center: (601) 861 5555</p>
+        <p>Campus del Puente del Común<br>Km. 7, Autopista Norte de Bogotá<br>Chía, Cundinamarca, Colombia</p>
+      </div>
+
+    </div>
+
+    <div class="pie-legal">
+      <span>Universidad de La Sabana &middot; Personería Jurídica: Resolución 130 del 14 de enero de 1980, Ministerio de Educación Nacional<br>Versión del archivo: <b>2026.08.20</b></span>
+      <span><a class="pie-enlace" href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos" target="_blank" rel="noopener">Política de Protección de Datos</a> &middot; Vigilada Mineducación</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>

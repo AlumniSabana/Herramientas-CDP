@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Herramientas del Centro de Desarrollo Profesional de la Universidad de La Sabana: practica tu pitch y construye tu portafolio profesional.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#001459">
+<title>Herramientas · Centro de Desarrollo Profesional — Alumni Sabana</title>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   HERRAMIENTAS DEL CENTRO DE DESARROLLO PROFESIONAL
+   Alumni Sabana · Universidad de La Sabana
+
+   Página de entrada a las herramientas del CDP. Misma paleta,
+   misma tipografía y mismo pie que «Estudio de Pitch» y
+   «Construye tu portafolio profesional», para que las tres se
+   lean como un solo servicio.
+
+   PARA AÑADIR UNA HERRAMIENTA: duplica un <article class="tarjeta">
+   y añade su dirección en el bloque DIRECCIONES del script, al
+   final del documento. No hace falta tocar nada más.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════ 1 · VARIABLES ═══════════════ */
+:root {
+  --paper: #EEF1F8;
+  --surface: #FFFFFF;
+  --surface-2: #F5F7FC;
+  --ink: #0A1330;
+  --ink-soft: #4B5670;
+  --ink-faint: #8895A4;
+  --rule: #D9E1EE;
+  --rule-soft: #E9EEF7;
+
+  --azul: #001459;
+  --azul-500: #25409A;
+  --azul-300: #7FA6D0;
+  --azul-soft: #E3EAF7;
+
+  --ok: #158A5E;
+
+  --shadow: 0 1px 2px rgba(0,20,89,.05), 0 8px 24px -16px rgba(0,20,89,.22);
+  --shadow-alta: 0 2px 6px rgba(0,20,89,.08), 0 22px 44px -20px rgba(0,20,89,.3);
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+
+  --ancho: 1140px;
+  --pad: clamp(1.1rem, 4vw, 2.75rem);
+}
+
+/* ═══════════════ 2 · BASE ═══════════════ */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.2; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+a { color: var(--azul); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--azul-500); outline-offset: 3px; border-radius: 2px; }
+
+.envoltura { max-width: var(--ancho); margin: 0 auto; padding: 0 var(--pad); }
+.eyebrow {
+  font-size: .69rem; letter-spacing: .16em; text-transform: uppercase;
+  font-weight: 700; color: var(--azul-500);
+}
+.saltar {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: var(--azul); color: #FFFFFF;
+  padding: .6rem 1rem; border-radius: 0 0 5px 0; font-size: .85rem; font-weight: 600;
+}
+.saltar:focus { left: 0; }
+
+/* ═══════════════ 3 · CABECERA ═══════════════ */
+.masthead { background: var(--azul); color: #EAF0F8; }
+.masthead-fila {
+  display: flex; align-items: center; gap: 1.2rem;
+  padding: 1.1rem 0; flex-wrap: wrap;
+}
+.masthead img { height: 42px; width: auto; display: block; }
+.masthead .divisor {
+  padding-left: 1.1rem; border-left: 1px solid rgba(255,255,255,.28);
+  font-family: var(--serif); font-size: 1rem; line-height: 1.3;
+}
+.masthead .divisor small {
+  display: block; font-family: var(--sans); font-size: .68rem;
+  letter-spacing: .12em; text-transform: uppercase; color: #A9BEDE;
+  font-weight: 600; margin-top: .25rem;
+}
+
+/* ═══════════════ 4 · PORTADA ═══════════════ */
+.hero { background: var(--azul); color: #FFFFFF; padding: 2.4rem 0 3.6rem; }
+/* Titular y bajada ocupan la franja entera */
+.hero h1 {
+  font-size: clamp(1.55rem, 3.4vw, 2.45rem); font-style: italic;
+  letter-spacing: -.005em; line-height: 1.22;
+}
+.hero p {
+  margin-top: 1.1rem; font-size: 1.05rem;
+  color: #C7D6F0; line-height: 1.6;
+}
+.hero .eyebrow { color: #A9BEDE; }
+
+/* Llamada a la acción de la portada, solo sin sesión */
+.hero-acciones {
+  display: flex; align-items: center; gap: .8rem; flex-wrap: wrap;
+  margin-top: 1.6rem;
+}
+.hero-acciones[hidden] { display: none; }
+.hero-nota { font-size: .8rem; color: #A9BEDE; max-width: 46ch; line-height: 1.5; }
+.boton.claro { background: #FFFFFF; color: var(--azul); border-color: #FFFFFF; }
+.boton.linea-claro { background: transparent; color: #FFFFFF; border-color: rgba(255,255,255,.5); }
+.boton.linea-claro:hover { background: rgba(255,255,255,.14); border-color: #FFFFFF; opacity: 1; }
+.boton.linea { background: transparent; color: var(--azul); border-color: var(--rule); }
+.boton.linea:hover { background: var(--azul-soft); border-color: var(--azul); opacity: 1; }
+
+/* Botones de cuenta de la cabecera. Los estilos de .btn-cuenta los
+   trae auth.js; aquí solo se coloca la fila. */
+.zona-cuenta { margin-left: auto; display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+
+/* ═══════════════ 5 · PANEL DE QUIEN ENTRÓ ═══════════════ */
+.panel {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 8px;
+  box-shadow: var(--shadow); padding: 1.5rem 1.7rem;
+  margin-top: -2.2rem; margin-bottom: 1.4rem;
+}
+.panel[hidden] { display: none; }
+.panel-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.2rem; flex-wrap: wrap; }
+.panel h2 { font-size: 1.5rem; font-style: italic; color: var(--azul); margin-top: .2rem; }
+.panel-cab p { font-size: .9rem; color: var(--ink-soft); margin-top: .3rem; }
+.panel-nota {
+  font-size: .82rem; color: var(--ink-faint);
+  margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--rule-soft);
+}
+/* Con panel arriba, las tarjetas ya no se meten en la banda azul */
+.panel:not([hidden]) ~ .tarjetas { margin-top: 0; }
+
+/* ═══════════════ 6 · TARJETAS ═══════════════ */
+.tarjetas {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: 1.4rem; margin-top: -2.2rem; padding-bottom: .5rem;
+}
+.tarjeta {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 8px;
+  box-shadow: var(--shadow); padding: 1.6rem 1.7rem 1.7rem;
+  display: flex; flex-direction: column; gap: .9rem;
+  transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+}
+.tarjeta:hover { box-shadow: var(--shadow-alta); transform: translateY(-2px); border-color: var(--azul-300); }
+/* Sin fotografías: la página se apoya en la tipografía y el color
+   institucional. Solo quedan el logo y el escudo de la Universidad. */
+.tarjeta h2 { font-size: 1.4rem; font-style: italic; color: var(--azul); }
+.tarjeta .lema { font-size: .95rem; color: var(--ink-soft); }
+
+.tarjeta dl {
+  margin: 0; display: grid; grid-template-columns: auto 1fr;
+  gap: .35rem .9rem; font-size: .86rem;
+  padding-top: .9rem; border-top: 1px solid var(--rule-soft);
+}
+.tarjeta dt {
+  font-size: .66rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-faint); font-weight: 700; padding-top: .2rem;
+}
+.tarjeta dd { margin: 0; color: var(--ink-soft); }
+
+.tarjeta .ir { margin-top: auto; padding-top: 1.1rem; }
+.boton {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  background: var(--azul); color: #FFFFFF; border: 1px solid var(--azul);
+  font-family: var(--sans); font-size: .9rem; font-weight: 600;
+  padding: .68rem 1.3rem; border-radius: 5px; text-decoration: none;
+  transition: opacity .15s, transform .08s;
+}
+.boton:hover { opacity: .9; }
+.boton:active { transform: translateY(1px); }
+.boton .flecha { font-size: 1.05em; line-height: 1; }
+
+/* ═══════════════ 6 · CÓMO SE COMPLEMENTAN ═══════════════ */
+.par { padding: 3rem 0 0; }
+.par h2 { font-size: 1.5rem; font-style: italic; color: var(--azul); }
+/* La bajada ocupa el ancho de la sección, igual que en la portada */
+.par p { margin-top: .8rem; color: var(--ink-soft); }
+.par .dos {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem; margin-top: 1.4rem;
+}
+.par .paso {
+  background: var(--surface-2); border: 1px solid var(--rule-soft);
+  border-left: 3px solid var(--azul-300); border-radius: 0 6px 6px 0;
+  padding: 1rem 1.2rem; font-size: .92rem; color: var(--ink-soft);
+}
+.par .paso b { display: block; color: var(--ink); font-family: var(--serif); font-size: 1.02rem; margin-bottom: .25rem; }
+
+/* Aviso de privacidad común */
+.privacidad {
+  display: flex; gap: .8rem; align-items: flex-start;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 1rem 1.2rem; margin: 2.4rem 0 3.2rem; font-size: .88rem; color: var(--ink-soft);
+  box-shadow: var(--shadow);
+}
+.privacidad .sello { flex: none; }
+.privacidad .sello img { height: 34px; width: auto; display: block; }
+.privacidad b { color: var(--ink); }
+
+/* ═══════════════ 7 · PIE ═══════════════ */
+footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
+.pie-rejilla {
+  display: grid; grid-template-columns: 1.1fr 1.4fr 1.3fr 1fr; gap: 2.4rem;
+  padding-bottom: 1.9rem; border-bottom: 1px solid rgba(255,255,255,.16);
+}
+.pie-logo { height: 48px; width: auto; display: block; margin-bottom: 1.15rem; }
+.pie-col h4 {
+  font-family: var(--sans); font-size: .69rem; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: #FFFFFF; margin: 0 0 .9rem;
+}
+.pie-col p { font-size: .82rem; line-height: 1.65; color: #B9C9E2; margin: 0 0 .7rem; }
+.pie-col p:last-child { margin-bottom: 0; }
+.pie-col strong { color: #E7EEF9; font-weight: 600; }
+.pie-marca p { font-size: .78rem; color: #9FB2CE; }
+.pie-enlace {
+  color: #E7EEF9; text-decoration: none; font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,.35); padding-bottom: 1px;
+  transition: color .15s, border-color .15s;
+}
+.pie-enlace:hover { color: #FFFFFF; border-bottom-color: #FFFFFF; }
+.pie-legal {
+  display: flex; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;
+  padding-top: 1.25rem; font-size: .72rem; color: #8FA4C4; line-height: 1.6;
+}
+.pie-legal .pie-enlace { font-weight: 500; color: #B9C9E2; }
+
+/* ═══════════════ 8 · RESPONSIVE ═══════════════ */
+@media (max-width: 1000px) { .pie-rejilla { grid-template-columns: 1fr 1fr; gap: 2rem; } }
+@media (max-width: 620px) {
+  .pie-rejilla { grid-template-columns: 1fr; }
+  .tarjetas { margin-top: -1.4rem; }
+  .masthead .divisor { padding-left: 0; border-left: 0; }
+  .privacidad { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+  .tarjeta:hover { transform: none; }
+}
+</style>
+</head>
+<body>
+
+<a class="saltar" href="#herramientas">Saltar a las herramientas</a>
+
+<!-- ══════════════════ CABECERA ══════════════════ -->
+<header class="masthead">
+  <div class="envoltura masthead-fila">
+    <img src="LOGO_ALUMNI" alt="Alumni Sabana" width="150" height="84">
+    <div class="divisor">Centro de Desarrollo Profesional<small>Universidad de La Sabana</small></div>
+
+    <!-- Los rellena Cuenta.pintar() de auth.js: sin sesión, «Iniciar
+         sesión» y «Crear cuenta»; con sesión, el nombre y «Salir». -->
+    <div class="zona-cuenta" id="zona-cuenta" data-cuenta="completa"></div>
+  </div>
+</header>
+
+<!-- ══════════════════ PORTADA ══════════════════ -->
+<section class="hero">
+  <div class="envoltura">
+    <span class="eyebrow">Herramientas de trabajo autónomo</span>
+    <h1>¡Prepárate con los servicios que el Centro de Desarrollo Profesional ha preparado para ti!</h1>
+    <p>Dos herramientas de acceso abierto para la comunidad universitaria: una para construir la evidencia de lo que has hecho, otra para aprender a contarlo en voz alta. Puedes usarlas por separado o una después de la otra.</p>
+
+    <!-- Solo mientras no hay sesión. La cuenta se abre desde los
+         botones de la cabecera: aquí solo se explica para qué sirve,
+         para no repetir dos veces la misma llamada a la acción. -->
+    <div class="hero-acciones" id="hero-acciones">
+      <span class="hero-nota">Crea tu cuenta con el correo @unisabana.edu.co desde los botones de arriba a la derecha. Puedes usar las herramientas sin cuenta, pero solo con cuenta se guarda tu avance.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ HERRAMIENTAS ══════════════════ -->
+<main class="envoltura" id="herramientas">
+
+  <!-- ══════════════ PANEL DE QUIEN ENTRÓ ══════════════
+       Oculto sin sesión. Lo rellena y lo muestra pintarPanel(). -->
+  <section class="panel" id="panel" hidden>
+    <div class="panel-cab">
+      <div>
+        <span class="eyebrow">Tu cuenta</span>
+        <h2 id="panel-nombre">—</h2>
+        <p id="panel-datos"></p>
+      </div>
+      <button type="button" class="boton linea" id="panel-salir">Cerrar sesión</button>
+    </div>
+    <p class="panel-nota">Tu sesión vale para todas las herramientas del Centro y se cierra al cerrar la pestaña.</p>
+  </section>
+
+  <div class="tarjetas">
+
+    <!-- ── Portafolio ── -->
+    <article class="tarjeta">
+      <span class="eyebrow">Construye la evidencia</span>
+      <h2>Construye tu portafolio profesional</h2>
+      <p class="lema">Tu hoja de vida resume lo que has hecho. Tu portafolio lo demuestra. Esta herramienta te lleva hoja por hoja por las cinco secciones de un portafolio y ajusta los ejemplos, los tipos de evidencia y la lista de verificación a tu programa académico.</p>
+      <dl>
+        <dt>¿Para qué sirve?</dt><dd>Para mostrar tu trabajo a un empleador, un cliente o un programa de posgrado.</dd>
+        <dt>¿Qué necesitas?</dt><dd>Nada más que los trabajos que quieras mostrar. Sin cuenta.</dd>
+        <dt>¿Qué te llevas?</dt><dd>Tu portafolio en PDF, listo para montarlo donde prefieras.</dd>
+        <dt>¿Cuánto tarda?</dt><dd>Entre 30 y 45 minutos.</dd>
+      </dl>
+      <div class="ir">
+        <a class="boton" data-destino="portafolio" href="#">Abrir el portafolio <span class="flecha" aria-hidden="true">→</span></a>
+      </div>
+    </article>
+
+    <!-- ── Pitch ── -->
+    <article class="tarjeta">
+      <span class="eyebrow">Aprende a contarlo</span>
+      <h2>Estudio de Pitch</h2>
+      <p class="lema">Practicas tu pitch en voz alta, grabándote, y recibes un reporte con lo que se puede medir de tu entrega: duración, ritmo, fluidez, estructura, concreción y cierre. Y además, observaciones escritas sobre lo que dijiste.</p>
+      <dl>
+        <dt>¿Para qué sirve?</dt><dd>Para entrevistas, ferias de empleo, presentar un emprendimiento o defender un trabajo académico.</dd>
+        <dt>¿Qué necesitas?</dt><dd>Micrófono y correo institucional. Cámara opcional, para la presencia visual.</dd>
+        <dt>¿Qué te llevas?</dt><dd>Un reporte por ronda y el historial de tu avance.</dd>
+        <dt>¿Cuánto tarda?</dt><dd>Entre 10 y 15 minutos por ronda.</dd>
+      </dl>
+      <div class="ir">
+        <a class="boton" data-destino="pitch" href="#">Abrir el estudio <span class="flecha" aria-hidden="true">→</span></a>
+      </div>
+    </article>
+
+  </div>
+
+  <!-- ══════════════════ CÓMO SE COMPLEMENTAN ══════════════════ -->
+  <section class="par">
+    <h2>¿Cómo se complementan?</h2>
+    <p>Son dos mitades del mismo problema. Un portafolio sólido no sirve de nada si no sabes explicarlo en dos minutos, y el mejor pitch se cae en cuanto piden evidencia y no la hay. Si tienes tiempo para las dos, este es el orden que recomendamos.</p>
+    <div class="dos">
+      <div class="paso"><b>Primero, la evidencia</b>Construye el portafolio. Al elegir qué proyectos incluir y redactar qué hiciste tú en cada uno, ya estás decidiendo qué vas a contar.</div>
+      <div class="paso"><b>Después, la entrega</b>Practica el pitch. Llegas con el material ordenado y los resultados frescos, así que puedes concentrarte en cómo lo dices y no en qué decir.</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ PRIVACIDAD ══════════════════ -->
+  <div class="privacidad">
+    <span class="sello"><img src="LOGO_USABANA_NAVY" alt="Universidad de La Sabana" width="362" height="96"></span>
+    <p><b>Sobre tus datos.</b> El portafolio guarda lo que escribes únicamente en tu navegador: no se envía a ningún servidor. El Estudio de Pitch procesa el audio en tu equipo y no lo almacena; con cuenta conserva solo la transcripción y el reporte, y puedes eliminarlos cuando quieras. Los detalles completos están dentro de cada herramienta y en la <a href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos" target="_blank" rel="noopener">Política de Protección de Datos de la Universidad</a>.</p>
+  </div>
+
+</main>
+
+<!-- ══════════════════ PIE ══════════════════ -->
+<footer class="pie">
+  <div class="envoltura">
+    <div class="pie-rejilla">
+
+      <div class="pie-col pie-marca">
+        <img class="pie-logo" src="LOGO_USABANA_BLANCO" alt="Universidad de La Sabana" width="241" height="64">
+        <p>Institución de educación superior sujeta a inspección y vigilancia por el Ministerio de Educación Nacional.</p>
+        <p>Carácter Académico: Universidad.</p>
+      </div>
+
+      <div class="pie-col">
+        <h4>El servicio</h4>
+        <p>Las herramientas del <strong>Centro de Desarrollo Profesional, Alumni Sabana</strong> son de trabajo autónomo y de acceso abierto para la comunidad universitaria.</p>
+        <p>Acompañan tu preparación, pero no evalúan la calidad de tu trabajo, no certifican competencias ni sustituyen una asesoría personalizada.</p>
+      </div>
+
+      <div class="pie-col">
+        <h4>Tratamiento de datos</h4>
+        <p>Cada herramienta explica dentro qué guarda y dónde. Ninguna publica nada en tu nombre.</p>
+        <p>La veracidad de la información y de las evidencias que incluyas es tu responsabilidad.</p>
+        <p><a class="pie-enlace" href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos" target="_blank" rel="noopener">Política de Protección de Datos de la Universidad ↗</a></p>
+      </div>
+
+      <div class="pie-col">
+        <h4>Contacto</h4>
+        <p>Centro de Desarrollo Profesional<br>Alumni Sabana</p>
+        <p><a class="pie-enlace" href="mailto:desarrolloprofesional@unisabana.edu.co">desarrolloprofesional@unisabana.edu.co</a></p>
+        <p>Contact center: (601) 861 5555</p>
+        <p>Campus del Puente del Común<br>Km. 7, Autopista Norte de Bogotá<br>Chía, Cundinamarca, Colombia</p>
+      </div>
+
+    </div>
+
+    <div class="pie-legal">
+      <span>Universidad de La Sabana &middot; Personería Jurídica: Resolución 130 del 14 de enero de 1980, Ministerio de Educación Nacional<br>Versión del archivo: <b>2026.08.20</b></span>
+      <span><a class="pie-enlace" href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos" target="_blank" rel="noopener">Política de Protección de Datos</a> &middot; Vigilada Mineducación</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Autenticación compartida: la misma que usan el Estudio de Pitch
+     y el portafolio. Trae el modal de registro e inicio de sesión con
+     su marcado y sus estilos, así que aquí no se copia nada. -->
+<script src="auth.js"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════
+     DIRECCIONES DE LAS HERRAMIENTAS
+     ----------------------------------------------------------
+     ESTO ES LO ÚNICO QUE HAY QUE EDITAR AL PUBLICAR.
+
+     Por defecto apuntan al nombre de archivo, que es lo que
+     funciona si los tres HTML están en la misma carpeta o en el
+     mismo servidor. Cuando el CDP publique cada herramienta en su
+     dirección definitiva, sustituye el valor por la URL completa:
+
+       portafolio: "https://alumni.unisabana.edu.co/portafolio/",
+       pitch:      "https://alumni.unisabana.edu.co/pitch/",
+
+     Para añadir una herramienta nueva: añade su entrada aquí y
+     duplica una <article class="tarjeta"> con el mismo
+     data-destino.
+     ══════════════════════════════════════════════════════════ */
+  var DIRECCIONES = {
+    portafolio: "portafolio-alumni-sabana.html",
+    pitch:      "estudio-de-pitch.html"
+  };
+
+  /* Marca de versión en el enlace. Los navegadores guardan en caché
+     las páginas abiertas desde el disco, así que al reemplazar un
+     archivo por uno nuevo se puede seguir viendo el viejo. Cambiando
+     la marca cambia la dirección, y el navegador se ve obligado a
+     leer el archivo otra vez. Súbela cada vez que publiques. */
+  var VERSION = "2026.08.20";
+
+  function conVersion(url) {
+    if (!url || !VERSION) return url;
+    return url + (url.indexOf("?") < 0 ? "?v=" : "&v=") + VERSION;
+  }
+
+  /* Se asignan por script y no en el HTML para que las direcciones
+     vivan en un solo sitio: al publicar se edita el bloque de
+     arriba y no hay que ir buscando enlaces por el documento. */
+  Array.prototype.forEach.call(document.querySelectorAll("[data-destino]"), function (a) {
+    var destino = DIRECCIONES[a.getAttribute("data-destino")];
+    if (destino) a.setAttribute("href", conVersion(destino));
+    else a.removeAttribute("href");   /* sin dirección, no finge ser un enlace */
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     LOS DOS ESTADOS DE LA PORTADA
+     ----------------------------------------------------------
+     Sin sesión se ve la presentación con «Crear cuenta» e
+     «Ingresar». Con sesión, el panel con el nombre, el programa y
+     las mismas tarjetas de herramientas. Quien no quiera cuenta
+     puede seguir entrando a las herramientas: la cuenta sirve para
+     conservar el avance, no para dar permiso.
+
+     Todo lo de cuentas —el modal, el registro, la validación del
+     dominio, el acuerdo, la confirmación— lo pone auth.js.
+     ══════════════════════════════════════════════════════════ */
+  function pintarPanel(sesion) {
+    var panel = document.getElementById("panel");
+    var cta = document.getElementById("hero-acciones");
+    if (!panel || !cta) return;
+
+    panel.hidden = !sesion;
+    cta.hidden = !!sesion;
+    if (!sesion) return;
+
+    document.getElementById("panel-nombre").textContent = sesion.nombre || sesion.correo;
+    var datos = [sesion.programa, sesion.facultad, sesion.correo].filter(Boolean);
+    document.getElementById("panel-datos").textContent = datos.join(" · ");
+  }
+
+  /* auth.js avisa al entrar, al salir y al recuperar la sesión */
+  alCambiarSesion(pintarPanel);
+  alEntrar(function (sesion) { pintarPanel(sesion); });
+
+  document.addEventListener("click", function (e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    if (t.closest("#panel-salir")) { Cuenta.salir(); return; }
+  });
+
+  /* Los correos de Supabase —confirmación de cuenta y recuperación de
+     contraseña— devuelven aquí con la sesión en la dirección. Sin
+     esta llamada el enlace aterrizaría en la portada y no pasaría
+     nada. Cuando el enlace es de recuperación, auth.js abre solo el
+     formulario para escribir la contraseña nueva. */
+  sesionDesdeURL().then(function (entro) {
+    if (entro) { Cuenta.pintar(); pintarPanel(Cuenta.sesion); }
+  });
+
+  /* Por si la sesión ya estaba puesta antes de registrar el aviso */
+  if (document.readyState !== "loading") pintarPanel(Cuenta.sesion);
+  else document.addEventListener("DOMContentLoaded", function () { pintarPanel(Cuenta.sesion); });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Herramienta del Centro de Desarrollo Profesional de la Universidad de La Sabana para construir un portafolio profesional paso a paso, ajustado a tu programa académico.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#001459">
+<title>Construye tu portafolio profesional · Alumni Sabana</title>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   CONSTRUYE TU PORTAFOLIO PROFESIONAL · ALUMNI SABANA
+   Centro de Desarrollo Profesional · Universidad de La Sabana
+
+   ORGANIZACIÓN DE LA HOJA DE ESTILOS
+     1 · Variables de diseño
+     2 · Base y tipografía
+     3 · Layout
+     4 · Navegación lateral
+     5 · Hojas y paginación
+     6 · Componentes
+     7 · Formularios
+     8 · Proyectos
+     9 · Vista previa
+    10 · Checklist
+    11 · Pie y avisos
+    12 · Responsive
+
+   Una sola paleta, definida una vez en :root: la institucional de la
+   Universidad de La Sabana, la misma de «Estudio de Pitch». No hay
+   modo oscuro ni acento dorado.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════ 1 · VARIABLES DE DISEÑO ═══════════════ */
+:root {
+  /* Superficies y texto: neutros con matiz azul, como en «Estudio de Pitch» */
+  --paper: #EEF1F8;
+  --surface: #FFFFFF;
+  --surface-2: #F5F7FC;
+  --ink: #0A1330;
+  --ink-soft: #4B5670;
+  --ink-faint: #8895A4;
+  --rule: #D9E1EE;
+  --rule-soft: #E9EEF7;
+
+  /* Color institucional: misma paleta que «Estudio de Pitch».
+     El azul #001459 es el color oficial de la Universidad; los tonos
+     500 y 300 son sus derivados para acentos y estados. No hay dorado:
+     todo lo que antes lo usaba pasó al azul medio. */
+  --azul: #001459;
+  --azul-700: #1E306E;
+  --azul-500: #25409A;
+  --azul-300: #7FA6D0;
+  --azul-soft: #E3EAF7;   /* relleno suave: debe distinguirse del papel */
+
+  /* Índice lateral: fondo azul, de modo que necesita su propia
+     escala de contraste (texto e indicadores sobre oscuro). */
+  --nav-bg: #001459;
+  --nav-ink: #EAF0F8;
+  --nav-ink-soft: #A9BEDE;
+  --nav-line: rgba(255,255,255,.17);
+  --nav-hover: rgba(255,255,255,.08);
+  --nav-activo: rgba(255,255,255,.13);
+  --nav-acento: #C7D6F0;
+
+  /* Estados */
+  --ok: #158A5E;
+  --ok-soft: #E4F2EC;
+  --alerta: #A3252F;     /* mismo rojo que «Estudio de Pitch» */
+  --alerta-soft: #FAE8E9;
+
+  /* Contraste sobre relleno de color */
+  --field: #FFFFFF;
+  --on-azul: #FFFFFF;
+  --on-fill: #FFFFFF;
+
+  --shadow: 0 1px 2px rgba(0,20,89,.05), 0 8px 24px -16px rgba(0,20,89,.22);
+
+  /* Tipografía: idéntica a la de «Estudio de Pitch» */
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", Menlo, monospace;
+
+  /* Medidas
+     La prosa ocupaba 66 caracteres, la medida clasica de lectura.
+     Dentro de una hoja de 1180 px eso dejaba media pagina en blanco
+     a la derecha y los parrafos se leian cortados a mitad de linea.
+     Ahora la prosa llega hasta el borde de la hoja, igual que las
+     tablas y las tarjetas. */
+  --measure: none;
+  --pad: clamp(1.1rem, 4vw, 2.75rem);
+  --nav-w: 258px;
+}
+
+/* Paleta única. No hay modo oscuro: la identidad de la Universidad
+   se mantiene igual en cualquier dispositivo y no depende de la
+   preferencia del sistema. */
+
+/* ═══════════════ 2 · BASE Y TIPOGRAFÍA ═══════════════ */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--serif);
+  font-weight: 600;
+  text-wrap: balance;
+  line-height: 1.2;
+  margin: 0;
+}
+/* Titular de hoja: mismo tratamiento que las cabeceras de sección de
+   «Estudio de Pitch»: serif en cursiva y azul institucional. */
+h2.sec {
+  font-size: clamp(1.5rem, 3vw, 2rem); margin-top: .3rem;
+  font-style: italic; color: var(--azul);
+}
+h3 { font-size: 1.08rem; }
+
+p { margin: 0; }
+a { color: var(--azul); text-underline-offset: 3px; }
+
+:focus-visible { outline: 2px solid var(--azul-500); outline-offset: 3px; border-radius: 2px; }
+
+.eyebrow {
+  font-size: .69rem; letter-spacing: .16em; text-transform: uppercase;
+  font-weight: 700; color: var(--azul-500);
+}
+.q { font-family: var(--serif); font-size: 1.15rem; color: var(--ink-soft); font-style: italic; }
+.prose { max-width: var(--measure); }
+.stack { display: flex; flex-direction: column; gap: 1.1rem; }
+
+/* Enlace de salto, visible solo con teclado */
+.saltar {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: var(--azul); color: var(--on-azul);
+  padding: .6rem 1rem; border-radius: 0 0 5px 0; font-size: .85rem; font-weight: 600;
+}
+.saltar:focus { left: 0; }
+
+/* ═══════════════ 3 · LAYOUT ═══════════════ */
+/* La retícula ocupa todo el ancho de la ventana: así el índice azul
+   llega de verdad al borde izquierdo y no queda una franja de color
+   vacía a su lado. El ancho de lectura se limita en la hoja, no en
+   la retícula, para que el color sí sea de borde a borde. */
+.shell {
+  display: grid;
+  grid-template-columns: var(--nav-w) minmax(0, 1fr);
+  min-height: 100vh;
+  /* El azul lo pinta la retícula, no el índice. El índice es «sticky»
+     y mide una pantalla de alto, así que su fondo se acabaría a mitad
+     de las hojas largas; pintando aquí la primera columna, el color
+     llega hasta el final del documento por larga que sea la hoja. */
+  background: linear-gradient(to right, var(--nav-bg) 0 var(--nav-w), var(--paper) var(--nav-w));
+}
+main { padding: 1.6rem var(--pad) 3rem; min-width: 0; }
+section { padding: 0 0 .5rem; }
+
+/* ═══════════════ 4 · NAVEGACIÓN LATERAL ═══════════════ */
+/* El índice va sobre azul institucional. Todo lo que vive dentro de
+   él (texto, enlaces, distintivos, barra de avance) usa la escala
+   «--nav-*», pensada para leerse sobre fondo oscuro. */
+nav.toc {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow-y: auto;
+  padding: 2.2rem 1.25rem 2rem var(--pad);
+  background: var(--nav-bg);
+  color: var(--nav-ink);
+  display: flex; flex-direction: column; gap: .08rem;
+}
+/* Sobre el azul va el logo en blanco: es el único que se usa. */
+nav.toc .logo img { display: block; width: 116px; height: auto; }
+
+nav.toc .brand { font-family: var(--serif); font-size: 1rem; line-height: 1.25; color: var(--nav-ink); }
+nav.toc .brand small {
+  display: block; font-family: var(--sans); font-size: .7rem; letter-spacing: .11em;
+  text-transform: uppercase; color: var(--nav-ink-soft); font-weight: 600; margin-top: .4rem;
+}
+nav.toc hr { border: 0; border-top: 1px solid var(--nav-line); width: 100%; margin: 1.1rem 0 .55rem; }
+/* Cabecera de grupo. Es un botón que pliega y despliega su bloque;
+   se le quitan los estilos del botón general para que siga leyéndose
+   como el rótulo de sección que era. */
+nav.toc .navlabel {
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  width: 100%; text-align: left;
+  background: none; border: 0; box-shadow: none;
+  padding: .5rem .55rem; margin: .35rem 0 0; border-radius: 4px;
+  font-family: var(--sans); font-size: .66rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--nav-ink-soft); font-weight: 700;
+  cursor: pointer; transition: color .15s, background .15s;
+}
+nav.toc .navlabel:first-of-type { margin-top: 0; }
+nav.toc .navlabel:hover { background: var(--nav-hover); color: #FFFFFF; }
+nav.toc .navlabel[aria-expanded="true"] { color: #FFFFFF; }
+nav.toc .navlabel .chev {
+  font-size: 1rem; line-height: 1; color: var(--nav-ink-soft);
+  transform: rotate(0deg); transition: transform .2s ease;
+}
+nav.toc .navlabel[aria-expanded="true"] .chev { transform: rotate(90deg); color: var(--nav-acento); }
+
+/* Bloque de enlaces de cada grupo */
+.navgrupo { display: none; flex-direction: column; gap: .08rem; padding-bottom: .35rem; }
+.navgrupo.abierto { display: flex; }
+nav.toc a {
+  display: flex; align-items: center; gap: .55rem;
+  padding: .34rem .55rem; border-radius: 4px;
+  font-size: .855rem; color: var(--nav-ink-soft); text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: color .15s, background .15s, border-color .15s;
+}
+nav.toc a:hover { color: #FFFFFF; background: var(--nav-hover); }
+nav.toc a.on {
+  color: #FFFFFF; border-left-color: var(--nav-acento);
+  font-weight: 600; background: var(--nav-activo);
+}
+
+/* Las cinco secciones llevan un distintivo numerado que es, además,
+   el indicador de estado: el número se vuelve un visto cuando la
+   sección tiene contenido. Las hojas de lectura no llevan ninguno,
+   porque no hay nada que completar en ellas, y así se distingue de
+   un vistazo lo que se lee de lo que se escribe. */
+nav.toc a .marca {
+  width: 19px; height: 19px; flex: none; border-radius: 50%;
+  border: 1px solid var(--nav-line);
+  display: grid; place-items: center;
+  font-family: var(--sans); font-size: .63rem; font-weight: 700;
+  color: var(--nav-ink-soft); font-variant-numeric: tabular-nums;
+  transition: background .2s, border-color .2s, color .2s;
+}
+nav.toc a.on .marca { border-color: #FFFFFF; color: #FFFFFF; }
+nav.toc a.done .marca {
+  background: var(--nav-acento); border-color: var(--nav-acento); color: var(--azul);
+}
+nav.toc a.done .marca .n { display: none; }
+nav.toc a.done .marca::after { content: "✓"; font-size: .68rem; line-height: 1; }
+
+/* Alinea el texto de las hojas de lectura con el de las secciones */
+nav.toc a.simple { padding-left: calc(.55rem + 19px + .55rem); }
+
+/* Vuelta a la página de entrada. Va dentro del índice, así que usa
+   la escala de contraste sobre azul. */
+nav.toc a.volver {
+  gap: .45rem; margin-bottom: .9rem; padding: .45rem .7rem;
+  font-size: .78rem; font-weight: 600; color: #FFFFFF; white-space: nowrap;
+  border: 1px solid rgba(255,255,255,.45); border-radius: 100px; border-left-width: 1px;
+  justify-content: center;
+}
+nav.toc a.volver:hover { background: rgba(255,255,255,.14); border-color: #FFFFFF; }
+nav.toc a.volver .fl { font-size: 1.05em; line-height: 1; }
+nav.toc a.volver[hidden] { display: none !important; }
+
+/* Cuerpo plegable del índice (solo se pliega en móvil) */
+.toc-body { display: flex; flex-direction: column; gap: .08rem; }
+
+/* Barra superior del índice: marca + control de menú.
+   En escritorio el logo ocupa su propia fila y la marca queda debajo;
+   en móvil todo va en línea con el botón de menú a la derecha. */
+.toc-top { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+nav.toc .logo { flex: 1 1 auto; margin-bottom: 1.2rem; }
+.toc-top .brand { flex: 0 0 100%; min-width: 0; }
+
+/* Botón de menú: sobre azul no puede heredar el botón claro general */
+.icon-btn {
+  flex: none; width: 34px; height: 34px; display: none;
+  align-items: center; justify-content: center;
+  font-size: 1rem; line-height: 1; padding: 0;
+  background: transparent; color: var(--nav-ink);
+  border: 1px solid var(--nav-line);
+}
+.icon-btn:hover { background: var(--nav-hover); border-color: rgba(255,255,255,.34); }
+
+/* Progreso global, arriba del índice: responde «¿por dónde voy?»
+   antes de que haya que buscarlo. */
+.nav-progreso { margin: .2rem 0 1rem; display: flex; flex-direction: column; gap: .4rem; }
+.nav-progreso .rot-fila { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+.nav-progreso .rot {
+  font-size: .66rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--nav-ink-soft); font-weight: 700;
+}
+.nav-progreso .num {
+  font-size: .74rem; font-weight: 700; color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+}
+.nav-progreso .track { height: 5px; background: rgba(255,255,255,.18); border-radius: 999px; overflow: hidden; }
+.nav-progreso .fill { display: block; height: 100%; width: 0; background: var(--nav-acento); transition: width .3s ease; }
+
+/* ═══════════════ 5 · HOJAS Y PAGINACIÓN ═══════════════ */
+/* Tope de ancho de la hoja: en monitores muy anchos evita tablas y
+   tarjetas desmedidas sin dejar franjas de color sin usar. */
+.hoja { display: none; max-width: 1180px; }
+.hoja.on { display: flex; flex-direction: column; gap: 1.1rem; animation: entra .22s ease both; }
+@keyframes entra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.hojas-barra { display: flex; gap: 3px; margin-bottom: 1.7rem; max-width: 1180px; }
+.hojas-barra span { flex: 1; height: 3px; border-radius: 2px; background: var(--rule); transition: background .25s; }
+.hojas-barra span.pasada { background: var(--azul-300); }
+.hojas-barra span.actual { background: var(--azul); }
+
+.pager {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  margin-top: 2.4rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+}
+/* En la ultima hoja no hay boton de avance. El hueco mantiene el
+   folio centrado y «Anterior» en su sitio de siempre. */
+.pager-hueco { display: block; min-width: 8.5rem; }
+@media (max-width: 620px) { .pager-hueco { display: none; } }
+.pager .folio {
+  font-size: .78rem; color: var(--ink-faint); letter-spacing: .07em;
+  text-transform: uppercase; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════ 6 · COMPONENTES ═══════════════ */
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 1rem; }
+.card {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 1.2rem 1.3rem; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; gap: .55rem;
+}
+.card h3 { font-size: 1.02rem; }
+.card ul, .evi ul {
+  margin: 0; padding-left: 1.1rem; color: var(--ink-soft); font-size: .92rem;
+  display: flex; flex-direction: column; gap: .22rem;
+}
+.evi { display: grid; grid-template-columns: repeat(auto-fit, minmax(228px, 1fr)); gap: 1rem; }
+
+/* Proporción 70-20-10 */
+.prop-bar { display: flex; height: 62px; border-radius: 6px; overflow: hidden; border: 1px solid var(--rule); }
+.prop-bar div { display: flex; flex-direction: column; justify-content: center; padding: 0 1rem; color: var(--on-fill); }
+.prop-bar .p70 { flex: 70; background: var(--azul); }
+.prop-bar .p20 { flex: 20; background: var(--azul-500); }
+.prop-bar .p10 { flex: 10; background: var(--ink-soft); }
+.prop-bar strong { font-family: var(--serif); font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.prop-bar span { font-size: .75rem; opacity: .93; line-height: 1.25; }
+
+/* Tablas */
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; min-width: 480px; }
+th, td { text-align: left; padding: .62rem .95rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+thead th {
+  font-size: .71rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-faint); font-weight: 700;
+}
+tbody tr:last-child td { border-bottom: 0; }
+td b { color: var(--ink); }
+
+/* Avisos */
+.warn {
+  border-left: 3px solid var(--azul-500); background: var(--azul-soft);
+  padding: .8rem 1rem; border-radius: 0 5px 5px 0; font-size: .92rem;
+}
+.adapt-note { background: var(--azul-soft); border-radius: 5px; padding: .8rem 1rem; font-size: .92rem; }
+.adapt-note b {
+  display: block; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--azul); margin-bottom: .2rem;
+}
+
+/* Botones */
+button {
+  font-family: var(--sans); font-size: .82rem; font-weight: 600; cursor: pointer;
+  background: var(--surface); color: var(--azul); border: 1px solid var(--rule);
+  padding: .4rem .85rem; border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  transition: background .15s, border-color .15s, transform .08s, color .15s;
+}
+button:hover { background: var(--azul-soft); border-color: var(--azul); }
+button:active { transform: translateY(1px); }
+button.solid { background: var(--azul); color: var(--on-azul); border-color: var(--azul); }
+button.solid:hover { opacity: .88; background: var(--azul); }
+button[disabled] { opacity: .32; cursor: default; transform: none; }
+button[disabled]:hover { background: var(--surface); border-color: var(--rule); }
+button.solid[disabled]:hover { background: var(--azul); border-color: var(--azul); }
+/* Confirmación breve tras copiar o descargar */
+button.hecho, button.hecho:hover {
+  background: var(--ok-soft); border-color: var(--ok); color: var(--ok);
+}
+button.solid.hecho, button.solid.hecho:hover { background: var(--ok); border-color: var(--ok); color: var(--on-azul); }
+
+.actions { display: flex; flex-wrap: wrap; gap: .55rem; align-items: center; }
+
+/* Aviso flotante */
+.toast {
+  position: fixed; bottom: 1.4rem; left: 50%; transform: translate(-50%, 140%);
+  background: var(--ink); color: var(--paper);
+  padding: .6rem 1.1rem; border-radius: 999px; font-size: .86rem;
+  transition: transform .28s cubic-bezier(.2,.8,.3,1); z-index: 50;
+  max-width: calc(100vw - 2rem); text-align: center;
+}
+.toast.on { transform: translate(-50%, 0); }
+
+/* ═══════════════ 7 · FORMULARIOS ═══════════════ */
+/* El atributo «hidden» debe ganar siempre. Sin esto, cualquier regla
+   con display (.field, .card, .actions) lo anula por especificidad y
+   el elemento sigue viéndose aunque el JS lo haya ocultado. */
+[hidden] { display: none !important; }
+
+.field { display: flex; flex-direction: column; gap: .32rem; }
+.field > label {
+  font-size: .78rem; letter-spacing: .07em; text-transform: uppercase;
+  font-weight: 700; color: var(--ink-faint);
+}
+.field .hint { font-size: .85rem; color: var(--ink-soft); }
+
+input[type="text"], input[type="email"], textarea, select {
+  font-family: var(--sans); font-size: .95rem; color: var(--ink); background: var(--field);
+  border: 1px solid var(--rule); border-radius: 5px; padding: .55rem .7rem; width: 100%;
+  line-height: 1.5; transition: border-color .15s, box-shadow .15s;
+}
+textarea { resize: vertical; min-height: 4.5rem; }
+input:focus, textarea:focus, select:focus {
+  border-color: var(--azul);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--azul) 14%, transparent);
+}
+::placeholder { color: var(--ink-faint); opacity: .85; }
+
+/* Campo derivado: no se escribe, se completa solo */
+input[readonly] {
+  background: var(--rule-soft); color: var(--ink-soft); cursor: default;
+}
+input[readonly]:focus { border-color: var(--rule); box-shadow: none; }
+
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+
+fieldset {
+  border: 1px solid var(--rule); border-radius: 6px; background: var(--surface);
+  box-shadow: var(--shadow); padding: 1.2rem 1.3rem 1.35rem; margin: 0;
+  display: flex; flex-direction: column; gap: 1rem;
+}
+legend { font-family: var(--serif); font-size: 1.05rem; padding: 0 .5rem; }
+
+/* Caja de configuración del programa. Sin tope se estira hasta el
+   ancho de la hoja y un desplegable de 1100 px se lee fatal: el ojo
+   pierde la relación entre la etiqueta y el campo. */
+.setup {
+  background: var(--surface); border: 1px solid var(--azul); border-radius: 6px;
+  box-shadow: var(--shadow); padding: 1.4rem; display: flex; flex-direction: column; gap: 1.1rem;
+}
+/* Los nombres de las facultades son largos: «Escuela Internacional
+   de Ciencias Económicas y Administrativas» no cabe en una columna
+   de cuatro y se cortaba a media palabra. Ocupando dos, cabe entera
+   sin encoger las demás. */
+.setup #facultad-wrap { grid-column: span 2; }
+@media (max-width: 900px) { .setup #facultad-wrap { grid-column: 1 / -1; } }
+
+/* ═══════════════ 8 · PROYECTOS ═══════════════ */
+#proyectos-wrap fieldset { position: relative; }
+#proyectos-wrap legend { display: flex; align-items: center; gap: .5rem; }
+.field-full { grid-column: 1 / -1; }
+
+/* Dos columnas como máximo dentro de una ficha: la retícula general
+   admite cuatro en pantallas anchas, y con cuatro los campos de texto
+   largo quedan tan estrechos que no se puede releer lo escrito. */
+#proyectos-wrap .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 720px) { #proyectos-wrap .grid2 { grid-template-columns: 1fr; } }
+
+/* Contador de palabras de cada campo con mínimo. Neutro mientras el
+   campo está vacío: nadie merece ver todo en rojo antes de empezar. */
+.cuenta {
+  font-size: .74rem; color: var(--ink-faint); font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: center; gap: .3rem;
+}
+.cuenta b { font-weight: 700; }
+.cuenta.corto { color: var(--alerta); }
+.cuenta.ok { color: var(--ok); }
+.cuenta.ok::after { content: "\2713"; font-weight: 700; }
+.field.corto textarea, .field.corto input[type="text"] { border-color: var(--alerta); }
+.field .opcional { font-size: .74rem; color: var(--ink-faint); font-style: italic; }
+
+/* Semáforo de la ficha */
+.ficha-estado {
+  font-size: .82rem; color: var(--ink-faint);
+  padding: .55rem .8rem; border-radius: 5px; background: var(--rule-soft);
+  border-left: 3px solid var(--rule);
+}
+.ficha-estado.pendiente { color: var(--alerta); background: var(--alerta-soft); border-left-color: var(--alerta); }
+.ficha-estado.lista { color: var(--ok); background: var(--ok-soft); border-left-color: var(--ok); }
+
+/* Enlaces del índice que están detrás de la regla */
+nav.toc a.bloqueado { opacity: .42; }
+nav.toc a.bloqueado:hover { background: transparent; color: var(--nav-ink-soft); cursor: not-allowed; }
+nav.toc a.bloqueado .marca { opacity: .7; }
+
+/* Aviso de la regla de avance */
+.puerta {
+  font-size: .88rem; color: var(--alerta); background: var(--alerta-soft);
+  border-left: 3px solid var(--alerta); padding: .7rem 1rem; border-radius: 0 5px 5px 0;
+}
+.puerta.lista { color: var(--ok); background: var(--ok-soft); border-left-color: var(--ok); }
+/* Parpadeo al rechazar un salto: sin él, el clic parece no hacer nada */
+.puerta.destaca { animation: llamar .9s ease 2; }
+@keyframes llamar {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(163,37,47,0); }
+  35%      { box-shadow: 0 0 0 5px rgba(163,37,47,.22); }
+}
+
+/* Traducción al inglés dentro de la ficha */
+.trad { display: flex; flex-direction: column; gap: .5rem; }
+.trad-nota { font-size: .8rem; color: var(--ink-faint); line-height: 1.45; }
+.trad-nota.aviso { color: var(--alerta); }
+.trad-salida { border: 1px solid var(--rule); border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.trad-cab {
+  display: flex; align-items: center; justify-content: space-between; gap: .8rem;
+  padding: .5rem .8rem; border-bottom: 1px solid var(--rule-soft);
+}
+.trad-texto {
+  margin: 0; padding: .8rem; font-family: var(--sans); font-size: .87rem;
+  line-height: 1.6; white-space: pre-wrap; color: var(--ink-soft);
+}
+
+/* Fotografías del campus */
+.foto { margin: .3rem 0; }
+/* La hoja de apertura va en una sola columna y todos sus bloques
+   comparten ancho, para que no queden escalones de blanco entre uno
+   y el siguiente. Ese ancho es ahora el de la hoja entera. */
+#que-es > *:not(.pager) { max-width: none; }
+/* Con la tabla acotada a la columna, el reparto automático dejaba la
+   última columna corta y partía celdas en dos líneas. Fijar la
+   proporción da a cada pregunta y a cada respuesta su renglón. */
+/* Con la hoja completa a su disposicion la tabla ya no tiene que
+   encogerse: recupera el cuerpo normal y su aire lateral.
+   Se conserva el min-width heredado: en movil la tabla debe poder
+   desbordarse y desplazarse, no comprimirse hasta ser ilegible. */
+#que-es table { table-layout: fixed; }
+#que-es th, #que-es td { padding: .7rem 1rem; }
+#que-es th:nth-child(1), #que-es td:nth-child(1) { width: 27%; }
+#que-es th:nth-child(2), #que-es td:nth-child(2) { width: 31%; }
+#que-es th:nth-child(3), #que-es td:nth-child(3) { width: 42%; }
+
+/* Recorte panorámico: a tamaño completo la foto se comía la hoja y
+   competía con el texto, que es lo que se viene a leer. */
+.foto img {
+  display: block; width: 100%; height: auto; border-radius: 6px;
+  aspect-ratio: 16 / 7; object-fit: cover;
+  border: 1px solid var(--rule); box-shadow: var(--shadow);
+}
+.foto figcaption { font-size: .78rem; color: var(--ink-faint); margin-top: .45rem; }
+
+/* ═══════════════ 9 · VISTA PREVIA ═══════════════ */
+.preview { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; box-shadow: var(--shadow); }
+.preview-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: .8rem 1.1rem; border-bottom: 1px solid var(--rule-soft); flex-wrap: wrap;
+}
+.preview-head h3 { font-size: 1rem; }
+.preview pre {
+  margin: 0; padding: 1.2rem 1.3rem; font-family: var(--mono); font-size: .84rem;
+  line-height: 1.65; white-space: pre-wrap; color: var(--ink-soft);
+  overflow-x: auto; min-height: 8rem;
+}
+.empty { color: var(--ink-faint); font-style: italic; }
+
+/* Barras de progreso de hoja */
+.progress { display: flex; align-items: center; gap: .8rem; font-size: .86rem; color: var(--ink-soft); flex-wrap: wrap; }
+.progress .track { flex: 1; height: 6px; background: var(--rule); border-radius: 999px; overflow: hidden; max-width: 320px; }
+.progress .fill { display: block; height: 100%; width: 0; background: var(--azul-500); transition: width .25s ease; }
+.progress .num { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
+
+/* ═══════════════ 10 · CHECKLIST ═══════════════ */
+.check {
+  display: flex; flex-direction: column; background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 6px; box-shadow: var(--shadow); overflow: hidden;
+}
+.check label {
+  display: flex; gap: .75rem; align-items: flex-start; padding: .65rem 1.1rem;
+  cursor: pointer; border-bottom: 1px solid var(--rule-soft); font-size: .93rem;
+}
+.check label:last-of-type { border-bottom: 0; }
+.check label:hover { background: var(--rule-soft); }
+.check input { margin-top: .35rem; accent-color: var(--azul); width: 15px; height: 15px; flex: none; }
+.check input:checked + span { color: var(--ink-faint); text-decoration: line-through; }
+.check .esp { border-left: 3px solid var(--azul-500); }
+
+/* ═══════════════ 11 · PLATAFORMAS, PIE Y GUARDADO ═══════════════ */
+.plats { display: grid; grid-template-columns: repeat(auto-fit, minmax(248px, 1fr)); gap: 1rem; }
+.plat dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .28rem .7rem; font-size: .87rem; }
+.plat dt {
+  font-size: .69rem; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink-faint); font-weight: 700; padding-top: .18rem;
+}
+.plat dd { margin: 0; color: var(--ink-soft); }
+.plat.rec { border-color: var(--azul); }
+/* El título de cada plataforma enlaza a su sitio oficial */
+.plat h3 a.plat-link {
+  color: inherit; text-decoration: none;
+  display: inline-flex; align-items: baseline; gap: .35rem;
+  border-bottom: 1px solid transparent; transition: border-color .15s, color .15s;
+}
+.plat h3 a.plat-link:hover { color: var(--azul); border-bottom-color: var(--azul); }
+.plat h3 a.plat-link .ext {
+  font-family: var(--sans); font-size: .72em; color: var(--azul);
+  font-weight: 700; line-height: 1;
+}
+/* Texto solo para lectores de pantalla */
+.sr {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.rec-tag { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--azul); }
+
+/* Pie institucional: banda azul a todo el ancho, con la misma
+   estructura de cuatro columnas que «Estudio de Pitch». Vive fuera
+   de la retícula para poder ocupar la ventana completa. */
+footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
+.pie-envoltura { max-width: 1440px; margin: 0 auto; padding: 0 var(--pad); }
+.pie-rejilla {
+  display: grid; grid-template-columns: 1.1fr 1.4fr 1.3fr 1fr; gap: 2.4rem;
+  padding-bottom: 1.9rem; border-bottom: 1px solid rgba(255,255,255,.16);
+}
+.pie-logo { height: 48px; width: auto; display: block; margin-bottom: 1.15rem; }
+.pie-col h4 {
+  font-family: var(--sans); font-size: .69rem; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: #FFFFFF; margin: 0 0 .9rem;
+}
+.pie-col p { font-size: .82rem; line-height: 1.65; color: #B9C9E2; margin: 0 0 .7rem; }
+.pie-col p:last-child { margin-bottom: 0; }
+.pie-col strong { color: #E7EEF9; font-weight: 600; }
+.pie-marca p { font-size: .78rem; color: #9FB2CE; }
+.pie-enlace {
+  color: #E7EEF9; text-decoration: none; font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,.35); padding-bottom: 1px;
+  transition: color .15s, border-color .15s;
+}
+.pie-enlace:hover { color: #FFFFFF; border-bottom-color: #FFFFFF; }
+.pie-legal { display: flex; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;
+  padding-top: 1.25rem; font-size: .72rem; color: #8FA4C4; line-height: 1.6; }
+.pie-legal .pie-enlace { font-weight: 500; color: #B9C9E2; }
+
+/* Sello de la Universidad en la hoja de asesoría */
+.sello {
+  display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
+  box-shadow: var(--shadow); padding: 1.1rem 1.3rem;
+}
+.sello img { height: 44px; width: auto; display: block; }
+.sello p {
+  font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+  font-weight: 700; color: var(--ink-faint);
+  padding-left: 1.1rem; border-left: 1px solid var(--rule);
+}
+
+/* Indicador de guardado en el navegador. Vive dentro del índice, así
+   que su escala de contraste también es la de fondo azul. */
+.guardado {
+  display: flex; align-items: flex-start; gap: .45rem;
+  font-size: .76rem; color: var(--nav-ink-soft); line-height: 1.4;
+  margin-top: 1.4rem; padding-top: .9rem; border-top: 1px solid var(--nav-line);
+}
+.guardado .punto { margin-top: .38rem; }
+.guardado .punto { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.28); flex: none; transition: background .2s; }
+.guardado.activo .punto { background: #7BD3AC; }
+.guardado.activo { color: #A7E3C8; }
+
+/* ═══════════════ 12 · RESPONSIVE ═══════════════ */
+@media (max-width: 900px) {
+  /* En una sola columna no hay franja lateral que pintar */
+  .shell { grid-template-columns: 1fr; background: var(--paper); }
+
+  nav.toc {
+    position: sticky; top: 0; z-index: 40; height: auto; overflow: visible;
+    padding: .85rem var(--pad); gap: 0;
+    background: var(--nav-bg);
+  }
+  nav.toc .logo { flex: 0 0 auto; margin: 0 .7rem 0 0; }
+  nav.toc .logo img { width: 88px; }
+  .toc-top .brand { flex: 1 1 auto; }
+  nav.toc hr { display: none; }
+  nav.toc .brand small { display: none; }
+
+  .toc-top { align-items: center; }
+  .icon-btn { display: inline-flex; }
+
+  /* El índice se pliega para no ocupar media pantalla */
+  .toc-body {
+    display: none; padding-top: .7rem; margin-top: .7rem;
+    border-top: 1px solid var(--nav-line);
+    max-height: 62vh; overflow-y: auto;
+  }
+  nav.toc.abierto .toc-body { display: flex; }
+  nav.toc a { padding: .5rem .55rem; font-size: .9rem; }
+  /* Sin el margen inferior, la barra queda pegada a la primera
+     etiqueta de grupo y parecen superpuestas. */
+  .nav-progreso { margin: .2rem 0 1rem; }
+
+  main { padding-top: 1.2rem; }
+  .pager button { flex: 1; min-width: 8.5rem; }
+  .pager .folio { order: -1; width: 100%; text-align: center; }
+}
+
+@media (max-width: 1000px) { .pie-rejilla { grid-template-columns: 1fr 1fr; gap: 2rem; } }
+
+@media (max-width: 620px) {
+  .pie-rejilla { grid-template-columns: 1fr; }
+  .sello { gap: .8rem; }
+  .sello p { padding-left: 0; border-left: 0; }
+}
+
+@media (max-width: 560px) {
+  .prop-bar { flex-direction: column; height: auto; }
+  .prop-bar div { padding: .65rem 1rem; }
+  .preview-head { align-items: flex-start; }
+  .preview-head .actions { width: 100%; }
+  .preview-head .actions button { flex: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, .hoja.on { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+@media print {
+  nav.toc, .pager, .hojas-barra, .toast, .actions, .saltar, footer.pie { display: none !important; }
+  .hoja { display: block !important; }
+  .shell { display: block; }
+  body { background: #fff; }
+}
+/* ═══════════════ REVISIÓN CON IA ═══════════════
+   Va dentro de «Antes de publicar», debajo de la lista de
+   verificación. Se distingue del resto de la hoja con un borde
+   azul: es una opinión, no un dato de la herramienta. */
+.revision {
+  margin-top: 2rem; padding: 1.4rem; border: 1px solid var(--azul);
+  border-radius: 6px; background: var(--surface); box-shadow: var(--shadow);
+}
+.revision-cab {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap; margin-bottom: .9rem;
+}
+.revision-cab h3 { margin-top: .3rem; }
+.revision-cab button { flex: none; }
+.revision > .prose { font-size: .93rem; color: var(--ink-soft); }
+.revision-nota { font-size: .85rem; line-height: 1.55; margin-top: .9rem; color: var(--ink-soft); }
+.revision-nota:empty { display: none; }
+.revision-nota.aviso { color: var(--alerta); }
+.revision-nota.trabajando { color: var(--azul-500); font-weight: 600; }
+.revision-salida { margin-top: 1.3rem; border-top: 1px solid var(--rule); padding-top: 1.3rem; }
+.revision-salida[hidden] { display: none; }
+
+/* Veredicto: la frase de cabecera, en el tono del resultado. */
+.rev-veredicto {
+  font-family: var(--serif); font-size: 1.1rem; line-height: 1.45;
+  padding: .9rem 1.1rem; border-radius: 5px; border-left: 3px solid var(--azul);
+  background: var(--azul-soft); color: var(--ink);
+}
+.rev-veredicto.listo { border-left-color: var(--ok); background: var(--ok-soft); color: var(--ok); }
+
+.rev-grupo { margin-top: 1.5rem; }
+.rev-grupo > .eyebrow { display: block; margin-bottom: .7rem; }
+
+.rev-item {
+  border: 1px solid var(--rule); border-left: 3px solid var(--rule-soft);
+  border-radius: 5px; padding: .9rem 1.1rem; margin-bottom: .7rem; background: var(--surface-2);
+}
+.rev-item.solido       { border-left-color: var(--ok); }
+.rev-item.mejorable    { border-left-color: var(--azul-300); }
+.rev-item.insuficiente { border-left-color: var(--alerta); }
+.rev-item h4 { font-family: var(--sans); font-size: .92rem; font-weight: 700; margin-bottom: .1rem; }
+.rev-estado {
+  font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
+  font-weight: 700; color: var(--ink-faint);
+}
+.rev-item.solido .rev-estado       { color: var(--ok); }
+.rev-item.insuficiente .rev-estado { color: var(--alerta); }
+.rev-item ul { margin: .6rem 0 0; padding-left: 1.1rem; }
+.rev-item li { margin-bottom: .35rem; font-size: .93rem; line-height: 1.55; color: var(--ink-soft); }
+.rev-item li:last-child { margin-bottom: 0; }
+
+.rev-prioridad {
+  margin-top: 1.5rem; padding: .9rem 1.1rem; border-radius: 5px;
+  background: var(--azul); color: var(--on-azul); font-size: .95rem; line-height: 1.55;
+}
+.rev-prioridad b { display: block; font-size: .68rem; letter-spacing: .13em;
+  text-transform: uppercase; margin-bottom: .3rem; color: var(--nav-acento); }
+
+.rev-crudo { white-space: pre-wrap; font-size: .92rem; line-height: 1.6; color: var(--ink-soft); }
+
+.rev-pie {
+  margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--rule);
+  font-size: .8rem; line-height: 1.55; color: var(--ink-faint);
+}
+
+/* ═══════════════ ZONA DE CUENTA EN EL ÍNDICE ═══════════════
+   Los estilos de los botones y del modal los trae auth.js. Aquí
+   solo se coloca la fila dentro de la barra lateral, que es azul,
+   así que hereda los colores claros de la cabecera del Pitch. */
+.zona-cuenta { margin: .9rem 0 .2rem; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.zona-cuenta .sesion { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.zona-cuenta .sesion-modo {
+  font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
+  color: #A9BEDE; font-weight: 700;
+}
+.zona-cuenta .sesion-correo { font-size: .82rem; max-width: 15ch; }
+
+/* Programa tomado de la cuenta: el campo se ve resuelto, no
+   apagado. Un select deshabilitado en gris se lee como avería. */
+.campo-listo select, .campo-listo input {
+  background: var(--azul-soft); border-color: var(--azul);
+  color: var(--ink); cursor: default; opacity: 1;
+}
+.sello-perfil {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .74rem; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: #157a52;
+}
+</style>
+<!-- La cuenta la resuelve auth.js, compartido con la portada y el
+     Estudio de Pitch. Trae el modal, el registro, el inicio de
+     sesión y la sesión compartida entre las tres páginas. -->
+<script src="auth.js"></script>
+</head>
+<body>
