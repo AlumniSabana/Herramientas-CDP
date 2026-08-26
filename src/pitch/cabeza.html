@@ -852,6 +852,44 @@ button{font-family:inherit;font-size:inherit;cursor:pointer}
 .diag-pie[hidden]{display:none}
 .diag-pie .nota-pie{margin:0}
 .admin-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px}
+/* ── Rosca de composición ────────────────────────────────────
+   Paleta secuencial de un solo tono: el azul institucional. Los
+   sectores van ordenados de mayor a menor, así que la escala de
+   claridad y el tamaño dicen lo mismo y se refuerzan.
+
+   No es capricho de estilo. Una paleta categórica de diez tonos
+   distintos no cabe aquí: en una rosca cualquier sector puede
+   quedar junto a cualquier otro, y con más de tres tonos los pares
+   dejan de distinguirse para quien no ve bien el color. Por eso
+   solo se pintan los cuatro mayores y el resto se agrupa en
+   «Otras», con la tabla completa justo debajo. */
+.rosca-zona{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:28px;
+  align-items:center;margin:4px 0 22px;padding:18px 20px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m)}
+.rosca-zona[hidden]{display:none}
+.sr-solo{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.rosca-caja{position:relative;width:210px;height:210px;flex:none}
+.rosca-caja svg{display:block;width:100%;height:100%;overflow:visible}
+.rosca-centro{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;pointer-events:none;text-align:center}
+.rosca-centro .n{font-family:var(--font-mono);font-size:34px;font-weight:600;
+  color:var(--azul-900);line-height:1}
+.rosca-centro .t{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--texto-3);font-weight:700;margin-top:5px}
+.rosca-sector{transition:opacity .12s}
+.rosca-caja:hover .rosca-sector{opacity:.45}
+.rosca-caja .rosca-sector:hover{opacity:1}
+.rosca-titulo{font-size:13px;font-weight:650;color:var(--texto);margin-bottom:12px}
+.rosca-leyenda{display:flex;flex-direction:column;gap:9px;min-width:0;max-width:400px}
+.rosca-item{display:grid;grid-template-columns:12px minmax(0,1fr) auto auto;
+  gap:10px;align-items:center;font-size:13.5px}
+.rosca-punto{width:12px;height:12px;border-radius:3px;flex:none}
+.rosca-nom{color:var(--texto-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rosca-val{font-family:var(--font-mono);font-weight:650;color:var(--texto)}
+.rosca-pct{font-family:var(--font-mono);color:var(--texto-3);font-size:12.5px;min-width:44px;text-align:right}
+.rosca-vacia{grid-column:1/-1;color:var(--texto-3);font-size:14px;text-align:center;padding:26px 0}
+@media (max-width:720px){.rosca-zona{grid-template-columns:1fr;justify-items:center}}
+
 /* Ruta de migas: dice dónde estás y deja volver a cualquier nivel. */
 .admin-ruta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:13.5px}
 .admin-ruta button{appearance:none;background:none;border:0;padding:0;font:inherit;
@@ -1343,6 +1381,22 @@ tr.vacia td:first-child{font-weight:600;color:var(--texto-2)}
            aquí es justamente dónde no se está usando. -->
       <div id="admin-vista-programas" hidden>
         <nav class="admin-ruta" id="admin-ruta" aria-label="Dónde estás"></nav>
+
+        <!-- Composición del nivel actual. La tabla de debajo tiene
+             el detalle completo; esto es el vistazo. -->
+        <figure class="rosca-zona" id="rosca-zona" hidden>
+          <div>
+            <div class="rosca-caja">
+              <svg id="rosca-svg" viewBox="0 0 100 100" role="img" aria-labelledby="rosca-alt"></svg>
+              <div class="rosca-centro"><span class="n" id="rosca-total">0</span><span class="t">Personas</span></div>
+            </div>
+          </div>
+          <figcaption>
+            <div class="rosca-titulo" id="rosca-titulo"></div>
+            <div class="rosca-leyenda" id="rosca-leyenda"></div>
+            <span id="rosca-alt" class="sr-solo"></span>
+          </figcaption>
+        </figure>
 
         <div class="tabla-scroll">
           <table>

@@ -2096,6 +2096,124 @@ function pintarAdmin(){
    la misma que se usa en el registro. Así no hay dos listas que
    mantener.
    ============================================================ */
+
+/* ============================================================
+   ROSCA DE COMPOSICIÓN
+   ------------------------------------------------------------
+   Un vistazo a cómo se reparten las personas: por facultad en el
+   primer nivel, por programa dentro de una facultad en el segundo.
+
+   POR QUÉ SOLO CINCO SECTORES
+   Una rosca sirve para ver la proporción de un vistazo, no para
+   comparar valores parecidos, y deja de leerse pasados unos seis
+   sectores. Con diez facultades se pintan las cuatro mayores y el
+   resto se agrupa en «Otras». El detalle completo, facultad por
+   facultad, está en la tabla de debajo, que es además el respaldo
+   accesible de la gráfica.
+
+   POR QUÉ UN SOLO TONO
+   Cualquier sector puede quedar junto a cualquier otro, así que
+   todos los pares cuentan. Con más de tres tonos distintos los
+   pares dejan de distinguirse para quien no percibe bien el color.
+   Una escala de claridad del azul institucional, ordenada de mayor
+   a menor, evita el problema y además dice dos veces lo mismo:
+   más grande y más oscuro es más gente.
+
+   La identidad nunca depende del color: cada sector lleva su
+   etiqueta en la leyenda, con su cifra y su porcentaje.
+   ============================================================ */
+const ROSCA_TONOS = ["#001459", "#2A5AA8", "#5E93CE", "#A3C3E6"];
+const ROSCA_OTRAS = "#5C6472";
+const ROSCA_MAX   = 4;    /* sectores con nombre propio; el quinto es «Otras» */
+
+/* Un sector de rosca es un arco entre dos radios. Se dibuja como
+   trazo grueso sobre un círculo, que sale más simple y más nítido
+   que componer el path a mano. */
+function arcoRosca(desde, hasta, color, id){
+  const R = 36, C = 2 * Math.PI * R;
+  const largo = Math.max(0, (hasta - desde)) * C;
+  /* 2 px de aire entre sectores: los separa sin inventar un borde
+     de color, que competiría con los datos. */
+  const hueco = 1.6;
+  const visible = Math.max(0.5, largo - hueco);
+  return '<circle class="rosca-sector" data-sector="' + id + '"' +
+    ' cx="50" cy="50" r="' + R + '" fill="none"' +
+    ' stroke="' + color + '" stroke-width="17"' +
+    ' stroke-dasharray="' + visible.toFixed(2) + ' ' + (C - visible).toFixed(2) + '"' +
+    ' stroke-dashoffset="' + (-desde * C).toFixed(2) + '"' +
+    ' transform="rotate(-90 50 50)"><title></title></circle>';
+}
+
+/* datos: [{nombre, valor}] sin ordenar. Devuelve lo que se pinta. */
+function pintarRosca(titulo, datos, etiquetaCentro){
+  const zona = $("#rosca-zona");
+  if(!zona) return;
+
+  const con = datos.filter(d => d.valor > 0).sort((a,b)=> b.valor - a.valor);
+  const total = con.reduce((a,d)=> a + d.valor, 0);
+
+  if(!total){
+    zona.hidden = false;
+    $("#rosca-titulo").textContent = titulo;
+    $("#rosca-svg").innerHTML =
+      '<circle cx="50" cy="50" r="36" fill="none" stroke="#E9EEF7" stroke-width="17"/>';
+    $("#rosca-total").textContent = "0";
+    $("#rosca-leyenda").innerHTML =
+      '<div class="rosca-vacia">Todavía no hay a nadie registrado aquí.</div>';
+    $("#rosca-alt").textContent = "Sin datos que representar.";
+    return;
+  }
+
+  /* Los mayores con nombre; el resto, agrupado. */
+  let trozos = con.slice(0, ROSCA_MAX).map((d,i)=>({
+    nombre: d.nombre, valor: d.valor, color: ROSCA_TONOS[i]
+  }));
+  const resto = con.slice(ROSCA_MAX);
+  if(resto.length){
+    trozos.push({
+      nombre: resto.length === 1 ? resto[0].nombre : "Otras " + resto.length,
+      valor: resto.reduce((a,d)=> a + d.valor, 0),
+      color: resto.length === 1 ? ROSCA_TONOS[ROSCA_MAX - 1] : ROSCA_OTRAS,
+      agrupa: resto.length > 1 ? resto.map(d=> d.nombre) : null
+    });
+  }
+
+  let acumulado = 0;
+  const arcos = trozos.map((t,i)=>{
+    const desde = acumulado;
+    acumulado += t.valor / total;
+    return arcoRosca(desde, acumulado, t.color, i);
+  }).join("");
+
+  zona.hidden = false;
+  $("#rosca-titulo").textContent = titulo;
+  $("#rosca-total").textContent = total;
+  $("#rosca-svg").innerHTML = arcos;
+
+  $("#rosca-leyenda").innerHTML = trozos.map((t,i)=>{
+    const pct = Math.round(t.valor / total * 100);
+    return '<div class="rosca-item" data-sector="' + i + '">' +
+      '<span class="rosca-punto" style="background:' + t.color + '"></span>' +
+      '<span class="rosca-nom" title="' + esc(t.agrupa ? t.agrupa.join(", ") : t.nombre) + '">' +
+        esc(t.nombre) + "</span>" +
+      '<span class="rosca-val">' + t.valor + "</span>" +
+      '<span class="rosca-pct">' + pct + " %</span></div>";
+  }).join("");
+
+  /* El título de cada arco es lo que muestra el navegador al pasar
+     por encima, y lo que lee un lector de pantalla. */
+  $$("#rosca-svg [data-sector]").forEach(el=>{
+    const t = trozos[+el.dataset.sector];
+    const pct = Math.round(t.valor / total * 100);
+    const tit = el.querySelector("title");
+    if(tit){ tit.textContent = t.nombre + ": " + t.valor + " de " + total + " (" + pct + " %)"; }
+  });
+
+  $("#rosca-alt").textContent = titulo + ". " +
+    trozos.map(t=> t.nombre + ", " + t.valor).join("; ") + ". Total " + total + " " +
+    (etiquetaCentro || "personas") + ". El detalle completo está en la tabla siguiente.";
+}
+
 let progFacultad = "", progPrograma = "";
 
 /* Todo lo que se sabe de una persona, venga de perfiles o de haber
@@ -2144,6 +2262,18 @@ function resumen(lista){
   };
 }
 
+/* El detalle de una persona se alimenta de adminPersonas, que arma
+   pintarPersonas(). Desde el recorrido por programa se llega con el
+   correo, así que hay que traducirlo a su posición en esa lista. */
+function indiceDePersona(correo){
+  const c = String(correo || "").toLowerCase();
+  if(!c || !Array.isArray(adminPersonas)) return -1;
+  for(let i = 0; i < adminPersonas.length; i++){
+    if(String(adminPersonas[i].correo || "").toLowerCase() === c) return i;
+  }
+  return -1;
+}
+
 function pintarRuta(){
   const partes = [];
   if(progFacultad){
@@ -2185,16 +2315,35 @@ function pintarPorPrograma(){
       .filter(p=> igualNombre(p.programa, progPrograma))
       .sort((a,b)=> b.rondas - a.rondas || String(a.correo).localeCompare(String(b.correo)));
 
-    cab.innerHTML = "<tr><th>Persona</th><th>Rondas</th><th>Último puntaje</th><th>Promedio</th></tr>";
+    /* En el nivel de personas no hay composición que mostrar: cada
+       fila es una persona, no una parte de un total. */
+    $("#rosca-zona").hidden = true;
+
+    cab.innerHTML = "<tr><th>Persona</th><th>Rondas</th><th>Último puntaje</th><th>Promedio</th><th></th></tr>";
     cuerpo.innerHTML = dentro.length
-      ? dentro.map(p=>`<tr${p.rondas ? "" : ' class="vacia"'}>
+      ? dentro.map(p=>{
+          /* El detalle con el reporte y las observaciones ya existe;
+             aquí solo se enlaza, buscando a la persona en la lista
+             que lo alimenta. */
+          const idx = indiceDePersona(p.correo);
+          return `<tr${p.rondas ? "" : ' class="vacia"'}>
           <td>${esc(p.nombre || p.correo)}
               <div style="font-size:12px;color:var(--texto-3)">${esc(p.correo)}</div></td>
           <td class="num">${p.rondas}</td>
           <td class="num">${p.ultimo == null ? "—" : p.ultimo}</td>
           <td class="num">${p.rondas ? Math.round(p.suma / p.rondas) : "—"}</td>
-        </tr>`).join("")
-      : '<tr><td colspan="4" style="color:var(--texto-3)">Nadie de este programa se ha registrado todavía.</td></tr>';
+          <td>${idx > -1
+            ? '<button class="btn-mini" data-ver-persona="' + idx + '">Ver reporte</button>'
+            : ""}</td>
+        </tr>`;}).join("")
+      : '<tr><td colspan="5" style="color:var(--texto-3)">Nadie de este programa se ha registrado todavía.</td></tr>';
+
+    $$("#admin-cuerpo [data-ver-persona]").forEach(b=>{
+      b.addEventListener("click", e=>{
+        e.stopPropagation();
+        verPersona(+b.dataset.verPersona);
+      });
+    });
 
     const r = resumen(dentro);
     $("#admin-prog-pista").textContent = dentro.length
@@ -2235,7 +2384,14 @@ function pintarPorPrograma(){
         pintarPorPrograma();
       });
     });
-    $("#admin-prog-pista").textContent = "Pulsa un programa para ver quién está inscrito.";
+
+    pintarRosca("Personas por programa · " + progFacultad,
+      programas.map(nom=>({
+        nombre: nom,
+        valor: gente.filter(p=> igualNombre(p.programa, nom)).length
+      })));
+
+    $("#admin-prog-pista").textContent = "Pulsa un programa para ver quién está inscrito y abrir su reporte.";
     return;
   }
 
@@ -2269,6 +2425,12 @@ function pintarPorPrograma(){
       pintarPorPrograma();
     });
   });
+
+  pintarRosca("Personas por facultad",
+    nombres.map(nom=>({
+      nombre: nom.replace(/^Facultad de /, "").replace(/^Escuela Internacional de /, "E. I. de "),
+      valor: gente.filter(p=> igualNombre(p.facultad, nom)).length
+    })));
 
   const conAlguien = nombres.filter(n=> gente.some(p=> igualNombre(p.facultad, n))).length;
   $("#admin-prog-pista").textContent =
