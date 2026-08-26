@@ -571,6 +571,14 @@ button{font-family:inherit;font-size:inherit;cursor:pointer}
 .sem-chip[aria-pressed="true"] .sem-p.nada{background:#fff}
 .sem-cuenta{font-size:12.5px;color:var(--texto-3);margin-left:4px}
 
+/* Sello de versión. Existe para responder de un vistazo a «¿estoy
+   viendo la copia nueva o una vieja?», que sin esto solo se puede
+   contestar comparando archivos. */
+.admin-version{
+  margin-left:9px;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;
+  color:var(--texto-3);text-transform:none;font-weight:600;
+}
+
 .puntaje{display:flex;flex-direction:column;align-items:center;gap:4px}
 .puntaje-n{
   font-family:var(--font-mono);font-size:66px;font-weight:600;line-height:1;
@@ -1380,7 +1388,7 @@ tr.vacia td:first-child{font-weight:600;color:var(--texto-2)}
     <section class="admin" id="admin-panel" hidden>
       <div class="admin-cab">
         <div>
-          <span class="seccion-eyebrow">Administración <span class="insignia-admin">CDP</span></span>
+          <span class="seccion-eyebrow">Administración <span class="insignia-admin">CDP</span><span class="admin-version" id="admin-version"></span></span>
           <h2>Consolidado del servicio</h2>
           <p style="font-size:14.5px;color:var(--texto-2)" id="admin-sub">Cargando…</p>
         </div>
@@ -1614,7 +1622,12 @@ const INICIO_ARCHIVO = "herramientas-alumni-sabana.html";
 /* Marca de version. Los navegadores guardan en cache las paginas ya
    visitadas: al publicar una version nueva se puede seguir viendo la
    vieja. Subela cada vez que publiques. */
-const VERSION = "2026.08.20";
+/* Se sube en cada entrega. Sirve para dos cosas: romper la caché
+   del navegador en los enlaces entre herramientas, y decir en
+   pantalla qué versión se está mirando, que es la única forma de
+   saber si una copia descargada está al día sin ponerse a comparar
+   archivos. */
+const VERSION = "2026.08.26";
 
 (function volverInicio(){
   const a = document.getElementById("volver-inicio");
@@ -4594,6 +4607,8 @@ async function cargarAdmin(){
   /* Al recargar el consolidado se vuelve al nivel de facultades: si
      no, se quedaría abierto un programa de la carga anterior. */
   progFacultad = ""; progPrograma = "";
+  const sello = $("#admin-version");
+  if(sello){ sello.textContent = "v" + VERSION; }
   $("#admin-sub").textContent = "Cargando consolidado…";
   try{
     const r = await api("/admin/rondas", "GET");

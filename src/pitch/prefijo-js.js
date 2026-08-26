@@ -26,7 +26,12 @@ const INICIO_ARCHIVO = "herramientas-alumni-sabana.html";
 /* Marca de version. Los navegadores guardan en cache las paginas ya
    visitadas: al publicar una version nueva se puede seguir viendo la
    vieja. Subela cada vez que publiques. */
-const VERSION = "2026.08.20";
+/* Se sube en cada entrega. Sirve para dos cosas: romper la caché
+   del navegador en los enlaces entre herramientas, y decir en
+   pantalla qué versión se está mirando, que es la única forma de
+   saber si una copia descargada está al día sin ponerse a comparar
+   archivos. */
+const VERSION = "2026.08.26";
 
 (function volverInicio(){
   const a = document.getElementById("volver-inicio");

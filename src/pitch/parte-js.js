@@ -1853,6 +1853,8 @@ async function cargarAdmin(){
   /* Al recargar el consolidado se vuelve al nivel de facultades: si
      no, se quedaría abierto un programa de la carga anterior. */
   progFacultad = ""; progPrograma = "";
+  const sello = $("#admin-version");
+  if(sello){ sello.textContent = "v" + VERSION; }
   $("#admin-sub").textContent = "Cargando consolidado…";
   try{
     const r = await api("/admin/rondas", "GET");
