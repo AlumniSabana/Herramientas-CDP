@@ -253,7 +253,46 @@ var CAMPOS = [
   "f-correo", "f-linkedin", "f-otro", "f-cta"
 ];
 
-var LLAVE = "alumni-portafolio:v1";
+/* ── Dónde se guarda el borrador ──────────────────────────────
+   Cada cuenta tiene el suyo. Antes había una sola llave para todo
+   el navegador, así que quien entraba después veía el borrador de
+   quien había entrado antes: en un equipo compartido del campus,
+   una persona leía el portafolio a medio escribir de otra.
+
+   La llave lleva ahora el identificador de la cuenta. Quien trabaja
+   sin cuenta tiene la suya propia, «anon», que tampoco se mezcla
+   con la de nadie.
+
+   El texto sigue sin salir del equipo. Aislar por cuenta no es lo
+   mismo que guardarlo en el servidor: si cambias de computador, el
+   borrador no te sigue, y eso está dicho en pantalla. */
+var LLAVE_BASE = "alumni-portafolio:v1";
+
+/* Borradores escritos antes de que hubiera aislamiento. No se pueden
+   atribuir a nadie: se escribieron con una llave común. Se mueven al
+   cajón «sin cuenta», que es el único sitio donde no le adjudican a
+   una persona un texto que quizá no es suyo. Se hace una sola vez. */
+function migrarBorradorAntiguo(){
+  try {
+    var viejo = window.localStorage.getItem(LLAVE_BASE);
+    if (viejo == null) return;
+    var destino = LLAVE_BASE + ":anon";
+    if (window.localStorage.getItem(destino) == null) {
+      window.localStorage.setItem(destino, viejo);
+    }
+    window.localStorage.removeItem(LLAVE_BASE);
+  } catch (e) { /* sin permisos: no pasa nada */ }
+}
+
+function llaveDelBorrador(){
+  var id = "";
+  try {
+    if (typeof Cuenta !== "undefined" && Cuenta && Cuenta.sesion) {
+      id = Cuenta.sesion.id || Cuenta.sesion.correo || "";
+    }
+  } catch (e) { /* auth.js puede no estar cargado */ }
+  return LLAVE_BASE + ":" + (id ? String(id) : "anon");
+}
 
 /* ═══════════════ 2 · UTILIDADES ═══════════════ */
 var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -1240,6 +1279,44 @@ function abiertaDesdeArchivo() {
    ══════════════════════════════════════════════════════════════ */
 var avanceTimer = null, avanceUltimo = "";
 
+/* ── Cambio de cuenta ─────────────────────────────────────────
+   Al entrar o salir hay que cambiar de borrador, no solo de llave.
+   Si no se vacía primero lo que hay en pantalla, la primera tecla
+   que se pulse guardaría el texto de la cuenta anterior bajo la
+   llave de la nueva, que es justo la mezcla que se quiere evitar. */
+function vaciarFormulario(){
+  CAMPOS.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  var sel = $("#f-programa"); if (sel) sel.value = "";
+  var et = $("#f-etapa");     if (et)  et.value = "estudiante";
+  var ob = $("#f-objetivo");  if (ob)  ob.value = "practica";
+  $("#proyectos-wrap").innerHTML = "";
+  proyN = 0;
+  $$("#check input").forEach(function (i) { i.checked = false; });
+}
+
+var llaveActual = "";
+
+function cambiarDeBorrador(){
+  var nueva = llaveDelBorrador();
+  if (nueva === llaveActual) return;      /* la sesión no cambió de dueño */
+  llaveActual = nueva;
+
+  /* El guardado va con retraso: se cancela para que no escriba lo de
+     la cuenta anterior bajo la llave de la nueva. */
+  clearTimeout(guardarTimer);
+  vaciarFormulario();
+
+  if (!restaurar()) {
+    addProyecto(); addProyecto(); addProyecto();
+    marcarGuardado("Se guarda solo mientras escribes", false);
+  }
+  syncPrograma();
+  render();
+}
+
 function hayRegistro() {
   return typeof api === "function" && typeof Cuenta !== "undefined" && !!(Cuenta && Cuenta.sesion);
 }
@@ -1848,7 +1925,7 @@ function guardar() {
   clearTimeout(guardarTimer);
   guardarTimer = setTimeout(function () {
     try {
-      window.localStorage.setItem(LLAVE, JSON.stringify(serializar()));
+      window.localStorage.setItem(llaveDelBorrador(), JSON.stringify(serializar()));
       marcarGuardado("Guardado en este navegador", true);
       setTimeout(function () { marcarGuardado("Guardado en este navegador", false); }, 1600);
     } catch (e) {
@@ -1860,7 +1937,7 @@ function guardar() {
 function restaurar() {
   if (!hayAlmacen) { marcarGuardado("Este navegador no permite guardar", false); return false; }
   var crudo;
-  try { crudo = window.localStorage.getItem(LLAVE); } catch (e) { return false; }
+  try { crudo = window.localStorage.getItem(llaveDelBorrador()); } catch (e) { return false; }
   if (!crudo) return false;
 
   var d;
@@ -1897,7 +1974,7 @@ function borrarGuardado() {
      borrador que el usuario acaba de pedir eliminar. */
   clearTimeout(guardarTimer);
   if (!hayAlmacen) return;
-  try { window.localStorage.removeItem(LLAVE); } catch (e) { /* sin permisos */ }
+  try { window.localStorage.removeItem(llaveDelBorrador()); } catch (e) { /* sin permisos */ }
 }
 
 /* Un solo escuchador para todo lo que se escribe dentro del contenido */
@@ -1962,6 +2039,10 @@ $("#reset").addEventListener("click", function () {
    que antes, sin cuenta. */
 if (typeof alCambiarSesion === "function") {
   alCambiarSesion(function (sesion) {
+    /* Primero se cambia de borrador y solo después se aplica el
+       perfil: al revés, aplicarPerfil() guardaría el texto de la
+       cuenta anterior bajo la llave de la nueva. */
+    cambiarDeBorrador();
     aplicarPerfil(sesion);
     pintarAvisoTraductor();
     pintarAvisoRevision();
@@ -1987,6 +2068,8 @@ document.addEventListener("click", function (e) {
 syncPrograma();
 adapt();
 
+migrarBorradorAntiguo();
+llaveActual = llaveDelBorrador();
 if (!restaurar()) {
   addProyecto(); addProyecto(); addProyecto();
   marcarGuardado("Se guarda solo mientras escribes", false);
