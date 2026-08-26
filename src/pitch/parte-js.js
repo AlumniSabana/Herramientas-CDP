@@ -1768,102 +1768,9 @@ function descargarReportePDF(res, ej){
 
 /* ============================================================
    EXPORTACIÓN A EXCEL (.xlsx)
-   ------------------------------------------------------------
-   Escritor mínimo de OOXML: arma el ZIP a mano con método
-   «store» (sin compresión) para no depender de ninguna
-   librería externa. El archivo sigue siendo autocontenido
-   y funciona sin conexión.
    ============================================================ */
-const CRC_TABLA = (function(){
-  const t = new Uint32Array(256);
-  for(let n=0;n<256;n++){
-    let c = n;
-    for(let k=0;k<8;k++){ c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); }
-    t[n] = c >>> 0;
-  }
-  return t;
-})();
-function crc32(bytes){
-  let c = 0xFFFFFFFF;
-  for(let i=0;i<bytes.length;i++){ c = CRC_TABLA[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); }
-  return (c ^ 0xFFFFFFFF) >>> 0;
-}
-function aBytes(txt){ return new TextEncoder().encode(txt); }
-
-function zipStore(archivos){
-  const partes = [], central = [];
-  let offset = 0;
-  const d = new Date();
-  const hora = ((d.getHours()<<11) | (d.getMinutes()<<5) | Math.floor(d.getSeconds()/2)) & 0xFFFF;
-  const fecha = (((d.getFullYear()-1980)<<9) | ((d.getMonth()+1)<<5) | d.getDate()) & 0xFFFF;
-
-  archivos.forEach(a=>{
-    const nombre = aBytes(a.nombre), datos = a.datos, crc = crc32(datos);
-    const lh = new DataView(new ArrayBuffer(30));
-    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0, true);
-    lh.setUint16(8, 0, true); lh.setUint16(10, hora, true); lh.setUint16(12, fecha, true);
-    lh.setUint32(14, crc, true); lh.setUint32(18, datos.length, true); lh.setUint32(22, datos.length, true);
-    lh.setUint16(26, nombre.length, true); lh.setUint16(28, 0, true);
-    partes.push(new Uint8Array(lh.buffer), nombre, datos);
-
-    const cd = new DataView(new ArrayBuffer(46));
-    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true);
-    cd.setUint16(8, 0, true); cd.setUint16(10, 0, true); cd.setUint16(12, hora, true);
-    cd.setUint16(14, fecha, true); cd.setUint32(16, crc, true);
-    cd.setUint32(20, datos.length, true); cd.setUint32(24, datos.length, true);
-    cd.setUint16(28, nombre.length, true); cd.setUint32(42, offset, true);
-    central.push(new Uint8Array(cd.buffer), nombre);
-    offset += 30 + nombre.length + datos.length;
-  });
-
-  let tamCentral = 0;
-  central.forEach(p=> tamCentral += p.length);
-  const eo = new DataView(new ArrayBuffer(22));
-  eo.setUint32(0, 0x06054b50, true);
-  eo.setUint16(8, archivos.length, true); eo.setUint16(10, archivos.length, true);
-  eo.setUint32(12, tamCentral, true); eo.setUint32(16, offset, true);
-
-  return new Blob(partes.concat(central, [new Uint8Array(eo.buffer)]),
-                  {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-}
-
-function xEsc(t){
-  return String(t == null ? "" : t)
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;").replace(/'/g,"&apos;")
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"");
-}
-function colLetra(n){
-  let s = "";
-  while(n >= 0){ s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n/26) - 1; }
-  return s;
-}
-function hojaXML(filas){
-  const cuerpo = filas.map((fila,i)=>{
-    const celdas = fila.map((v,j)=>{
-      const ref = colLetra(j) + (i+1);
-      if(typeof v === "number" && isFinite(v)){ return `<c r="${ref}"><v>${v}</v></c>`; }
-      return `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${xEsc(v)}</t></is></c>`;
-    }).join("");
-    return `<row r="${i+1}">${celdas}</row>`;
-  }).join("");
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${cuerpo}</sheetData></worksheet>`;
-}
-function construirXLSX(filas, nombreHoja){
-  const archivos = [
-    {nombre:"[Content_Types].xml", datos: aBytes(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`)},
-    {nombre:"_rels/.rels", datos: aBytes(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`)},
-    {nombre:"xl/workbook.xml", datos: aBytes(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${xEsc(nombreHoja)}" sheetId="1" r:id="rId1"/></sheets></workbook>`)},
-    {nombre:"xl/_rels/workbook.xml.rels", datos: aBytes(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`)},
-    {nombre:"xl/worksheets/sheet1.xml", datos: aBytes(hojaXML(filas))}
-  ];
-  return zipStore(archivos);
-}
+/* El escritor de .xlsx vive ahora en auth.js, compartido con el
+   portafolio. Aquí solo queda quién arma las filas. */
 
 const COL_DIM = ["duracion","ritmo","fluidez","estructura","concrecion","cierre","visual"];
 function exportarExcel(lista, archivo){
@@ -1921,7 +1828,7 @@ function exportarExcel(lista, archivo){
    Solo visible con rol "admin". El servidor debe verificar el
    rol; ocultar el panel en el cliente es comodidad, no seguridad.
    ============================================================ */
-let adminDatos = [], adminUsuarios = [];
+let adminDatos = [], adminUsuarios = [], adminCuentas = 0;
 
 /* Último reporte en pantalla. Se guarda para poder redibujarlo cuando
    cambia la sesión: si practicas sin cuenta y luego entras, el bloque
@@ -1957,6 +1864,22 @@ async function cargarAdmin(){
       const u = await api("/admin/usuarios", "GET");
       adminUsuarios = (u && u.usuarios) ? u.usuarios : [];
       adminFaltaVista = !!(u && u.faltaVista);
+
+      /* Las cuentas de administración no son personas atendidas: son
+         las de quien mira el tablero. Contarlas inflaba el número de
+         personas y metía a la propia dirección del Centro en la lista
+         del servicio que dirige. Se quitan aquí, una sola vez, y así
+         desaparecen a la vez de la tabla, de los indicadores, del
+         desglose por programa y del Excel, que todos leen de estas
+         dos listas. */
+      adminCuentas = adminUsuarios.filter(x => x.rol === "admin").length;
+      const correosAdmin = new Set(
+        adminUsuarios.filter(x => x.rol === "admin")
+                     .map(x => String(x.correo || "").toLowerCase()));
+      adminUsuarios = adminUsuarios.filter(x => x.rol !== "admin");
+      if(correosAdmin.size){
+        adminDatos = adminDatos.filter(x => !correosAdmin.has(String(x.correo || "").toLowerCase()));
+      }
 
       /* Las rondas se filtran con la misma lista. Sin esto, una ronda
          de alguien excluido lo devolvería a la tabla de personas —
@@ -2129,10 +2052,16 @@ function pintarAdmin(){
       "El panel está leyendo la tabla <code>perfiles</code> directamente, así que puede incluir cuentas " +
       "que no correspondan al consolidado. Crea la vista en Supabase y vuelve a actualizar.";
   } else {
+    /* Se dice cuántas cuentas de administración quedaron fuera, para
+       que la diferencia entre este número y el de Supabase no parezca
+       un error del panel. */
+    const nota = adminCuentas
+      ? " No se cuenta" + (adminCuentas === 1 ? " la cuenta de administración." : " las " + adminCuentas + " cuentas de administración.")
+      : "";
     $("#admin-sub").textContent = personas
       ? "Personas que han iniciado sesión al menos una vez, hayan practicado o no. " +
-        "Las cuentas creadas pero nunca usadas no aparecen aquí."
-      : "Todavía nadie ha iniciado sesión en el servicio.";
+        "Las cuentas creadas pero nunca usadas no aparecen aquí." + nota
+      : "Todavía nadie ha iniciado sesión en el servicio." + nota;
   }
 
   $("#admin-kpis").innerHTML = [

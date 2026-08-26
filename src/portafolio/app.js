@@ -1165,6 +1165,7 @@ function progreso() {
   $$("nav.toc a[data-step]").forEach(function (link) {
     link.classList.toggle("done", !!estados[link.dataset.step]);
   });
+  return hechas;
 }
 
 var salida = $("#salida");
@@ -1216,6 +1217,237 @@ function render() {
    a la persona a cambiar de navegador cuando el problema es otro. */
 function abiertaDesdeArchivo() {
   return window.location.protocol === "file:";
+}
+
+/* ══════════════════════════════════════════════════════════════
+   REGISTRO DE AVANCE
+   --------------------------------------------------------------
+   Con la sesión abierta se guarda en Supabase en qué punto va cada
+   persona. Sirve para que el Centro sepa si la herramienta se usa,
+   quién se queda a medias y en qué programas.
+
+   LO QUE SE MANDA son números y etiquetas: programa, etapa,
+   objetivo, cuántas secciones lleva, cuántas fichas ha escrito y si
+   ya descargó el PDF.
+
+   LO QUE NO SE MANDA es una sola palabra del borrador. El texto del
+   portafolio no sale de este navegador, y eso es lo que la
+   herramienta promete en pantalla. Si algún día hace falta añadir
+   algo aquí, primero hay que cambiar esa promesa.
+
+   Sin cuenta no se registra nada, porque no habría a quién
+   atribuirlo ni tendría sentido hacerlo.
+   ══════════════════════════════════════════════════════════════ */
+var avanceTimer = null, avanceUltimo = "";
+
+function hayRegistro() {
+  return typeof api === "function" && typeof Cuenta !== "undefined" && !!(Cuenta && Cuenta.sesion);
+}
+
+function medirAvance() {
+  var proy = leerProyectos(false);
+  var completas = 0;
+  $$("#proyectos-wrap fieldset").forEach(function (fs) {
+    if (evaluarFicha(fs).completa) completas++;
+  });
+  var c = contextoRevision();
+  return {
+    programa: c.programa || "",
+    facultad: val("f-facultad") || "",
+    area: areaKey() || "",
+    etapa: c.etapa || "",
+    objetivo: c.objetivo || "",
+    hojas_completas: progreso(),
+    fichas_total: proy.length,
+    fichas_completas: completas
+  };
+}
+
+/* Se manda con retraso y solo si algo cambió de verdad. Escribir
+   una frase dispara decenas de guardados locales; no tiene sentido
+   que cada tecla sea una petición al servidor. */
+function registrarAvance(extra) {
+  if (!hayRegistro()) return;
+  var datos = medirAvance();
+  if (extra) { Object.keys(extra).forEach(function (k) { datos[k] = extra[k]; }); }
+
+  var firma = JSON.stringify(datos);
+  if (firma === avanceUltimo && !extra) return;
+
+  clearTimeout(avanceTimer);
+  avanceTimer = setTimeout(function () {
+    avanceUltimo = firma;
+    /* Si falla, se calla. Es una métrica: que no se registre no
+       puede estropearle el trabajo a nadie. */
+    api("/portafolio", "PUT", datos).catch(function () { avanceUltimo = ""; });
+  }, extra ? 0 : 4000);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CONSOLIDADO PARA ADMINISTRACIÓN
+   --------------------------------------------------------------
+   Solo existe para las cuentas con rol de administración. No es
+   una hoja del recorrido: no cuenta para el avance ni aparece en
+   el paginador.
+   ══════════════════════════════════════════════════════════════ */
+var admFilas = [];
+
+function esAdministrador() {
+  return typeof Cuenta !== "undefined" && Cuenta && typeof Cuenta.esAdmin === "function" && Cuenta.esAdmin();
+}
+
+/* Muestra o esconde todo lo de administración de una vez. */
+function pintarAccesoAdmin() {
+  var admin = esAdministrador();
+  var hoja = $("#admin"), nav = $("#nav-admin"), grupo = $("#g-admin");
+  if (!hoja || !nav || !grupo) return;
+
+  nav.hidden = !admin;
+  grupo.hidden = !admin;
+  if (!admin) {
+    hoja.hidden = true;
+    hoja.classList.remove("on");
+    return;
+  }
+  hoja.hidden = false;
+  if (!admFilas.length) cargarConsolidado();
+}
+
+function irAlConsolidado() {
+  if (!esAdministrador()) return;
+  hojas.forEach(function (h) { h.classList.remove("on"); });
+  $("#admin").classList.add("on");
+  navLinks.forEach(function (l) {
+    var activo = l.getAttribute("href") === "#admin";
+    l.classList.toggle("on", activo);
+    if (activo) { l.setAttribute("aria-current", "page"); } else { l.removeAttribute("aria-current"); }
+  });
+  abrirGrupoDeHoja("admin");
+  cerrarMenu();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function admAviso(txt) {
+  var a = $("#adm-aviso");
+  if (a) a.textContent = txt || "";
+}
+
+function cargarConsolidado() {
+  if (!esAdministrador()) return;
+  admAviso("");
+  $("#adm-sub").textContent = "Cargando consolidado…";
+  api("/admin/portafolios", "GET").then(function (r) {
+    admFilas = (r && r.portafolios) ? r.portafolios : [];
+    pintarConsolidado();
+  }).catch(function (err) {
+    $("#adm-sub").textContent = "No se pudo cargar el consolidado.";
+    admAviso("No se pudo leer el consolidado: " + ((err && err.message) || "error desconocido") +
+      ". Si es la primera vez, corre supabase/sql/portafolios.sql en el editor SQL de Supabase: " +
+      "crea la tabla, sus políticas y la vista portafolios_admin.");
+    $("#adm-cuerpo").innerHTML = "";
+    $("#adm-prog-cuerpo").innerHTML = "";
+    $("#adm-kpis").innerHTML = "";
+  });
+}
+
+function fechaCorta(t) {
+  if (!t) return "—";
+  return String(t).replace("T", " ").slice(0, 16);
+}
+
+function pintarConsolidado() {
+  var n = admFilas.length;
+  var sec = n ? admFilas.reduce(function (a, x) { return a + (Number(x.hojas_completas) || 0); }, 0) / n : 0;
+  var fic = n ? admFilas.reduce(function (a, x) { return a + (Number(x.fichas_completas) || 0); }, 0) / n : 0;
+  var pdf = admFilas.filter(function (x) { return x.descargado; }).length;
+  var programas = {};
+  admFilas.forEach(function (x) { if (x.programa) programas[x.programa] = 1; });
+
+  $("#adm-sub").textContent = n
+    ? "Personas que han abierto un portafolio con la sesión iniciada. Se registra el avance, nunca el texto: los borradores siguen viviendo solo en el navegador de cada quien."
+    : "Todavía nadie ha abierto un portafolio con la sesión iniciada.";
+
+  $("#adm-kpis").innerHTML = [
+    ["Personas", n],
+    ["Programas", Object.keys(programas).length],
+    ["Secciones promedio", sec.toFixed(1) + " de 5"],
+    ["Fichas promedio", fic.toFixed(1)],
+    ["Descargaron el PDF", pdf]
+  ].map(function (k) {
+    return '<div class="adm-kpi"><div class="n">' + esc(String(k[1])) +
+           '</div><div class="t">' + esc(k[0]) + "</div></div>";
+  }).join("");
+
+  $("#adm-cuerpo").innerHTML = n
+    ? admFilas.map(function (x) {
+        return "<tr>" +
+          '<td><div class="adm-persona">' + esc(x.nombre || x.correo) + "</div>" +
+          '<div class="adm-correo">' + esc(x.correo || "") + "</div></td>" +
+          "<td>" + esc(x.facultad || "—") + "</td>" +
+          "<td>" + esc(x.programa || "—") + "</td>" +
+          "<td>" + esc(x.etapa || "—") + "</td>" +
+          "<td>" + (Number(x.hojas_completas) || 0) + " de 5</td>" +
+          "<td>" + (Number(x.fichas_completas) || 0) + " de " + (Number(x.fichas_total) || 0) + "</td>" +
+          '<td class="' + (x.descargado ? "adm-si" : "adm-no") + '">' + (x.descargado ? "Sí" : "No") + "</td>" +
+          "<td>" + esc(fechaCorta(x.actualizado_en)) + "</td></tr>";
+      }).join("")
+    : '<tr><td colspan="8" style="color:var(--ink-faint)">Nadie ha empezado un portafolio todavía.</td></tr>';
+
+  var g = {};
+  admFilas.forEach(function (x) {
+    var k = x.programa || "Sin programa";
+    if (!g[k]) g[k] = { n: 0, sec: 0, fic: 0, pdf: 0 };
+    g[k].n++;
+    g[k].sec += Number(x.hojas_completas) || 0;
+    g[k].fic += Number(x.fichas_completas) || 0;
+    if (x.descargado) g[k].pdf++;
+  });
+  var claves = Object.keys(g).sort(function (a, b) { return g[b].n - g[a].n; });
+  $("#adm-prog-cuerpo").innerHTML = claves.length
+    ? claves.map(function (k) {
+        var p = g[k];
+        return "<tr><td>" + esc(k) + '</td><td class="num">' + p.n +
+          '</td><td class="num">' + (p.sec / p.n).toFixed(1) +
+          '</td><td class="num">' + (p.fic / p.n).toFixed(1) +
+          '</td><td class="num">' + p.pdf + "</td></tr>";
+      }).join("")
+    : '<tr><td colspan="5" style="color:var(--ink-faint)">Sin datos.</td></tr>';
+}
+
+function exportarConsolidado() {
+  if (!admFilas.length) { admAviso("No hay nada que exportar todavía."); return; }
+  if (typeof construirXLSX !== "function") {
+    admAviso("El generador de Excel no está disponible en esta versión.");
+    return;
+  }
+  var filas = [[
+    "Correo", "Nombre", "Facultad", "Programa", "Área", "Etapa", "Objetivo",
+    "Secciones completas", "Fichas escritas", "Fichas completas",
+    "Descargó el PDF", "Pidió revisión con IA", "Empezó", "Última actividad"
+  ]];
+  admFilas.forEach(function (x) {
+    filas.push([
+      x.correo || "", x.nombre || "", x.facultad || "", x.programa || "",
+      x.area || "", x.etapa || "", x.objetivo || "",
+      Number(x.hojas_completas) || 0, Number(x.fichas_total) || 0, Number(x.fichas_completas) || 0,
+      x.descargado ? "Sí" : "No", x.revisado_ia ? "Sí" : "No",
+      fechaCorta(x.creado_en), fechaCorta(x.actualizado_en)
+    ]);
+  });
+  try {
+    var url = URL.createObjectURL(construirXLSX(filas, "Portafolios"));
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "portafolios-cdp.xlsx";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+    admAviso("");
+    $("#adm-sub").textContent = "Excel descargado con " + admFilas.length +
+      (admFilas.length === 1 ? " persona." : " personas.") +
+      " Contiene datos personales: guárdalo donde corresponda y no lo reenvíes por correo.";
+  } catch (e) {
+    admAviso("No se pudo generar el Excel: " + e.message);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1413,6 +1645,7 @@ function pedirRevision() {
     portafolio: armar()
   }).then(function (d) {
     pintarRevision(d || {});
+    registrarAvance({ revisado_ia: true });
     nota.className = "revision-nota";
     nota.textContent = "Revisión hecha. Vuelve a pedirla cuando hayas corregido.";
     btn.textContent = "Revisar otra vez";
@@ -1607,6 +1840,10 @@ function serializar() {
 }
 
 function guardar() {
+  /* El avance se registra con el mismo disparador que el guardado
+     local, que ya se llama en cada cambio. Va aparte por si no hay
+     almacenamiento en el navegador: son cosas distintas. */
+  registrarAvance();
   if (!hayAlmacen) return;
   clearTimeout(guardarTimer);
   guardarTimer = setTimeout(function () {
@@ -1684,14 +1921,20 @@ $("#dl-port-en").addEventListener("click", function () { descargarPortafolioIngl
 $("#copy-port").addEventListener("click", function () { copy(armar(), "Portafolio copiado", this); });
 $("#dl-port").addEventListener("click", function () {
   descargarPDF("mi-portafolio.pdf", armar(), "Portafolio profesional", this);
+  registrarAvance({ descargado: true });
 });
 $("#dl-all").addEventListener("click", function () {
   descargarPDF("mi-portafolio-y-checklist.pdf",
     armar() + "\n\n---\n\n" + checklistMd(), "Portafolio profesional", this);
+  registrarAvance({ descargado: true });
 });
 
 $("#reset").addEventListener("click", function () {
   if (!window.confirm("Se borrará todo lo que has escrito, también el borrador guardado en este navegador. ¿Continuar?")) return;
+
+  /* Si hay cuenta, también se retira el registro de avance del
+     servidor. Empezar de nuevo tiene que significar eso. */
+  if (hayRegistro()) { avanceUltimo = ""; api("/portafolio", "DELETE").catch(function () {}); }
 
   $$("main input[type='text'], main input[type='email'], main textarea").forEach(function (el) { el.value = ""; });
   $("#f-programa").value = "";
@@ -1722,10 +1965,23 @@ if (typeof alCambiarSesion === "function") {
     aplicarPerfil(sesion);
     pintarAvisoTraductor();
     pintarAvisoRevision();
+    pintarAccesoAdmin();
+    if (sesion) registrarAvance();
   });
 }
 
 $("#rev-pedir").addEventListener("click", pedirRevision);
+$("#adm-actualizar").addEventListener("click", cargarConsolidado);
+$("#adm-excel").addEventListener("click", exportarConsolidado);
+
+/* El enlace del índice no lleva a una hoja del recorrido, así que
+   se atiende aparte. */
+document.addEventListener("click", function (e) {
+  var a = e.target && e.target.closest ? e.target.closest('a[href="#admin"]') : null;
+  if (!a) return;
+  e.preventDefault();
+  irAlConsolidado();
+});
 
 /* Arranque */
 syncPrograma();
@@ -1748,6 +2004,8 @@ if (typeof Cuenta !== "undefined" && Cuenta && Cuenta.sesion) {
 }
 pintarAvisoTraductor();
 pintarAvisoRevision();
+pintarAccesoAdmin();
+if (window.location.hash === "#admin") { irAlConsolidado(); }
 
 })();
 </script>

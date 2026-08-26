@@ -718,6 +718,38 @@ footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
   .shell { display: block; }
   body { background: #fff; }
 }
+/* ═══════════════ CONSOLIDADO (ADMINISTRACIÓN) ═══════════════ */
+.admin-cab {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap; margin-bottom: .5rem;
+}
+.adm-kpis {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: .8rem; margin: 1.4rem 0 1.6rem;
+}
+.adm-kpi {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 1rem 1.1rem;
+}
+.adm-kpi .n { font-family: var(--mono); font-size: 1.6rem; font-weight: 600; color: var(--azul); line-height: 1.1; }
+.adm-kpi .t {
+  font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-faint); font-weight: 700; margin-top: .35rem;
+}
+#adm-tabla td, #adm-programas td { font-size: .9rem; }
+.adm-persona { font-weight: 600; }
+.adm-correo { font-size: .76rem; color: var(--ink-faint); }
+.adm-si { color: var(--ok); font-weight: 700; }
+.adm-no { color: var(--ink-faint); }
+.adm-aviso { font-size: .85rem; line-height: 1.55; margin-top: 1rem; color: var(--alerta); }
+.adm-aviso:empty { display: none; }
+/* La hoja de administración se ve igual que las demás, pero no es
+   una «.hoja»: queda fuera del recorrido, del paginador y de la
+   barra de avance, porque no es un paso que nadie tenga que dar. */
+.hoja-admin { display: none; max-width: 1180px; }
+.hoja-admin.on { display: flex; flex-direction: column; gap: 1.1rem; animation: entra .22s ease both; }
+.hoja-admin[hidden] { display: none !important; }
+
 /* ═══════════════ REVISIÓN CON IA ═══════════════
    Va dentro de «Antes de publicar», debajo de la lista de
    verificación. Se distingue del resto de la hoja con un borde

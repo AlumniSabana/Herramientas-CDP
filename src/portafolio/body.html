@@ -71,6 +71,16 @@
       <a class="simple" href="#asesoria">Hablar con un asesor</a>
     </div>
 
+    <!-- Solo para cuentas con rol de administración. Lo muestra
+         app.js cuando la sesión lo es; el resto del tiempo ni
+         siquiera existe en el índice. -->
+    <button class="navlabel" type="button" id="nav-admin" aria-expanded="false" aria-controls="g-admin" hidden>
+      <span>Administración</span><span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="navgrupo" id="g-admin" hidden>
+      <a class="simple" href="#admin">Consolidado del portafolio</a>
+    </div>
+
     <span class="guardado" id="guardado"><span class="punto" aria-hidden="true"></span><span id="guardado-txt">Sin cambios todavía</span></span>
   </div>
 </nav>
@@ -513,6 +523,54 @@
 </section>
 
 <!-- ─────────── HABLAR CON UN ASESOR ─────────── -->
+<!-- ─────────── CONSOLIDADO (SOLO ADMINISTRACIÓN) ───────────
+     No es una hoja del recorrido: no aparece en el paginador ni
+     cuenta para el avance. Existe solo si quien mira tiene rol de
+     administración, y app.js la retira del recorrido si no. -->
+<section id="admin" class="hoja-admin" data-titulo="Consolidado del portafolio" hidden>
+  <div class="admin-cab">
+    <div>
+      <span class="eyebrow">Administración · CDP</span>
+      <h2 class="sec">Consolidado del portafolio</h2>
+    </div>
+    <div class="actions">
+      <button class="solid" id="adm-excel" type="button">Exportar a Excel</button>
+      <button id="adm-actualizar" type="button">Actualizar</button>
+    </div>
+  </div>
+
+  <p class="prose" id="adm-sub">Personas que han abierto un portafolio con la sesión iniciada. Se registra el avance, nunca el texto: los borradores siguen viviendo solo en el navegador de cada quien.</p>
+
+  <div class="adm-kpis" id="adm-kpis"></div>
+
+  <div class="tablewrap">
+    <table id="adm-tabla">
+      <thead>
+        <tr>
+          <th>Persona</th><th>Facultad</th><th>Programa</th>
+          <th>Etapa</th><th>Secciones</th><th>Fichas</th><th>PDF</th><th>Última vez</th>
+        </tr>
+      </thead>
+      <tbody id="adm-cuerpo"></tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:1.8rem">Por programa</h3>
+  <div class="tablewrap">
+    <table id="adm-programas">
+      <thead><tr><th>Programa</th><th>Personas</th><th>Secciones promedio</th><th>Fichas promedio</th><th>Terminados</th></tr></thead>
+      <tbody id="adm-prog-cuerpo"></tbody>
+    </table>
+  </div>
+
+  <p class="adm-aviso" id="adm-aviso"></p>
+
+  <div class="callout" style="margin-top:1.6rem">
+    <b>Qué contiene y qué no</b>
+    Cada fila es el avance de una persona: su programa, cuántas secciones lleva y cuántas fichas de proyecto ha escrito. <b>No hay una sola palabra de su portafolio</b>, porque el texto no se envía a ningún servidor. Si necesitas leer el trabajo de alguien, pídeselo.
+  </div>
+</section>
+
 <section id="asesoria" class="hoja" data-titulo="Hablar con un asesor">
   <span class="eyebrow">Acompañamiento</span>
   <h2 class="sec">Hablar con un asesor</h2>

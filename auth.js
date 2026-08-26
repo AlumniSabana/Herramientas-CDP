@@ -381,6 +381,111 @@ const Cuenta = {
   }
 };
 
+
+/* ============================================================
+   EXPORTACIÓN A EXCEL (.xlsx)
+   ------------------------------------------------------------
+   Escritor mínimo de OOXML: arma el ZIP a mano con método
+   «store» (sin compresión) para no depender de ninguna librería
+   externa. Los archivos siguen siendo autocontenidos y funcionan
+   sin conexión.
+
+   Vivía dentro del Pitch. Está aquí porque el portafolio también
+   exporta, y dos copias del mismo escritor de ZIP es exactamente
+   la clase de duplicación que se desincroniza sin que nadie se
+   entere hasta que un Excel deja de abrir.
+   ============================================================ */
+const CRC_TABLA = (function(){
+  const t = new Uint32Array(256);
+  for(let n=0;n<256;n++){
+    let c = n;
+    for(let k=0;k<8;k++){ c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); }
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(bytes){
+  let c = 0xFFFFFFFF;
+  for(let i=0;i<bytes.length;i++){ c = CRC_TABLA[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); }
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function aBytes(txt){ return new TextEncoder().encode(txt); }
+
+function zipStore(archivos){
+  const partes = [], central = [];
+  let offset = 0;
+  const d = new Date();
+  const hora = ((d.getHours()<<11) | (d.getMinutes()<<5) | Math.floor(d.getSeconds()/2)) & 0xFFFF;
+  const fecha = (((d.getFullYear()-1980)<<9) | ((d.getMonth()+1)<<5) | d.getDate()) & 0xFFFF;
+
+  archivos.forEach(a=>{
+    const nombre = aBytes(a.nombre), datos = a.datos, crc = crc32(datos);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0, true);
+    lh.setUint16(8, 0, true); lh.setUint16(10, hora, true); lh.setUint16(12, fecha, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, datos.length, true); lh.setUint32(22, datos.length, true);
+    lh.setUint16(26, nombre.length, true); lh.setUint16(28, 0, true);
+    partes.push(new Uint8Array(lh.buffer), nombre, datos);
+
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true);
+    cd.setUint16(8, 0, true); cd.setUint16(10, 0, true); cd.setUint16(12, hora, true);
+    cd.setUint16(14, fecha, true); cd.setUint32(16, crc, true);
+    cd.setUint32(20, datos.length, true); cd.setUint32(24, datos.length, true);
+    cd.setUint16(28, nombre.length, true); cd.setUint32(42, offset, true);
+    central.push(new Uint8Array(cd.buffer), nombre);
+    offset += 30 + nombre.length + datos.length;
+  });
+
+  let tamCentral = 0;
+  central.forEach(p=> tamCentral += p.length);
+  const eo = new DataView(new ArrayBuffer(22));
+  eo.setUint32(0, 0x06054b50, true);
+  eo.setUint16(8, archivos.length, true); eo.setUint16(10, archivos.length, true);
+  eo.setUint32(12, tamCentral, true); eo.setUint32(16, offset, true);
+
+  return new Blob(partes.concat(central, [new Uint8Array(eo.buffer)]),
+                  {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+}
+
+function xEsc(t){
+  return String(t == null ? "" : t)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&apos;")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"");
+}
+function colLetra(n){
+  let s = "";
+  while(n >= 0){ s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n/26) - 1; }
+  return s;
+}
+function hojaXML(filas){
+  const cuerpo = filas.map((fila,i)=>{
+    const celdas = fila.map((v,j)=>{
+      const ref = colLetra(j) + (i+1);
+      if(typeof v === "number" && isFinite(v)){ return `<c r="${ref}"><v>${v}</v></c>`; }
+      return `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${xEsc(v)}</t></is></c>`;
+    }).join("");
+    return `<row r="${i+1}">${celdas}</row>`;
+  }).join("");
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${cuerpo}</sheetData></worksheet>`;
+}
+function construirXLSX(filas, nombreHoja){
+  const archivos = [
+    {nombre:"[Content_Types].xml", datos: aBytes(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`)},
+    {nombre:"_rels/.rels", datos: aBytes(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`)},
+    {nombre:"xl/workbook.xml", datos: aBytes(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${xEsc(nombreHoja)}" sheetId="1" r:id="rId1"/></sheets></workbook>`)},
+    {nombre:"xl/_rels/workbook.xml.rels", datos: aBytes(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`)},
+    {nombre:"xl/worksheets/sheet1.xml", datos: aBytes(hojaXML(filas))}
+  ];
+  return zipStore(archivos);
+}
+
 /* ============================================================
    ADAPTADOR DE SUPABASE
    ------------------------------------------------------------
@@ -676,6 +781,37 @@ async function supabaseAPI(ruta, metodo, cuerpo){
     return await sbSesionDesde(d);
   }
 
+  /* ---------- Uso del portafolio ----------
+     Una fila por persona, con su avance. Nunca el texto del
+     borrador: eso sigue viviendo solo en el navegador de cada quien,
+     que es lo que la herramienta promete en pantalla. */
+  if(ruta === "/portafolio" && metodo === "PUT"){
+    if(!Cuenta.sesion){ return null; }
+    const fila = Object.assign({usuario_id: Cuenta.sesion.id}, b);
+    /* «resolution=merge-duplicates» convierte el POST en un upsert
+       sobre la llave primaria, así que sirve tanto la primera vez
+       como las siguientes sin tener que preguntar antes si existe. */
+    await sbAuth("/rest/v1/portafolios", {
+      method: "POST",
+      headers: {"Prefer": "resolution=merge-duplicates,return=minimal"},
+      body: JSON.stringify(fila)
+    });
+    return null;
+  }
+
+  if(ruta === "/portafolio" && metodo === "DELETE"){
+    if(!Cuenta.sesion){ return null; }
+    await sbAuth("/rest/v1/portafolios?usuario_id=eq." + encodeURIComponent(Cuenta.sesion.id),
+      {method:"DELETE", headers:{"Prefer":"return=minimal"}});
+    return null;
+  }
+
+  if(ruta === "/admin/portafolios" && metodo === "GET"){
+    const r = await sbAuth("/rest/v1/portafolios_admin?select=*&order=actualizado_en.desc",
+      {method:"GET"});
+    return {portafolios: r || []};
+  }
+
   /* ---------- Traducción con IA ----------
      Respaldo del portafolio para los navegadores que no traen
      traductor propio. La clave de Gemini vive en los secretos de
@@ -721,7 +857,18 @@ async function supabaseAPI(ruta, metodo, cuerpo){
 
   /* ---------- Rondas ---------- */
   if(ruta === "/rondas" && metodo === "GET"){
-    const r = await sbAuth("/rest/v1/rondas?select=*&order=creada_en.desc", {method:"GET"});
+    /* El filtro por usuario_id es explícito y no sobra.
+       Antes esta consulta pedía todas las rondas y confiaba en que
+       RLS devolviera solo las propias. Para una persona normal así
+       era, pero el administrador tiene permiso de leer las rondas de
+       todo el mundo (lo necesita el consolidado), así que su
+       «Tu historial» le mostraba las de los demás como si fueran
+       suyas. Pidiendo solo las de uno, la consulta es correcta
+       independientemente de lo que permita la política. */
+    const mio = Cuenta.sesion ? Cuenta.sesion.id : "";
+    if(!mio){ return {rondas: []}; }
+    const r = await sbAuth("/rest/v1/rondas?select=*&usuario_id=eq." +
+      encodeURIComponent(mio) + "&order=creada_en.desc", {method:"GET"});
     return {rondas: r || []};
   }
 
@@ -1025,6 +1172,12 @@ async function demoAPI(ruta, metodo, cuerpo){
   if(ruta === "/revisar-portafolio"){
     throw new Error("la revisión con inteligencia artificial requiere el servidor de la Universidad");
   }
+
+  /* En demostración el avance del portafolio no se registra en
+     ninguna parte. Se calla en vez de fallar: es una métrica, no una
+     funcionalidad, y no tiene por qué romper la herramienta. */
+  if(ruta === "/portafolio"){ return null; }
+  if(ruta === "/admin/portafolios"){ return {portafolios: []}; }
 
   throw new Error("Operación no disponible en modo demostración.");
 }
