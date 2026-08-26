@@ -852,6 +852,24 @@ button{font-family:inherit;font-size:inherit;cursor:pointer}
 .diag-pie[hidden]{display:none}
 .diag-pie .nota-pie{margin:0}
 .admin-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px}
+/* Ruta de migas: dice dónde estás y deja volver a cualquier nivel. */
+.admin-ruta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:13.5px}
+.admin-ruta button{appearance:none;background:none;border:0;padding:0;font:inherit;
+  color:var(--azul-500);text-decoration:underline;cursor:pointer}
+.admin-ruta button:hover{color:var(--azul-900)}
+.admin-ruta .aqui{color:var(--texto);font-weight:650}
+.admin-ruta .sep{color:var(--texto-3)}
+/* Fila que lleva a otro nivel. El cursor y el realce dicen que se
+   puede pulsar, que si no la tabla parece muerta. */
+tr.baja{cursor:pointer}
+tr.baja:hover{background:var(--surface-2)}
+tr.baja td:first-child{font-weight:600;color:var(--azul-900)}
+/* Sin actividad todavía: se ve, pero apagada. Que aparezca es el
+   punto, porque un programa en cero es información. */
+tr.vacia td{color:var(--texto-3)}
+tr.vacia td:first-child{font-weight:600;color:var(--texto-2)}
+.admin-pista{font-size:12.5px;color:var(--texto-3);margin-top:12px;line-height:1.55}
+.admin-pista:empty{display:none}
 .admin-tab{
   appearance:none;background:none;border:none;padding:9px 15px;font-size:13.5px;font-weight:600;
   color:var(--texto-2);border-bottom:2px solid transparent;margin-bottom:-1px;
@@ -1317,14 +1335,23 @@ button{font-family:inherit;font-size:inherit;cursor:pointer}
         </div>
       </div>
 
-      <!-- Vista: por programa -->
+      <!-- Vista: por programa
+           Tres niveles: todas las facultades de la Universidad, los
+           programas de la que se elija, y las personas del programa
+           que se elija. Salen TODAS las facultades y TODOS los
+           programas, hayan practicado o no: lo que interesa saber
+           aquí es justamente dónde no se está usando. -->
       <div id="admin-vista-programas" hidden>
+        <nav class="admin-ruta" id="admin-ruta" aria-label="Dónde estás"></nav>
+
         <div class="tabla-scroll">
           <table>
-            <thead><tr><th>Facultad</th><th>Programa</th><th>Personas</th><th>Rondas</th><th>Puntaje promedio</th></tr></thead>
+            <thead id="admin-prog-cab"></thead>
             <tbody id="admin-cuerpo"></tbody>
           </table>
         </div>
+
+        <p class="admin-pista" id="admin-prog-pista"></p>
       </div>
 
       <!-- Detalle de una persona -->

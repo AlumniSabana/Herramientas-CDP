@@ -1850,6 +1850,9 @@ async function cargarAdmin(){
   adminFalloPerfiles = "";
   adminFaltaVista = false;
   adminRondasOcultas = 0;
+  /* Al recargar el consolidado se vuelve al nivel de facultades: si
+     no, se quedaría abierto un programa de la carga anterior. */
+  progFacultad = ""; progPrograma = "";
   $("#admin-sub").textContent = "Cargando consolidado…";
   try{
     const r = await api("/admin/rondas", "GET");
@@ -2069,29 +2072,208 @@ function pintarAdmin(){
     ["Puntaje promedio", prom], ["Muletillas por ronda", promMul.toFixed(1)]
   ].map(k=>`<div class="admin-kpi"><div class="n">${esc(k[1])}</div><div class="t">${esc(k[0])}</div></div>`).join("");
 
-  const grupos = {};
+  pintarPorPrograma();
+}
+
+/* ============================================================
+   POR PROGRAMA: TRES NIVELES
+   ------------------------------------------------------------
+   Antes esta vista listaba solo las combinaciones de facultad y
+   programa que ya tenían rondas. Con dos personas practicando
+   mostraba una fila, y la pregunta que de verdad se hace el Centro
+   («¿en qué programas no está entrando nadie?») no se podía
+   responder: lo que falta no aparecía por ninguna parte.
+
+   Ahora salen TODAS las facultades de la Universidad y TODOS los
+   programas de cada una, tengan actividad o no. Un programa en cero
+   es información, no un hueco.
+
+     Nivel 1  ·  las diez facultades
+     Nivel 2  ·  los programas de la facultad elegida
+     Nivel 3  ·  las personas de ese programa
+
+   FACULTADES lo trae auth.js, que es donde vive la lista oficial y
+   la misma que se usa en el registro. Así no hay dos listas que
+   mantener.
+   ============================================================ */
+let progFacultad = "", progPrograma = "";
+
+/* Todo lo que se sabe de una persona, venga de perfiles o de haber
+   aparecido en una ronda. */
+function personasConDatos(){
+  const por = {};
+  adminUsuarios.forEach(u=>{
+    const c = String(u.correo || "").toLowerCase();
+    if(!c) return;
+    por[c] = {correo:u.correo, nombre:u.nombre || "", facultad:u.facultad || "",
+              programa:u.programa || "", rondas:0, suma:0, ultimo:null};
+  });
   adminDatos.forEach(r=>{
-    const clave = (r.facultad || "Sin registrar") + "||" + (r.programa || "Sin registrar");
-    if(!grupos[clave]){ grupos[clave] = {personas:new Set(), rondas:0, suma:0}; }
-    grupos[clave].personas.add(r.correo);
-    grupos[clave].rondas++;
-    grupos[clave].suma += Number(r.puntaje) || 0;
+    const c = String(r.correo || "").toLowerCase();
+    if(!c) return;
+    if(!por[c]){
+      por[c] = {correo:r.correo, nombre:r.nombre || "", facultad:r.facultad || "",
+                programa:r.programa || "", rondas:0, suma:0, ultimo:null};
+    }
+    const p = por[c];
+    p.rondas++;
+    p.suma += Number(r.puntaje) || 0;
+    if(p.ultimo == null){ p.ultimo = Number(r.puntaje) || 0; }
+    if(!p.facultad) p.facultad = r.facultad || "";
+    if(!p.programa) p.programa = r.programa || "";
+  });
+  return Object.values(por);
+}
+
+/* Los nombres se escribieron por separado en el registro y en las
+   rondas, así que se comparan sin tildes ni mayúsculas. */
+function igualNombre(a, b){
+  const n = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+                   .toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  return n(a) === n(b);
+}
+
+function resumen(lista){
+  const rondas = lista.reduce((a,p)=> a + p.rondas, 0);
+  const suma   = lista.reduce((a,p)=> a + p.suma, 0);
+  return {
+    personas: lista.length,
+    activas:  lista.filter(p=> p.rondas > 0).length,
+    rondas:   rondas,
+    prom:     rondas ? Math.round(suma / rondas) : null
+  };
+}
+
+function pintarRuta(){
+  const partes = [];
+  if(progFacultad){
+    partes.push('<button type="button" data-ruta="raiz">Todas las facultades</button>');
+    if(progPrograma){
+      partes.push('<span class="sep" aria-hidden="true">›</span>');
+      partes.push('<button type="button" data-ruta="facultad">' + esc(progFacultad) + "</button>");
+      partes.push('<span class="sep" aria-hidden="true">›</span>');
+      partes.push('<span class="aqui">' + esc(progPrograma) + "</span>");
+    } else {
+      partes.push('<span class="sep" aria-hidden="true">›</span>');
+      partes.push('<span class="aqui">' + esc(progFacultad) + "</span>");
+    }
+  } else {
+    partes.push('<span class="aqui">Todas las facultades</span>');
+  }
+  $("#admin-ruta").innerHTML = partes.join(" ");
+  $$("#admin-ruta [data-ruta]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      if(b.dataset.ruta === "raiz"){ progFacultad = ""; progPrograma = ""; }
+      else { progPrograma = ""; }
+      pintarPorPrograma();
+    });
+  });
+}
+
+function pintarPorPrograma(){
+  const cab = $("#admin-prog-cab");
+  const cuerpo = $("#admin-cuerpo");
+  if(!cab || !cuerpo) return;
+  pintarRuta();
+
+  const gente = personasConDatos();
+  const listaFac = (typeof FACULTADES === "object" && FACULTADES) ? Object.keys(FACULTADES) : [];
+
+  /* ── Nivel 3: las personas del programa elegido ── */
+  if(progFacultad && progPrograma){
+    const dentro = gente
+      .filter(p=> igualNombre(p.programa, progPrograma))
+      .sort((a,b)=> b.rondas - a.rondas || String(a.correo).localeCompare(String(b.correo)));
+
+    cab.innerHTML = "<tr><th>Persona</th><th>Rondas</th><th>Último puntaje</th><th>Promedio</th></tr>";
+    cuerpo.innerHTML = dentro.length
+      ? dentro.map(p=>`<tr${p.rondas ? "" : ' class="vacia"'}>
+          <td>${esc(p.nombre || p.correo)}
+              <div style="font-size:12px;color:var(--texto-3)">${esc(p.correo)}</div></td>
+          <td class="num">${p.rondas}</td>
+          <td class="num">${p.ultimo == null ? "—" : p.ultimo}</td>
+          <td class="num">${p.rondas ? Math.round(p.suma / p.rondas) : "—"}</td>
+        </tr>`).join("")
+      : '<tr><td colspan="4" style="color:var(--texto-3)">Nadie de este programa se ha registrado todavía.</td></tr>';
+
+    const r = resumen(dentro);
+    $("#admin-prog-pista").textContent = dentro.length
+      ? r.personas + (r.personas === 1 ? " persona registrada" : " personas registradas") +
+        ", " + r.activas + " con al menos una ronda."
+      : "Este programa aparece porque está en la lista de la Universidad, no porque tenga a alguien inscrito en la herramienta.";
+    return;
+  }
+
+  /* ── Nivel 2: los programas de la facultad elegida ── */
+  if(progFacultad){
+    const programas = (FACULTADES && FACULTADES[progFacultad]) ? FACULTADES[progFacultad].slice() : [];
+    /* Alguien puede tener un programa que no está en la lista oficial
+       (posgrado, «otro programa»). No se puede perder: se añade. */
+    gente.forEach(p=>{
+      if(!igualNombre(p.facultad, progFacultad) || !p.programa) return;
+      if(!programas.some(x=> igualNombre(x, p.programa))) programas.push(p.programa);
+    });
+
+    cab.innerHTML = "<tr><th>Programa</th><th>Personas</th><th>Con rondas</th><th>Rondas</th><th>Puntaje promedio</th></tr>";
+    cuerpo.innerHTML = programas.length
+      ? programas.map(nom=>{
+          const dentro = gente.filter(p=> igualNombre(p.programa, nom));
+          const r = resumen(dentro);
+          return `<tr class="baja${r.personas ? "" : " vacia"}" data-programa="${esc(nom)}">
+            <td>${esc(nom)}</td>
+            <td class="num">${r.personas}</td>
+            <td class="num">${r.activas}</td>
+            <td class="num">${r.rondas}</td>
+            <td class="num">${r.prom == null ? "—" : r.prom}</td>
+          </tr>`;
+        }).join("")
+      : '<tr><td colspan="5" style="color:var(--texto-3)">Esta facultad no tiene programas en la lista.</td></tr>';
+
+    $$("#admin-cuerpo [data-programa]").forEach(tr=>{
+      tr.addEventListener("click", ()=>{
+        progPrograma = tr.dataset.programa;
+        pintarPorPrograma();
+      });
+    });
+    $("#admin-prog-pista").textContent = "Pulsa un programa para ver quién está inscrito.";
+    return;
+  }
+
+  /* ── Nivel 1: todas las facultades ── */
+  const nombres = listaFac.slice();
+  gente.forEach(p=>{
+    if(p.facultad && !nombres.some(x=> igualNombre(x, p.facultad))) nombres.push(p.facultad);
   });
 
-  const filas = Object.entries(grupos)
-    .map(([k,v])=>{
-      const p = k.split("||");
-      return {facultad:p[0], programa:p[1], personas:v.personas.size, rondas:v.rondas,
-              prom: v.rondas ? Math.round(v.suma/v.rondas) : 0};
-    })
-    .sort((a,b)=> b.rondas - a.rondas);
+  cab.innerHTML = "<tr><th>Facultad</th><th>Programas</th><th>Personas</th><th>Con rondas</th><th>Rondas</th><th>Puntaje promedio</th></tr>";
+  cuerpo.innerHTML = nombres.length
+    ? nombres.map(nom=>{
+        const dentro = gente.filter(p=> igualNombre(p.facultad, nom));
+        const r = resumen(dentro);
+        const cuantos = (FACULTADES && FACULTADES[nom]) ? FACULTADES[nom].length : 0;
+        return `<tr class="baja${r.personas ? "" : " vacia"}" data-facultad="${esc(nom)}">
+          <td>${esc(nom)}</td>
+          <td class="num">${cuantos || "—"}</td>
+          <td class="num">${r.personas}</td>
+          <td class="num">${r.activas}</td>
+          <td class="num">${r.rondas}</td>
+          <td class="num">${r.prom == null ? "—" : r.prom}</td>
+        </tr>`;
+      }).join("")
+    : '<tr><td colspan="6" style="color:var(--texto-3)">No hay facultades que mostrar.</td></tr>';
 
-  $("#admin-cuerpo").innerHTML = filas.length
-    ? filas.map(f=>`<tr>
-        <td>${esc(f.facultad)}</td><td>${esc(f.programa)}</td>
-        <td class="num">${f.personas}</td><td class="num">${f.rondas}</td><td class="num">${f.prom}</td>
-      </tr>`).join("")
-    : '<tr><td colspan="5" style="color:var(--texto-3)">Sin datos todavía.</td></tr>';
+  $$("#admin-cuerpo [data-facultad]").forEach(tr=>{
+    tr.addEventListener("click", ()=>{
+      progFacultad = tr.dataset.facultad;
+      progPrograma = "";
+      pintarPorPrograma();
+    });
+  });
+
+  const conAlguien = nombres.filter(n=> gente.some(p=> igualNombre(p.facultad, n))).length;
+  $("#admin-prog-pista").textContent =
+    "Están las " + nombres.length + " facultades, tengan actividad o no: " + conAlguien +
+    (conAlguien === 1 ? " tiene" : " tienen") + " a alguien registrado. Pulsa una para ver sus programas.";
 }
 
 /* ============================================================
