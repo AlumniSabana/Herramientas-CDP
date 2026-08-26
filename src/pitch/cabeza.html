@@ -971,6 +971,11 @@ tr.vacia td:first-child{font-weight:600;color:var(--texto-2)}
 .detalle-cab{margin-bottom:18px}
 .detalle-cab h3{font-size:20px;margin:10px 0 4px}
 .detalle-cab p{font-size:14px;color:var(--texto-2)}
+/* Ficha de una ronda abierta desde el propio historial. */
+.hist-detalle{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.hist-detalle[hidden]{display:none}
+.hist-detalle-cab{display:flex;justify-content:flex-end;margin-bottom:10px}
+
 .det-ficha{
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-m);
   padding:20px 22px;margin-top:18px;
@@ -1541,12 +1546,22 @@ tr.vacia td:first-child{font-weight:600;color:var(--texto-2)}
       </div>
       <div class="tabla-scroll">
         <table>
-          <thead><tr><th>#</th><th>Fecha</th><th>Escenario</th><th>Objetivo</th><th>Real</th><th>Ritmo</th><th>Muletillas</th><th>Puntaje</th><th></th></tr></thead>
+          <thead><tr><th>#</th><th>Fecha</th><th>Escenario</th><th>Objetivo</th><th>Real</th><th>Ritmo</th><th>Muletillas</th><th>Puntaje</th><th></th><th></th></tr></thead>
           <tbody id="historial-cuerpo"></tbody>
         </table>
       </div>
       <div class="hist-vacio" id="hist-vacio" hidden>Todavía no hay rondas guardadas.</div>
       <p class="hist-aviso" id="hist-aviso"></p>
+
+      <!-- La ronda que se abra desde el historial. Es la misma ficha
+           que ve el Centro en su panel: las mismas dimensiones, la
+           misma transcripción y las mismas observaciones. -->
+      <div class="hist-detalle" id="hist-detalle" hidden>
+        <div class="hist-detalle-cab">
+          <button class="enlace" id="hist-cerrar">Cerrar</button>
+        </div>
+        <div id="hist-ficha"></div>
+      </div>
     </div>
   </div>
 </section>

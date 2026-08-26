@@ -803,6 +803,9 @@ function renderHistorial(){
   $("#hist-invitacion").hidden = conCuenta;
   if(!conCuenta){ return; }
 
+  /* Si se recarga el historial, la ficha abierta puede referirse a
+     una ronda que ya no está. Se cierra y se vuelve a abrir a mano. */
+  $("#hist-detalle").hidden = true;
   $("#hist-titulo").textContent = "Tu historial";
   $("#hist-sub").textContent = "Guardado en tu cuenta (" + Cuenta.sesion.correo + "). Disponible desde cualquier dispositivo.";
   $("#hist-vacio").hidden = filas.length > 0;
@@ -820,8 +823,17 @@ function renderHistorial(){
       <td class="num">${h.ppm}</td>
       <td class="num">${h.muletillas_total}</td>
       <td class="num">${semaforo(h.puntaje)}</td>
+      <td><button class="btn-mini" data-abrir="${esc(h.id)}">Ver</button></td>
       <td><button class="btn-mini" data-borrar="${esc(h.id)}">Borrar</button></td>
     </tr>`).join("");
+
+  /* Abrir una ronda pasada. Antes el historial solo dejaba borrar:
+     se veía la fila con su puntaje, pero no había forma de releer lo
+     que uno dijo ni lo que se le respondió, que es justamente para
+     lo que sirve guardar el historial. */
+  $$("#historial-cuerpo [data-abrir]").forEach(b=>{
+    b.addEventListener("click", ()=> abrirRondaPropia(b.dataset.abrir));
+  });
 
   $$("#historial-cuerpo [data-borrar]").forEach(b=>{
     b.addEventListener("click", ()=>{
@@ -830,6 +842,19 @@ function renderHistorial(){
         .catch(e=> avisoHistorial("No se pudo eliminar: " + e.message));
     });
   });
+}
+
+/* ── Releer una ronda del propio historial ───────────────────
+   Muestra la misma ficha que ve el Centro en su panel. No es una
+   versión recortada: si el reporte de esa ronda existe, su autor
+   tiene derecho a leerlo entero. */
+function abrirRondaPropia(id){
+  const r = (estado.historial || []).filter(x=> String(x.id) === String(id))[0];
+  const caja = $("#hist-detalle"), ficha = $("#hist-ficha");
+  if(!r || !caja || !ficha) return;
+  ficha.innerHTML = fichaRondaHTML(r);
+  caja.hidden = false;
+  caja.scrollIntoView({behavior:"smooth", block:"nearest"});
 }
 
 function avisoHistorial(txt){
@@ -2048,14 +2073,30 @@ function verPersona(i){
   });
 }
 
-function verRondaAdmin(persona, j){
-  const r = persona.rondas[j];
-  if(!r) return;
+/* ── La ficha de una ronda ────────────────────────────────────
+   Dimensiones, transcripción, observaciones y ejercicio sugerido.
+   La usan dos sitios: el detalle de una persona en el panel de
+   administración, y el historial de cada quien en su propio
+   reporte. Es la misma ficha porque es la misma información: lo que
+   el Centro ve de una ronda es exactamente lo que ve su autor. */
+function fichaRondaHTML(r){
+  if(!r) return "";
   const dims = (r.dimensiones || []).map(d=>`
     <div class="det-dim"><div class="n">${d.pct == null ? "—" : d.pct}</div><div class="t">${esc(d.nombre || d.id)}</div></div>`).join("");
 
-  $("#det-ronda").hidden = false;
-  $("#det-ronda").innerHTML = `
+  const obs = (function(){
+    if(!r.observaciones){
+      return '<div class="det-texto">No se generaron observaciones para esta ronda.</div>';
+    }
+    const h = observacionesGuardadasAHTML({texto: r.observaciones});
+    /* Si está guardado en el formato por secciones se pinta igual
+       que en el reporte; si es prosa antigua, tal cual como antes. */
+    return h && h.indexOf("obs-bloque") >= 0
+      ? '<div class="det-obs">' + h + '</div>'
+      : '<div class="det-texto">' + esc(r.observaciones) + '</div>';
+  })();
+
+  return `
     <div class="det-ficha">
       <h4>${esc(r.tipo_nombre || r.tipo)} · ${fechaCorta(r.creada_en)} · puntaje ${r.puntaje}</h4>
       <div class="det-dims">${dims || '<span style="color:var(--texto-3)">Sin dimensiones registradas.</span>'}</div>
@@ -2065,23 +2106,20 @@ function verRondaAdmin(persona, j){
       </div>
       <div class="det-bloque">
         <span class="et">Observaciones</span>
-        ${(function(){
-          if(!r.observaciones){
-            return '<div class="det-texto">Esta persona no generó observaciones para esta ronda.</div>';
-          }
-          const h = observacionesGuardadasAHTML({texto: r.observaciones});
-          /* Si está guardado en el formato por secciones se pinta igual
-             que en el reporte; si es prosa antigua, tal cual como antes. */
-          return h && h.indexOf("obs-bloque") >= 0
-            ? '<div class="det-obs">' + h + '</div>'
-            : '<div class="det-texto">' + esc(r.observaciones) + '</div>';
-        })()}
+        ${obs}
       </div>
       <div class="det-bloque">
         <span class="et">Ejercicio sugerido</span>
-        <div class="det-texto">${r.ejercicio && r.ejercicio.titulo ? esc(r.ejercicio.titulo + " — " + r.ejercicio.texto) : "—"}</div>
+        <div class="det-texto">${r.ejercicio && r.ejercicio.titulo ? esc(r.ejercicio.titulo + " · " + r.ejercicio.texto) : "—"}</div>
       </div>
     </div>`;
+}
+
+function verRondaAdmin(persona, j){
+  const r = persona.rondas[j];
+  if(!r) return;
+  $("#det-ronda").hidden = false;
+  $("#det-ronda").innerHTML = fichaRondaHTML(r);
   $("#det-ronda").scrollIntoView({behavior:"smooth", block:"nearest"});
 }
 
@@ -2594,6 +2632,10 @@ window.addEventListener("beforeunload", ()=>{
 
 
 /* --- Historial: exportar, descargar y borrar --- */
+$("#hist-cerrar").addEventListener("click", ()=>{
+  $("#hist-detalle").hidden = true;
+});
+
 $("#hist-excel").addEventListener("click", ()=>{
   /* Antes esto salía sin hacer nada si no eras administrador, así
      que el botón existía y no respondía. Cualquiera puede bajarse
