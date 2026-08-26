@@ -920,10 +920,20 @@ button{font-family:inherit;font-size:inherit;cursor:pointer}
 .rosca-sector{transition:opacity .12s}
 .rosca-caja:hover .rosca-sector{opacity:.45}
 .rosca-caja .rosca-sector:hover{opacity:1}
+/* El sector que lleva a alguna parte se comporta como tal. El
+   agrupado no: son varias facultades y no hay una a la que ir. */
+.rosca-sector.navega{cursor:pointer}
 .rosca-titulo{font-size:13px;font-weight:650;color:var(--texto);margin-bottom:12px}
 .rosca-leyenda{display:flex;flex-direction:column;gap:9px;min-width:0;max-width:400px}
 .rosca-item{display:grid;grid-template-columns:12px minmax(0,1fr) auto auto;
-  gap:10px;align-items:center;font-size:13.5px}
+  gap:10px;align-items:center;font-size:13.5px;width:100%;text-align:left}
+/* La leyenda es el blanco grande: un arco de rosca es difícil de
+   acertar, y una fila entera no. */
+button.rosca-item{appearance:none;background:none;border:0;
+  padding:5px 8px;margin:-5px -8px;border-radius:5px;font:inherit;cursor:pointer;
+  transition:background .12s}
+button.rosca-item:hover{background:var(--surface-2)}
+button.rosca-item:hover .rosca-nom{color:var(--azul-900)}
 .rosca-punto{width:12px;height:12px;border-radius:3px;flex:none}
 .rosca-nom{color:var(--texto-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rosca-val{font-family:var(--font-mono);font-weight:650;color:var(--texto)}

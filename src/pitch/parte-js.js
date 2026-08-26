@@ -2208,8 +2208,11 @@ function arcoRosca(desde, hasta, color, id){
     ' transform="rotate(-90 50 50)"><title></title></circle>';
 }
 
-/* datos: [{nombre, valor}] sin ordenar. Devuelve lo que se pinta. */
-function pintarRosca(titulo, datos, etiquetaCentro){
+/* datos: [{nombre, valor, clave}] sin ordenar.
+   «clave» es a dónde lleva el sector si se pulsa; «nombre» es lo que
+   se lee, que puede venir acortado para que quepa en la leyenda.
+   alElegir recibe la clave. Sin alElegir la rosca solo se mira. */
+function pintarRosca(titulo, datos, etiquetaCentro, alElegir){
   const zona = $("#rosca-zona");
   if(!zona) return;
 
@@ -2230,15 +2233,20 @@ function pintarRosca(titulo, datos, etiquetaCentro){
 
   /* Los mayores con nombre; el resto, agrupado. */
   let trozos = con.slice(0, ROSCA_MAX).map((d,i)=>({
-    nombre: d.nombre, valor: d.valor, color: ROSCA_TONOS[i]
+    nombre: d.nombre, valor: d.valor, color: ROSCA_TONOS[i],
+    clave: d.clave || d.nombre
   }));
   const resto = con.slice(ROSCA_MAX);
   if(resto.length){
+    const uno = resto.length === 1;
     trozos.push({
-      nombre: resto.length === 1 ? resto[0].nombre : "Otras " + resto.length,
+      nombre: uno ? resto[0].nombre : "Otras " + resto.length,
       valor: resto.reduce((a,d)=> a + d.valor, 0),
-      color: resto.length === 1 ? ROSCA_TONOS[ROSCA_MAX - 1] : ROSCA_OTRAS,
-      agrupa: resto.length > 1 ? resto.map(d=> d.nombre) : null
+      color: uno ? ROSCA_TONOS[ROSCA_MAX - 1] : ROSCA_OTRAS,
+      /* El sector agrupado no lleva a ninguna parte: son varias. La
+         tabla de debajo sí las tiene una por una. */
+      clave: uno ? (resto[0].clave || resto[0].nombre) : null,
+      agrupa: uno ? null : resto.map(d=> d.nombre)
     });
   }
 
@@ -2254,23 +2262,44 @@ function pintarRosca(titulo, datos, etiquetaCentro){
   $("#rosca-total").textContent = total;
   $("#rosca-svg").innerHTML = arcos;
 
+  const navegable = i => !!(alElegir && trozos[i].clave);
+
   $("#rosca-leyenda").innerHTML = trozos.map((t,i)=>{
     const pct = Math.round(t.valor / total * 100);
-    return '<div class="rosca-item" data-sector="' + i + '">' +
+    const eti = t.agrupa
+      ? "Agrupa " + t.agrupa.length + ": " + t.agrupa.join(", ")
+      : t.nombre;
+    /* La leyenda es un botón cuando lleva a alguna parte: es un
+       blanco mucho mayor que el arco y funciona con el teclado. */
+    const tag = navegable(i) ? "button" : "div";
+    const extra = navegable(i)
+      ? ' type="button" class="rosca-item navega" data-ir="' + i + '"'
+      : ' class="rosca-item"';
+    return "<" + tag + extra + ' title="' + esc(eti) + '">' +
       '<span class="rosca-punto" style="background:' + t.color + '"></span>' +
-      '<span class="rosca-nom" title="' + esc(t.agrupa ? t.agrupa.join(", ") : t.nombre) + '">' +
-        esc(t.nombre) + "</span>" +
+      '<span class="rosca-nom">' + esc(t.nombre) + "</span>" +
       '<span class="rosca-val">' + t.valor + "</span>" +
-      '<span class="rosca-pct">' + pct + " %</span></div>";
+      '<span class="rosca-pct">' + pct + " %</span></" + tag + ">";
   }).join("");
 
   /* El título de cada arco es lo que muestra el navegador al pasar
      por encima, y lo que lee un lector de pantalla. */
   $$("#rosca-svg [data-sector]").forEach(el=>{
-    const t = trozos[+el.dataset.sector];
+    const i = +el.dataset.sector, t = trozos[i];
     const pct = Math.round(t.valor / total * 100);
     const tit = el.querySelector("title");
-    if(tit){ tit.textContent = t.nombre + ": " + t.valor + " de " + total + " (" + pct + " %)"; }
+    if(tit){
+      tit.textContent = t.nombre + ": " + t.valor + " de " + total + " (" + pct + " %)" +
+        (navegable(i) ? ". Pulsa para ver solo esta parte."
+                      : (t.agrupa ? ". Agrupa " + t.agrupa.length + ", están en la tabla." : ""));
+    }
+    if(!navegable(i)) return;
+    el.classList.add("navega");
+    el.addEventListener("click", ()=> alElegir(t.clave));
+  });
+
+  $$("#rosca-leyenda [data-ir]").forEach(b=>{
+    b.addEventListener("click", ()=> alElegir(trozos[+b.dataset.ir].clave));
   });
 
   $("#rosca-alt").textContent = titulo + ". " +
@@ -2462,8 +2491,11 @@ function pintarPorPrograma(){
     pintarRosca("Personas por programa · " + progFacultad,
       programas.map(nom=>({
         nombre: nom,
+        clave: nom,
         valor: gente.filter(p=> igualNombre(p.programa, nom)).length
-      })));
+      })),
+      "personas",
+      prog=>{ progPrograma = prog; pintarPorPrograma(); });
 
     $("#admin-prog-pista").textContent = "Pulsa un programa para ver quién está inscrito y abrir su reporte.";
     return;
@@ -2500,11 +2532,16 @@ function pintarPorPrograma(){
     });
   });
 
+  /* El nombre se acorta para que quepa en la leyenda, pero la clave
+     es el nombre completo: es lo que entiende el resto del panel. */
   pintarRosca("Personas por facultad",
     nombres.map(nom=>({
       nombre: nom.replace(/^Facultad de /, "").replace(/^Escuela Internacional de /, "E. I. de "),
+      clave: nom,
       valor: gente.filter(p=> igualNombre(p.facultad, nom)).length
-    })));
+    })),
+    "personas",
+    fac=>{ progFacultad = fac; progPrograma = ""; pintarPorPrograma(); });
 
   const conAlguien = nombres.filter(n=> gente.some(p=> igualNombre(p.facultad, n))).length;
   $("#admin-prog-pista").textContent =

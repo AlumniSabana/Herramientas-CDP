@@ -134,6 +134,46 @@ with sync_playwright() as p:
     ok("vuelve al recorrido por programa",
        not pg.query_selector("#admin-vista-programas").is_hidden())
     ok("sin errores de JS", not errs, errs)
+    print("\n7 · LA ROSCA COMO FILTRO")
+    pg.evaluate("""document.querySelector('#admin-ruta [data-ruta="raiz"]') &&
+        document.querySelector('#admin-ruta [data-ruta="raiz"]').click()""")
+    pg.wait_for_timeout(500)
+    ok("volvimos al nivel de facultades", "Todas las facultades" in pg.inner_text("#admin-ruta"),
+       pg.inner_text("#admin-ruta"))
+
+    leyenda = pg.evaluate("""Array.from(document.querySelectorAll('.rosca-item')).map(e=>
+        (e.tagName === 'BUTTON' ? 'boton:' : 'texto:') + e.querySelector('.rosca-nom').textContent)""")
+    ok("los sectores con destino son botones",
+       sum(1 for l in leyenda if l.startswith("boton:")) >= 4, leyenda)
+    ok("el agrupado NO es botón, porque son varias",
+       any(l.startswith("texto:") and "Otras" in l for l in leyenda), leyenda)
+    ok("el arco también es pulsable",
+       pg.evaluate("document.querySelectorAll('#rosca-svg .rosca-sector.navega').length") >= 4)
+    ok("el title invita a pulsar",
+       "Pulsa para ver" in pg.evaluate(
+         """document.querySelector('#rosca-svg .rosca-sector.navega title').textContent"""))
+
+    # Se pulsa el arco de Medicina desde la propia rosca
+    pg.evaluate("""(function(){
+        var b = Array.from(document.querySelectorAll('.rosca-item'))
+          .find(e => e.querySelector('.rosca-nom').textContent === 'Medicina');
+        b.click();
+    })()""")
+    pg.wait_for_timeout(600)
+    ok("la leyenda lleva a la facultad", "Medicina" in pg.inner_text("#admin-ruta"),
+       pg.inner_text("#admin-ruta"))
+    ok("y muestra sus programas", "por programa" in pg.inner_text("#rosca-titulo"),
+       pg.inner_text("#rosca-titulo"))
+
+    # Y desde el nivel de programas, al programa
+    pg.evaluate("""document.querySelector('#rosca-svg .rosca-sector.navega').dispatchEvent(
+        new MouseEvent('click', {bubbles:true}))""")
+    pg.wait_for_timeout(600)
+    ok("el arco lleva al programa", "Medicina" in pg.inner_text("#admin-ruta"),
+       pg.inner_text("#admin-ruta"))
+    ok("llegamos al nivel de personas",
+       pg.evaluate("document.querySelectorAll('#admin-cuerpo [data-ver-persona]').length") >= 1)
+    ok("sin errores de JS", not errs, errs)
     ctx.close()
     br.close()
 
