@@ -46,8 +46,13 @@ def montar(ctx):
     ctx.route(SB + "/**", ruta)
 
 def filas(pg):
+    # El semáforo añade una etiqueta oculta dentro de la celda; para
+    # comparar cifras hay que quedarse con el número que se ve.
     return pg.evaluate("""Array.from(document.querySelectorAll('#admin-cuerpo tr'))
-        .map(tr => Array.from(tr.children).map(td => td.textContent.trim().split('\\n')[0]))""")
+        .map(tr => Array.from(tr.children).map(td => {
+            var n = td.querySelector('.sem-n');
+            return (n ? n.textContent : td.textContent).trim().split('\\n')[0];
+        }))""")
 
 with sync_playwright() as p:
     br = p.chromium.launch(executable_path="/opt/pw-browsers/chromium")

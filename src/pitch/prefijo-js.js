@@ -295,6 +295,34 @@ function esc(t){
 }
 function nivel(p){ return p>=75 ? "bien" : p>=50 ? "ajusta" : "revisa"; }
 function etiquetaNivel(p){ return p>=75 ? "Sólido" : p>=50 ? "Ajustable" : "Prioridad"; }
+
+/* ── Semáforo ────────────────────────────────────────────────
+   La misma escala que ya usa el reporte, envuelta para poder
+   ponerla junto a cualquier cifra: en el historial, en el panel de
+   administración y en el detalle de una ronda.
+
+   Devuelve el marcador completo, con su forma y su nombre. La forma
+   importa: verde y amarillo se confunden con el daltonismo más
+   común, así que el color no puede ser el único canal.
+
+   Con puntaje nulo devuelve el estado «sin practicar», que no es un
+   suspenso: es que todavía no hay nada que calificar. */
+function semaforoNivel(p){
+  if(p == null || p === "" || isNaN(Number(p))) return "nada";
+  return nivel(Number(p));
+}
+function semaforoEtiqueta(p){
+  return semaforoNivel(p) === "nada" ? "Sin practicar" : etiquetaNivel(Number(p));
+}
+/* cifra = qué se escribe al lado del punto; por defecto, el puntaje */
+function semaforo(p, cifra){
+  const n = semaforoNivel(p);
+  const txt = cifra !== undefined ? cifra : (n === "nada" ? "—" : p);
+  return '<span class="sem" title="' + esc(semaforoEtiqueta(p)) + '">' +
+         '<span class="sem-p ' + n + '" aria-hidden="true"></span>' +
+         '<span class="sem-n">' + esc(String(txt)) + "</span>" +
+         '<span class="sr-solo">' + esc(semaforoEtiqueta(p)) + "</span></span>";
+}
 /* ============================================================
    NAVEGACIÓN POR ETAPAS
    ============================================================ */

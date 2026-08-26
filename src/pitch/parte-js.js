@@ -819,7 +819,7 @@ function renderHistorial(){
       <td class="num">${mmss(h.duracion_real)}</td>
       <td class="num">${h.ppm}</td>
       <td class="num">${h.muletillas_total}</td>
-      <td class="num">${h.puntaje}</td>
+      <td class="num">${semaforo(h.puntaje)}</td>
       <td><button class="btn-mini" data-borrar="${esc(h.id)}">Borrar</button></td>
     </tr>`).join("");
 
@@ -1910,6 +1910,54 @@ async function cargarAdmin(){
   }
 }
 
+/* ── Filtro por semáforo ──────────────────────────────────────
+   Deja ver de golpe a quién le está costando. Actúa sobre las dos
+   listas de personas: la pestaña «Personas» y el último nivel del
+   recorrido por programa.
+
+   NO toca los indicadores ni la rosca. Un consolidado que cambiara
+   sus totales al filtrar dejaría de ser un consolidado, y la
+   pregunta «cuántas personas usan esto» no se responde con un
+   subconjunto.
+
+   Sin nada marcado se ve todo, que es lo que se espera al abrir. */
+let semFiltro = new Set();
+
+function semPasa(puntaje){
+  if(!semFiltro.size) return true;
+  return semFiltro.has(semaforoNivel(puntaje));
+}
+
+/* La clasificación de una persona es su promedio, no su última
+   ronda: una mala tarde no la vuelve prioridad, ni una buena la
+   saca de serlo. */
+function semDePersona(p){
+  if(!p) return null;
+  if(p.promedio != null) return p.promedio;
+  if(p.rondas && p.suma != null) return p.rondas ? Math.round(p.suma / p.rondas) : null;
+  return null;
+}
+
+function semCuenta(visibles, total){
+  const c = $("#sem-cuenta");
+  if(!c) return;
+  c.textContent = semFiltro.size
+    ? "Mostrando " + visibles + " de " + total + (total === 1 ? " persona" : " personas")
+    : "";
+}
+
+function montarFiltroSemaforo(){
+  $$("#sem-filtro [data-sem]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const k = b.dataset.sem;
+      if(semFiltro.has(k)) semFiltro.delete(k); else semFiltro.add(k);
+      b.setAttribute("aria-pressed", semFiltro.has(k) ? "true" : "false");
+      pintarPersonas();
+      if($("#at-programas").getAttribute("aria-selected") === "true") pintarPorPrograma();
+    });
+  });
+}
+
 /* ---------- Lista de personas ---------- */
 function pintarPersonas(){
   const porCorreo = {};
@@ -1937,19 +1985,27 @@ function pintarPersonas(){
 
   adminPersonas = lista;
 
-  $("#admin-personas").innerHTML = lista.length
-    ? lista.map((p,i)=>`
+  /* Se filtra al pintar, no al armar: adminPersonas tiene que seguir
+     completa porque el detalle de una persona se abre por su
+     posición en ella. */
+  const visibles = lista.map((p,i)=>({p:p, i:i})).filter(x=> semPasa(semDePersona(x.p)));
+  semCuenta(visibles.length, lista.length);
+
+  $("#admin-personas").innerHTML = visibles.length
+    ? visibles.map(({p,i})=>`
         <tr class="clicable" data-persona="${i}">
           <td>${esc(p.nombre || p.correo)}${p.rol === "admin" ? ' <span class="insignia-admin">Admin</span>' : ""}
               <div style="font-size:12px;color:var(--texto-3)">${esc(p.correo)}</div></td>
           <td>${esc(p.facultad || "—")}</td>
           <td>${esc(p.programa || "—")}</td>
           <td class="num">${p.total}</td>
-          <td class="num">${p.ultimo == null ? "—" : p.ultimo}</td>
-          <td class="num">${p.promedio == null ? "—" : p.promedio}</td>
+          <td class="num">${semaforo(p.ultimo)}</td>
+          <td class="num">${semaforo(p.promedio)}</td>
           <td><button class="btn-mini" data-ver="${i}">Ver</button></td>
         </tr>`).join("")
-    : '<tr><td colspan="7" style="color:var(--texto-3)">Nadie se ha registrado todavía.</td></tr>';
+    : ('<tr><td colspan="7" style="color:var(--texto-3)">' +
+        (lista.length ? "Nadie encaja con el semáforo elegido." : "Nadie se ha registrado todavía.") +
+        "</td></tr>");
 
   $$("#admin-personas [data-persona]").forEach(tr=>{
     tr.addEventListener("click", ()=> verPersona(+tr.dataset.persona));
@@ -1964,6 +2020,7 @@ function verPersona(i){
   $("#admin-vista-personas").hidden = true;
   $("#admin-vista-programas").hidden = true;
   $(".admin-tabs").style.display = "none";
+  $("#sem-filtro").hidden = true;
   $("#admin-detalle").hidden = false;
   $("#det-ronda").hidden = true;
   $("#det-nombre").textContent = p.nombre || p.correo;
@@ -1979,7 +2036,7 @@ function verPersona(i){
           <td class="num">${mmss(r.duracion_real)}</td>
           <td class="num">${r.ppm}</td>
           <td class="num">${r.muletillas_total}</td>
-          <td class="num">${r.puntaje}</td>
+          <td class="num">${semaforo(r.puntaje)}</td>
           <td><button class="btn-mini">Leer</button></td>
         </tr>`).join("")
     : '<tr><td colspan="8" style="color:var(--texto-3)">Esta persona todavía no ha practicado.</td></tr>';
@@ -2033,6 +2090,8 @@ function volverALista(){
   const enPersonas = $("#at-personas").getAttribute("aria-selected") === "true";
   $("#admin-vista-personas").hidden = !enPersonas;
   $("#admin-vista-programas").hidden = enPersonas;
+  if(enPersonas){ $("#sem-filtro").hidden = false; }
+  else { pintarPorPrograma(); }
 }
 
 function pintarAdmin(){
@@ -2067,9 +2126,12 @@ function pintarAdmin(){
       : "Todavía nadie ha iniciado sesión en el servicio." + nota;
   }
 
+  /* «Muletillas por ronda» salió de aquí: en un consolidado del
+     servicio no dice nada accionable, y el dato sigue estando en el
+     reporte de cada persona y en el Excel. */
   $("#admin-kpis").innerHTML = [
     ["Personas", personas], ["Rondas", total], ["Facultades", facultades],
-    ["Puntaje promedio", prom], ["Muletillas por ronda", promMul.toFixed(1)]
+    ["Puntaje promedio", prom]
   ].map(k=>`<div class="admin-kpi"><div class="n">${esc(k[1])}</div><div class="t">${esc(k[0])}</div></div>`).join("");
 
   pintarPorPrograma();
@@ -2311,13 +2373,16 @@ function pintarPorPrograma(){
 
   /* ── Nivel 3: las personas del programa elegido ── */
   if(progFacultad && progPrograma){
-    const dentro = gente
+    const todos = gente
       .filter(p=> igualNombre(p.programa, progPrograma))
       .sort((a,b)=> b.rondas - a.rondas || String(a.correo).localeCompare(String(b.correo)));
+    const dentro = todos.filter(p=> semPasa(p.rondas ? Math.round(p.suma / p.rondas) : null));
+    semCuenta(dentro.length, todos.length);
 
     /* En el nivel de personas no hay composición que mostrar: cada
        fila es una persona, no una parte de un total. */
     $("#rosca-zona").hidden = true;
+    $("#sem-filtro").hidden = false;
 
     cab.innerHTML = "<tr><th>Persona</th><th>Rondas</th><th>Último puntaje</th><th>Promedio</th><th></th></tr>";
     cuerpo.innerHTML = dentro.length
@@ -2330,13 +2395,15 @@ function pintarPorPrograma(){
           <td>${esc(p.nombre || p.correo)}
               <div style="font-size:12px;color:var(--texto-3)">${esc(p.correo)}</div></td>
           <td class="num">${p.rondas}</td>
-          <td class="num">${p.ultimo == null ? "—" : p.ultimo}</td>
-          <td class="num">${p.rondas ? Math.round(p.suma / p.rondas) : "—"}</td>
+          <td class="num">${semaforo(p.ultimo)}</td>
+          <td class="num">${semaforo(p.rondas ? Math.round(p.suma / p.rondas) : null)}</td>
           <td>${idx > -1
             ? '<button class="btn-mini" data-ver-persona="' + idx + '">Ver reporte</button>'
             : ""}</td>
         </tr>`;}).join("")
-      : '<tr><td colspan="5" style="color:var(--texto-3)">Nadie de este programa se ha registrado todavía.</td></tr>';
+      : ('<tr><td colspan="5" style="color:var(--texto-3)">' +
+          (todos.length ? "Nadie de este programa encaja con el semáforo elegido."
+                        : "Nadie de este programa se ha registrado todavía.") + "</td></tr>");
 
     $$("#admin-cuerpo [data-ver-persona]").forEach(b=>{
       b.addEventListener("click", e=>{
@@ -2352,6 +2419,11 @@ function pintarPorPrograma(){
       : "Este programa aparece porque está en la lista de la Universidad, no porque tenga a alguien inscrito en la herramienta.";
     return;
   }
+
+  /* El filtro por semáforo clasifica personas, así que en los
+     niveles de facultad y programa se retira. */
+  $("#sem-filtro").hidden = true;
+  semCuenta(0, 0);
 
   /* ── Nivel 2: los programas de la facultad elegida ── */
   if(progFacultad){
@@ -2373,7 +2445,7 @@ function pintarPorPrograma(){
             <td class="num">${r.personas}</td>
             <td class="num">${r.activas}</td>
             <td class="num">${r.rondas}</td>
-            <td class="num">${r.prom == null ? "—" : r.prom}</td>
+            <td class="num">${semaforo(r.prom)}</td>
           </tr>`;
         }).join("")
       : '<tr><td colspan="5" style="color:var(--texto-3)">Esta facultad no tiene programas en la lista.</td></tr>';
@@ -2413,7 +2485,7 @@ function pintarPorPrograma(){
           <td class="num">${r.personas}</td>
           <td class="num">${r.activas}</td>
           <td class="num">${r.rondas}</td>
-          <td class="num">${r.prom == null ? "—" : r.prom}</td>
+          <td class="num">${semaforo(r.prom)}</td>
         </tr>`;
       }).join("")
     : '<tr><td colspan="6" style="color:var(--texto-3)">No hay facultades que mostrar.</td></tr>';
@@ -2739,17 +2811,24 @@ diagPintar({});
 /* --- Administración --- */
 $("#admin-refrescar").addEventListener("click", cargarAdmin);
 $("#det-volver").addEventListener("click", volverALista);
+montarFiltroSemaforo();
+
 $("#at-personas").addEventListener("click", ()=>{
   $("#at-personas").setAttribute("aria-selected","true");
   $("#at-programas").setAttribute("aria-selected","false");
   $("#admin-vista-personas").hidden = false;
   $("#admin-vista-programas").hidden = true;
+  /* En la pestaña de personas el filtro siempre aplica. */
+  $("#sem-filtro").hidden = false;
+  pintarPersonas();
 });
 $("#at-programas").addEventListener("click", ()=>{
   $("#at-personas").setAttribute("aria-selected","false");
   $("#at-programas").setAttribute("aria-selected","true");
   $("#admin-vista-personas").hidden = true;
   $("#admin-vista-programas").hidden = false;
+  /* Lo muestra o lo esconde según el nivel en el que se esté. */
+  pintarPorPrograma();
 });
 $("#inv-registro").addEventListener("click", ()=> abrirModal("registro"));
 $("#inv-entrar").addEventListener("click", ()=> abrirModal("entrar"));
