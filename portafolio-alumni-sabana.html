@@ -751,6 +751,100 @@ footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
 .adm-aviso { font-size: .85rem; line-height: 1.55; margin-top: 1rem; color: var(--alerta); }
 .adm-aviso:empty { display: none; }
 
+/* ─────────── ROSCA DE REPARTO ───────────
+   Portada tal cual desde el panel del Pitch, para que las dos
+   herramientas se lean igual. Un solo tono del azul institucional en
+   escala de claridad, y como mucho cinco sectores.
+
+   No es capricho: en una rosca cualquier sector puede quedar junto a
+   cualquier otro, así que todos los pares cuentan, y con más de tres
+   tonos distintos esos pares dejan de distinguirse para quien no
+   percibe bien el color. Con la escala de claridad, además, el dato
+   se dice dos veces: más grande y más oscuro es más gente. La
+   identidad nunca depende del color: cada sector lleva su etiqueta
+   en la leyenda, con su cifra y su porcentaje, y la tabla de debajo
+   trae el detalle completo. */
+.rosca-zona {
+  display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 1.8rem; align-items: center; margin: .3rem 0 1.4rem;
+  padding: 1.2rem 1.3rem; background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 6px;
+}
+.rosca-zona[hidden] { display: none; }
+.sr-solo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.rosca-caja { position: relative; width: 210px; height: 210px; flex: none; }
+.rosca-caja svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.rosca-centro {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; pointer-events: none; text-align: center;
+}
+.rosca-centro .n { font-family: var(--mono); font-size: 2.1rem; font-weight: 600; color: var(--azul); line-height: 1; }
+.rosca-centro .t {
+  font-size: .65rem; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--ink-faint); font-weight: 700; margin-top: .3rem;
+}
+.rosca-sector { transition: opacity .12s; }
+.rosca-caja:hover .rosca-sector { opacity: .45; }
+.rosca-caja .rosca-sector:hover { opacity: 1; }
+.rosca-sector.navega { cursor: pointer; }
+.rosca-titulo { font-size: .85rem; font-weight: 650; color: var(--ink); margin-bottom: .8rem; }
+.rosca-leyenda { display: flex; flex-direction: column; gap: .55rem; min-width: 0; max-width: 400px; }
+.rosca-item {
+  display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto;
+  gap: .6rem; align-items: center; font-size: .86rem; width: 100%; text-align: left;
+}
+/* La leyenda es el blanco grande: acertarle a un arco es difícil, a
+   una fila entera no. */
+button.rosca-item {
+  appearance: none; background: none; border: 0; box-shadow: none;
+  padding: .3rem .5rem; margin: -.3rem -.5rem; border-radius: 5px;
+  font: inherit; cursor: pointer; transition: background .12s;
+}
+button.rosca-item:hover { background: var(--surface-2); }
+button.rosca-item:hover .rosca-nom { color: var(--azul); }
+.rosca-punto { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.rosca-nom { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rosca-val { font-family: var(--mono); font-weight: 650; color: var(--ink); }
+.rosca-pct { font-family: var(--mono); color: var(--ink-faint); font-size: .8rem; min-width: 44px; text-align: right; }
+.rosca-vacia { grid-column: 1 / -1; color: var(--ink-faint); font-size: .9rem; text-align: center; padding: 1.6rem 0; }
+@media (max-width: 720px) { .rosca-zona { grid-template-columns: 1fr; justify-items: center; } }
+
+/* Migas: dicen dónde estás y dejan volver a cualquier nivel. */
+.admin-ruta { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-bottom: .9rem; font-size: .86rem; }
+.admin-ruta[hidden] { display: none; }
+.admin-ruta button {
+  appearance: none; background: none; border: 0; box-shadow: none; padding: .2rem .3rem;
+  font: inherit; color: var(--azul-500); cursor: pointer; text-decoration: underline;
+}
+.admin-ruta button:hover { color: var(--azul); }
+.admin-ruta .aqui { color: var(--ink); font-weight: 650; }
+.admin-ruta .sep { color: var(--ink-faint); }
+
+/* Filtros de la hoja de usuarios */
+.us-filtros {
+  display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;
+  margin: 1.2rem 0 .8rem; padding: 1rem 1.1rem;
+  background: var(--surface-2); border: 1px solid var(--rule); border-radius: 6px;
+}
+.us-filtros .field { margin: 0; min-width: 190px; flex: 1 1 190px; }
+.us-filtros button { flex: none; }
+.us-cuenta { font-size: .85rem; color: var(--ink-soft); margin: .2rem 0 .7rem; }
+.us-check {
+  display: flex; align-items: center; gap: .45rem; flex: none;
+  font-size: .88rem; color: var(--ink-soft); cursor: pointer; padding-bottom: .55rem;
+}
+.us-check input { width: auto; margin: 0; }
+/* Las cuentas del propio Centro se ven, pero se distinguen: no son
+   personas atendidas y no cuentan en los indicadores. */
+.us-marca {
+  display: inline-block; margin-left: .35rem; padding: .05rem .4rem;
+  border-radius: 999px; background: var(--azul-soft); color: var(--azul-500);
+  font-size: .6rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700;
+}
+#us-cuerpo tr[data-persona] { cursor: pointer; }
+#us-cuerpo tr[data-persona]:hover { background: var(--azul-soft); }
+#us-cuerpo tr.elegida { background: var(--azul-soft); }
+
 /* ─────────── LA REVISIÓN DE UNA PERSONA, EN EL CONSOLIDADO ───────────
    Se abre debajo de la tabla, no en una ventana: quien la lee suele
    estar comparando varias filas y una ventana le taparía la lista. */
@@ -1033,6 +1127,7 @@ footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
     </button>
     <div class="navgrupo" id="g-admin" hidden>
       <a class="simple" href="#admin">Consolidado del portafolio</a>
+      <a class="simple" href="#usuarios">Revisión usuarios</a>
     </div>
 
     <span class="guardado" id="guardado" title="Con la sesión abierta se guarda en tu cuenta y te sigue a cualquier computador. Sin entrar, solo en este navegador."><span class="punto" aria-hidden="true"></span><span id="guardado-txt">Sin cambios todavía</span></span>
@@ -1575,6 +1670,86 @@ footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
     <b>Qué contiene y qué no</b>
     Cada fila es el avance de una persona: su programa, cuántas secciones lleva y cuántas fichas de proyecto ha escrito. <b>No hay una sola palabra de su portafolio.</b> El texto sí está guardado, en su cuenta, pero las políticas de la base de datos solo se lo devuelven a ella: en esta tabla se cuenta, no se lee. Si necesitas leer el trabajo de alguien, pídeselo.<br><br>
     <b>Las segundas opiniones sí se pueden abrir</b>, con «Ver» en la fila de cada quien, porque sirven para preparar la asesoría. Ten presente que la instrucción le pide al modelo citar entre comillas las palabras del estudiante, así que una observación puede traer frases sueltas de su portafolio. Está avisado en pantalla antes de que nadie pida la revisión, y por eso puede pedirla sabiendo quién la va a leer.
+  </div>
+</section>
+
+<!-- ─────────── REVISIÓN USUARIOS (solo administración) ───────────
+     El consolidado de arriba cuenta; esta hoja mira persona por
+     persona. Trae lo mismo que el panel del Pitch: la rosca con su
+     desglose, los filtros por facultad y programa, y la ficha de
+     cada quien con lo que de verdad se puede consultar. -->
+<section id="usuarios" class="hoja-admin" data-titulo="Revisión usuarios" hidden>
+  <div class="admin-cab">
+    <div>
+      <span class="eyebrow">Administración · CDP</span>
+      <h2 class="sec">Revisión usuarios</h2>
+    </div>
+    <div class="actions">
+      <button id="us-actualizar" type="button">Actualizar</button>
+    </div>
+  </div>
+
+  <p class="prose" id="us-sub">Persona por persona: en qué punto va cada quien y qué le devolvió la revisión con inteligencia artificial. El texto de su portafolio no está aquí, solo lo lee su dueño.</p>
+
+  <!-- Dónde estás y cómo volver. Lo escribe pintarRutaUsuarios(). -->
+  <div class="admin-ruta" id="us-ruta"></div>
+
+  <figure class="rosca-zona" id="rosca-zona" hidden>
+    <div>
+      <div class="rosca-caja">
+        <svg id="rosca-svg" viewBox="0 0 100 100" role="img" aria-labelledby="rosca-alt"></svg>
+        <div class="rosca-centro"><span class="n" id="rosca-total">0</span><span class="t">Personas</span></div>
+      </div>
+    </div>
+    <figcaption>
+      <div class="rosca-titulo" id="rosca-titulo"></div>
+      <div class="rosca-leyenda" id="rosca-leyenda"></div>
+      <span id="rosca-alt" class="sr-solo"></span>
+    </figcaption>
+  </figure>
+
+  <div class="us-filtros">
+    <div class="field">
+      <label for="us-facultad">Facultad</label>
+      <select id="us-facultad"></select>
+    </div>
+    <div class="field">
+      <label for="us-programa">Programa</label>
+      <select id="us-programa"></select>
+    </div>
+    <div class="field">
+      <label for="us-busca">Buscar</label>
+      <input type="text" id="us-busca" placeholder="Nombre o correo">
+    </div>
+    <label class="us-check" for="us-centro">
+      <input type="checkbox" id="us-centro">
+      Incluir cuentas del Centro
+    </label>
+    <button id="us-limpiar" type="button">Quitar filtros</button>
+  </div>
+
+  <p class="us-cuenta" id="us-cuenta" role="status"></p>
+
+  <div class="tablewrap">
+    <table id="us-tabla">
+      <thead>
+        <tr>
+          <th>Persona</th><th>Facultad</th><th>Programa</th>
+          <th>Etapa</th><th>Secciones</th><th>Fichas</th><th>PDF</th>
+          <th>Segunda opinión</th><th>Última vez</th>
+        </tr>
+      </thead>
+      <tbody id="us-cuerpo"></tbody>
+    </table>
+  </div>
+
+  <div class="adm-revision" id="us-revision" hidden></div>
+
+  <p class="adm-aviso" id="us-aviso"></p>
+
+  <div class="callout" style="margin-top:1.6rem">
+    <b>Qué puedes consultar aquí</b>
+    El avance de cada persona y las segundas opiniones que haya pedido, con sus observaciones. <b>No su portafolio:</b> el texto que escribe solo se lo devuelve la base de datos a ella. Si necesitas leerlo, pídeselo: tiene el PDF a un clic en «Tu portafolio».
   </div>
 </section>
 
@@ -4112,40 +4287,67 @@ function hayRegistro() {
 var admFilas = [];
 var admRevisiones = [];   /* las segundas opiniones de todo el mundo */
 
+/* Una cuenta del propio Centro. Aparece en la lista, marcada, pero
+   no cuenta como persona atendida: quien administra necesita verse
+   a sí mismo para saber que la herramienta está guardando, y a la
+   vez no quiere salir en la estadística del servicio. */
+function esCuentaDelCentro(x) { return x && x.es_admin === true; }
+
+/* Las personas atendidas: todo el mundo menos el Centro. Es lo que
+   alimenta los indicadores, el desglose por programa y el Excel. */
+function admPersonas() {
+  return admFilas.filter(function (x) { return !esCuentaDelCentro(x); });
+}
+
 function esAdministrador() {
   return typeof Cuenta !== "undefined" && Cuenta && typeof Cuenta.esAdmin === "function" && Cuenta.esAdmin();
 }
 
 /* Muestra o esconde todo lo de administración de una vez. */
+/* Las dos hojas de administración. No son parte del recorrido: no
+   cuentan para el avance ni salen en el paginador. */
+var HOJAS_ADMIN = ["admin", "usuarios"];
+
 function pintarAccesoAdmin() {
   var admin = esAdministrador();
-  var hoja = $("#admin"), nav = $("#nav-admin"), grupo = $("#g-admin");
-  if (!hoja || !nav || !grupo) return;
+  var nav = $("#nav-admin"), grupo = $("#g-admin");
+  if (!nav || !grupo) return;
 
   nav.hidden = !admin;
   grupo.hidden = !admin;
-  if (!admin) {
-    hoja.hidden = true;
-    hoja.classList.remove("on");
-    return;
-  }
-  hoja.hidden = false;
-  if (!admFilas.length) cargarConsolidado();
+
+  HOJAS_ADMIN.forEach(function (id) {
+    var hoja = document.getElementById(id);
+    if (!hoja) return;
+    hoja.hidden = !admin;
+    if (!admin) hoja.classList.remove("on");
+  });
+
+  if (admin && !admFilas.length) cargarConsolidado();
 }
 
-function irAlConsolidado() {
+function irAHojaAdmin(id) {
   if (!esAdministrador()) return;
+  var hoja = document.getElementById(id);
+  if (!hoja) return;
+
   hojas.forEach(function (h) { h.classList.remove("on"); });
-  $("#admin").classList.add("on");
+  HOJAS_ADMIN.forEach(function (x) {
+    var el = document.getElementById(x);
+    if (el) el.classList.toggle("on", x === id);
+  });
+
   navLinks.forEach(function (l) {
-    var activo = l.getAttribute("href") === "#admin";
+    var activo = l.getAttribute("href") === "#" + id;
     l.classList.toggle("on", activo);
     if (activo) { l.setAttribute("aria-current", "page"); } else { l.removeAttribute("aria-current"); }
   });
-  abrirGrupoDeHoja("admin");
+  abrirGrupoDeHoja(id);
   cerrarMenu();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+function irAlConsolidado() { irAHojaAdmin("admin"); }
 
 function admAviso(txt) {
   var a = $("#adm-aviso");
@@ -4164,12 +4366,13 @@ function cargarConsolidado() {
   }).catch(function () {
     admRevisiones = [];
   }).then(function () {
-    if (admFilas.length) pintarConsolidado();
+    if (admFilas.length) { pintarConsolidado(); pintarUsuarios(); }
   });
 
   api("/admin/portafolios", "GET").then(function (r) {
     admFilas = (r && Array.isArray(r.portafolios)) ? r.portafolios : [];
     pintarConsolidado();
+    pintarUsuarios();
   }).catch(function (err) {
     $("#adm-sub").textContent = "No se pudo cargar el consolidado.";
     admAviso("No se pudo leer el consolidado: " + ((err && err.message) || "error desconocido") +
@@ -4224,8 +4427,8 @@ function celdaRevisiones(x) {
 
 var admRevAbierta = "";
 
-function abrirRevisionesDe(usuarioId, cual) {
-  var caja = $("#adm-revision");
+function abrirRevisionesDe(usuarioId, cual, dondeId) {
+  var caja = $(dondeId || "#adm-revision");
   if (!caja) return;
 
   var suyas = revisionesPorPersona()[usuarioId] || [];
@@ -4306,22 +4509,392 @@ $("#admin").addEventListener("click", function (e) {
   }
 });
 
+/* ══════════════════════════════════════════════════════════════
+   REVISIÓN USUARIOS
+   --------------------------------------------------------------
+   El consolidado cuenta; esta hoja mira persona por persona. Trae
+   lo mismo que el panel del Pitch, para que las dos herramientas se
+   usen igual: la rosca del reparto con su desglose, los filtros por
+   facultad y programa, y la ficha de cada quien.
+
+   POR QUÉ LA ROSCA ES DE UN SOLO TONO Y DE CINCO SECTORES
+   Una rosca sirve para ver una proporción de un vistazo, no para
+   comparar valores parecidos, y deja de leerse pasados unos seis
+   sectores. Con diez facultades se pintan las cuatro mayores y el
+   resto se agrupa; el detalle completo está en la tabla, que es
+   además el respaldo accesible de la gráfica.
+
+   Cualquier sector puede quedar junto a cualquier otro, así que
+   todos los pares cuentan: con más de tres tonos distintos esos
+   pares dejan de distinguirse para quien no percibe bien el color.
+   Una escala de claridad del azul institucional lo evita y dice dos
+   veces lo mismo, más grande y más oscuro es más gente. La
+   identidad nunca depende del color: cada sector lleva su etiqueta,
+   su cifra y su porcentaje en la leyenda.
+   ══════════════════════════════════════════════════════════════ */
+
+var ROSCA_TONOS = ["#001459", "#2A5AA8", "#5E93CE", "#A3C3E6"];
+var ROSCA_OTRAS = "#5C6472";
+var ROSCA_MAX = 4;      /* sectores con nombre propio; el quinto agrupa */
+
+/* Un sector es un arco entre dos radios. Se dibuja como trazo
+   grueso sobre un círculo: sale más simple y más nítido que
+   componer el path a mano. */
+function arcoRosca(desde, hasta, color, id) {
+  var R = 36, C = 2 * Math.PI * R;
+  var largo = Math.max(0, hasta - desde) * C;
+  var hueco = 1.6;      /* aire entre sectores, sin inventar un borde */
+  var visible = Math.max(0.5, largo - hueco);
+  return '<circle class="rosca-sector" data-sector="' + id + '"' +
+    ' cx="50" cy="50" r="' + R + '" fill="none"' +
+    ' stroke="' + color + '" stroke-width="17"' +
+    ' stroke-dasharray="' + visible.toFixed(2) + " " + (C - visible).toFixed(2) + '"' +
+    ' stroke-dashoffset="' + (-desde * C).toFixed(2) + '"' +
+    ' transform="rotate(-90 50 50)"><title></title></circle>';
+}
+
+/* datos: [{nombre, valor, clave}] sin ordenar. «clave» es a dónde
+   lleva el sector si se pulsa. Sin alElegir la rosca solo se mira. */
+function pintarRosca(titulo, datos, etiquetaCentro, alElegir) {
+  var zona = $("#rosca-zona");
+  if (!zona) return;
+
+  var con = datos.filter(function (d) { return d.valor > 0; })
+                 .sort(function (a, b) { return b.valor - a.valor; });
+  var total = con.reduce(function (a, d) { return a + d.valor; }, 0);
+
+  zona.hidden = false;
+  $("#rosca-titulo").textContent = titulo;
+
+  if (!total) {
+    $("#rosca-svg").innerHTML =
+      '<circle cx="50" cy="50" r="36" fill="none" stroke="#E9EEF7" stroke-width="17"/>';
+    $("#rosca-total").textContent = "0";
+    $("#rosca-leyenda").innerHTML =
+      '<div class="rosca-vacia">Todavía no hay a nadie registrado aquí.</div>';
+    $("#rosca-alt").textContent = "Sin datos que representar.";
+    return;
+  }
+
+  var trozos = con.slice(0, ROSCA_MAX).map(function (d, i) {
+    return { nombre: d.nombre, valor: d.valor, color: ROSCA_TONOS[i], clave: d.clave || d.nombre };
+  });
+  var resto = con.slice(ROSCA_MAX);
+  if (resto.length) {
+    var uno = resto.length === 1;
+    trozos.push({
+      nombre: uno ? resto[0].nombre : "Otras " + resto.length,
+      valor: resto.reduce(function (a, d) { return a + d.valor; }, 0),
+      color: uno ? ROSCA_TONOS[ROSCA_MAX - 1] : ROSCA_OTRAS,
+      /* El sector agrupado no lleva a ninguna parte: son varias. */
+      clave: uno ? (resto[0].clave || resto[0].nombre) : null,
+      agrupa: uno ? null : resto.map(function (d) { return d.nombre; })
+    });
+  }
+
+  var acumulado = 0;
+  $("#rosca-svg").innerHTML = trozos.map(function (t, i) {
+    var desde = acumulado;
+    acumulado += t.valor / total;
+    return arcoRosca(desde, acumulado, t.color, i);
+  }).join("");
+  $("#rosca-total").textContent = total;
+
+  var navegable = function (i) { return !!(alElegir && trozos[i].clave); };
+
+  $("#rosca-leyenda").innerHTML = trozos.map(function (t, i) {
+    var pct = Math.round(t.valor / total * 100);
+    var eti = t.agrupa ? "Agrupa " + t.agrupa.length + ": " + t.agrupa.join(", ") : t.nombre;
+    /* La leyenda es un botón cuando lleva a alguna parte: es un
+       blanco mucho mayor que el arco y funciona con el teclado. */
+    var tag = navegable(i) ? "button" : "div";
+    var extra = navegable(i)
+      ? ' type="button" class="rosca-item navega" data-rosca="' + i + '"'
+      : ' class="rosca-item"';
+    return "<" + tag + extra + ' title="' + esc(eti) + '">' +
+      '<span class="rosca-punto" style="background:' + t.color + '"></span>' +
+      '<span class="rosca-nom">' + esc(t.nombre) + "</span>" +
+      '<span class="rosca-val">' + t.valor + "</span>" +
+      '<span class="rosca-pct">' + pct + " %</span></" + tag + ">";
+  }).join("");
+
+  $$("#rosca-svg [data-sector]").forEach(function (el) {
+    var i = Number(el.getAttribute("data-sector")), t = trozos[i];
+    var pct = Math.round(t.valor / total * 100);
+    var tit = el.querySelector("title");
+    if (tit) {
+      tit.textContent = t.nombre + ": " + t.valor + " de " + total + " (" + pct + " %)" +
+        (navegable(i) ? ". Pulsa para ver solo esta parte."
+                      : (t.agrupa ? ". Agrupa " + t.agrupa.length + ", están en la tabla." : ""));
+    }
+    if (!navegable(i)) return;
+    el.classList.add("navega");
+    el.addEventListener("click", function () { alElegir(t.clave); });
+  });
+
+  $$("#rosca-leyenda [data-rosca]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      alElegir(trozos[Number(b.getAttribute("data-rosca"))].clave);
+    });
+  });
+
+  $("#rosca-alt").textContent = titulo + ". " +
+    trozos.map(function (t) { return t.nombre + ", " + t.valor; }).join("; ") +
+    ". Total " + total + " " + (etiquetaCentro || "personas") +
+    ". El detalle completo está en la tabla siguiente.";
+}
+
+/* ── Estado de los filtros ──────────────────────────────────── */
+var usFacultad = "", usPrograma = "", usBusca = "", usElegida = "";
+var usConCentro = false;   /* ¿se enseñan también las cuentas del CDP? */
+
+function usTodas() {
+  var cuenta = revisionesPorPersona();
+  var base = usConCentro ? admFilas : admPersonas();
+  return base.map(function (x) {
+    var suyas = cuenta[x.usuario_id] || [];
+    return {
+      id: x.usuario_id,
+      nombre: x.nombre || x.correo || "Sin nombre",
+      correo: x.correo || "",
+      facultad: x.facultad || "",
+      programa: x.programa || "",
+      etapa: x.etapa || "",
+      hojas: Number(x.hojas_completas) || 0,
+      fichas: Number(x.fichas_completas) || 0,
+      fichasTotal: Number(x.fichas_total) || 0,
+      descargado: !!x.descargado,
+      actualizado: x.actualizado_en,
+      revisiones: suyas.length,
+      delCentro: esCuentaDelCentro(x)
+    };
+  });
+}
+
+function usFiltradas() {
+  var q = usBusca.trim().toLowerCase();
+  return usTodas().filter(function (p) {
+    if (usFacultad && p.facultad !== usFacultad) return false;
+    if (usPrograma && p.programa !== usPrograma) return false;
+    if (q && (p.nombre + " " + p.correo).toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+}
+
+/* Cuenta por clave, para la rosca. */
+function usAgrupar(lista, campo) {
+  var g = {};
+  lista.forEach(function (p) {
+    var k = p[campo] || "Sin " + campo;
+    g[k] = (g[k] || 0) + 1;
+  });
+  return Object.keys(g).map(function (k) { return { nombre: k, valor: g[k], clave: k }; });
+}
+
+function pintarRutaUsuarios() {
+  var ruta = $("#us-ruta");
+  if (!ruta) return;
+  ruta.innerHTML = "";
+
+  var pasos = [{ txt: "Todas las facultades", ir: function () { usFacultad = ""; usPrograma = ""; pintarUsuarios(); } }];
+  if (usFacultad) pasos.push({ txt: usFacultad, ir: function () { usPrograma = ""; pintarUsuarios(); } });
+  if (usPrograma) pasos.push({ txt: usPrograma, ir: null });
+
+  pasos.forEach(function (p, i) {
+    if (i) {
+      var sep = document.createElement("span");
+      sep.className = "sep";
+      sep.textContent = "›";
+      ruta.appendChild(sep);
+    }
+    var ultimo = i === pasos.length - 1;
+    if (ultimo) {
+      var aqui = document.createElement("span");
+      aqui.className = "aqui";
+      aqui.textContent = p.txt;
+      ruta.appendChild(aqui);
+      return;
+    }
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = p.txt;
+    b.addEventListener("click", p.ir);
+    ruta.appendChild(b);
+  });
+}
+
+/* Los desplegables traen TODAS las facultades del catálogo, no solo
+   las que ya tienen gente: si una está vacía, esa también es una
+   respuesta y hay que poder verla. */
+function pintarFiltrosUsuarios() {
+  var selF = $("#us-facultad"), selP = $("#us-programa");
+  if (!selF || !selP) return;
+
+  var facs = {};
+  if (typeof FACULTADES !== "undefined" && FACULTADES) {
+    Object.keys(FACULTADES).forEach(function (f) { facs[f] = 1; });
+  }
+  usTodas().forEach(function (p) { if (p.facultad) facs[p.facultad] = 1; });
+
+  var listaF = Object.keys(facs).sort();
+  selF.innerHTML = '<option value="">Todas</option>' + listaF.map(function (f) {
+    return '<option value="' + esc(f) + '">' + esc(f) + "</option>";
+  }).join("");
+  selF.value = usFacultad;
+
+  var progs = {};
+  if (usFacultad && typeof FACULTADES !== "undefined" && FACULTADES[usFacultad]) {
+    (FACULTADES[usFacultad] || []).forEach(function (x) {
+      progs[typeof x === "string" ? x : (x && x.nombre) || ""] = 1;
+    });
+  }
+  usTodas().forEach(function (p) {
+    if (!p.programa) return;
+    if (usFacultad && p.facultad !== usFacultad) return;
+    progs[p.programa] = 1;
+  });
+  delete progs[""];
+
+  var listaP = Object.keys(progs).sort();
+  selP.innerHTML = '<option value="">Todos</option>' + listaP.map(function (x) {
+    return '<option value="' + esc(x) + '">' + esc(x) + "</option>";
+  }).join("");
+  selP.value = usPrograma;
+  selP.disabled = !listaP.length;
+}
+
+function pintarTablaUsuarios() {
+  var filas = usFiltradas().sort(function (a, b) {
+    return String(b.actualizado || "").localeCompare(String(a.actualizado || ""));
+  });
+
+  $("#us-cuenta").textContent = filas.length === 1
+    ? "1 persona"
+    : filas.length + " personas" + (usFacultad || usPrograma || usBusca ? " con estos filtros" : "");
+
+  $("#us-cuerpo").innerHTML = filas.length
+    ? filas.map(function (p) {
+        return '<tr data-persona="' + esc(p.id) + '"' +
+          (p.id === usElegida ? ' class="elegida"' : "") + ">" +
+          '<td><div class="adm-persona">' + esc(p.nombre) +
+            (p.delCentro ? ' <span class="us-marca">Centro</span>' : "") + "</div>" +
+          '<div class="adm-correo">' + esc(p.correo) + "</div></td>" +
+          "<td>" + esc(p.facultad || "—") + "</td>" +
+          "<td>" + esc(p.programa || "—") + "</td>" +
+          "<td>" + esc(p.etapa || "—") + "</td>" +
+          "<td>" + p.hojas + " de 5</td>" +
+          "<td>" + p.fichas + " de " + p.fichasTotal + "</td>" +
+          '<td class="' + (p.descargado ? "adm-si" : "adm-no") + '">' + (p.descargado ? "Sí" : "No") + "</td>" +
+          "<td>" + (p.revisiones
+            ? '<button type="button" class="adm-ver" data-revisiones="' + esc(p.id) +
+              '">Ver (' + p.revisiones + ")</button>"
+            : '<span class="adm-no">—</span>') + "</td>" +
+          "<td>" + esc(fechaCorta(p.actualizado)) + "</td></tr>";
+      }).join("")
+    : '<tr><td colspan="9" style="color:var(--ink-faint)">Nadie cumple estos filtros.</td></tr>';
+}
+
+function pintarUsuarios() {
+  if (!$("#us-cuerpo")) return;
+
+  pintarRutaUsuarios();
+  pintarFiltrosUsuarios();
+
+  /* La rosca desglosa el nivel en el que estás: por facultad al
+     principio, por programa dentro de una, y nada cuando ya se eligió
+     un programa (un solo sector no dice nada). */
+  var base = usTodas().filter(function (p) {
+    if (usFacultad && p.facultad !== usFacultad) return false;
+    return true;
+  });
+
+  if (usPrograma) {
+    $("#rosca-zona").hidden = true;
+  } else if (usFacultad) {
+    pintarRosca("Personas por programa · " + usFacultad,
+      usAgrupar(base, "programa"), "personas",
+      function (clave) { usPrograma = clave; usElegida = ""; pintarUsuarios(); });
+  } else {
+    pintarRosca("Personas por facultad",
+      usAgrupar(base, "facultad"), "personas",
+      function (clave) { usFacultad = clave; usPrograma = ""; usElegida = ""; pintarUsuarios(); });
+  }
+
+  pintarTablaUsuarios();
+}
+
+/* Los controles se escuchan desde la hoja: la tabla se repinta
+   entera con cada filtro y sus botones nacen y mueren con ella. */
+$("#us-facultad").addEventListener("change", function () {
+  usFacultad = this.value; usPrograma = ""; usElegida = ""; pintarUsuarios();
+});
+$("#us-programa").addEventListener("change", function () {
+  usPrograma = this.value; usElegida = ""; pintarUsuarios();
+});
+$("#us-busca").addEventListener("input", function () {
+  usBusca = this.value; pintarUsuarios();
+});
+$("#us-centro").addEventListener("change", function () {
+  usConCentro = this.checked; usElegida = ""; pintarUsuarios();
+});
+$("#us-limpiar").addEventListener("click", function () {
+  usFacultad = ""; usPrograma = ""; usBusca = ""; usElegida = "";
+  $("#us-busca").value = "";
+  /* La casilla del Centro no se toca: no es un filtro de búsqueda
+     sino una decisión sobre qué se está mirando. */
+  $("#us-revision").hidden = true;
+  pintarUsuarios();
+});
+$("#us-actualizar").addEventListener("click", cargarConsolidado);
+
+$("#usuarios").addEventListener("click", function (e) {
+  var b = e.target && e.target.closest ? e.target.closest("button") : null;
+  if (b && b.hasAttribute("data-revisiones")) {
+    usElegida = b.getAttribute("data-revisiones");
+    pintarTablaUsuarios();
+    abrirRevisionesDe(usElegida, null, "#us-revision");
+    return;
+  }
+  if (b && b.hasAttribute("data-revision")) {
+    abrirRevisionesDe(b.getAttribute("data-de"), b.getAttribute("data-revision"), "#us-revision");
+    return;
+  }
+  if (b) return;
+
+  /* Pulsar la fila entera abre lo de esa persona: es un blanco
+     mucho mayor que el botón. */
+  var tr = e.target && e.target.closest ? e.target.closest("tr[data-persona]") : null;
+  if (!tr) return;
+  usElegida = tr.getAttribute("data-persona");
+  pintarTablaUsuarios();
+  abrirRevisionesDe(usElegida, null, "#us-revision");
+});
+
 function fechaCorta(t) {
   if (!t) return "—";
   return String(t).replace("T", " ").slice(0, 16);
 }
 
 function pintarConsolidado() {
-  var n = admFilas.length;
-  var sec = n ? admFilas.reduce(function (a, x) { return a + (Number(x.hojas_completas) || 0); }, 0) / n : 0;
-  var fic = n ? admFilas.reduce(function (a, x) { return a + (Number(x.fichas_completas) || 0); }, 0) / n : 0;
-  var pdf = admFilas.filter(function (x) { return x.descargado; }).length;
+  var gente = admPersonas();
+  var n = gente.length;
+  var sec = n ? gente.reduce(function (a, x) { return a + (Number(x.hojas_completas) || 0); }, 0) / n : 0;
+  var fic = n ? gente.reduce(function (a, x) { return a + (Number(x.fichas_completas) || 0); }, 0) / n : 0;
+  var pdf = gente.filter(function (x) { return x.descargado; }).length;
   var programas = {};
-  admFilas.forEach(function (x) { if (x.programa) programas[x.programa] = 1; });
+  gente.forEach(function (x) { if (x.programa) programas[x.programa] = 1; });
+
+  var delCentro = admFilas.length - n;
+  var coletilla = delCentro
+    ? (delCentro === 1 ? " Queda fuera una cuenta del Centro" : " Quedan fuera " + delCentro + " cuentas del Centro") +
+      ": las ves en «Revisión usuarios», marcando la casilla."
+    : "";
 
   $("#adm-sub").textContent = n
-    ? "Personas que han abierto un portafolio con la sesión iniciada. Del portafolio se registra el avance, nunca el texto. De las segundas opiniones sí se ve el contenido: pulsa «Ver» en la fila de cada quien."
-    : "Todavía nadie ha abierto un portafolio con la sesión iniciada.";
+    ? "Personas que han abierto un portafolio con la sesión iniciada. Del portafolio se registra el avance, nunca el texto. De las segundas opiniones sí se ve el contenido: pulsa «Ver» en la fila de cada quien." + coletilla
+    : (admFilas.length
+        ? "Todavía no ha entrado nadie de fuera del Centro." + coletilla
+        : "Todavía nadie ha abierto un portafolio con la sesión iniciada.");
 
   $("#adm-kpis").innerHTML = [
     ["Personas", n],
@@ -4336,7 +4909,7 @@ function pintarConsolidado() {
   }).join("");
 
   $("#adm-cuerpo").innerHTML = n
-    ? admFilas.map(function (x) {
+    ? gente.map(function (x) {
         return "<tr>" +
           '<td><div class="adm-persona">' + esc(x.nombre || x.correo) + "</div>" +
           '<div class="adm-correo">' + esc(x.correo || "") + "</div></td>" +
@@ -4352,7 +4925,7 @@ function pintarConsolidado() {
     : '<tr><td colspan="9" style="color:var(--ink-faint)">Nadie ha empezado un portafolio todavía.</td></tr>';
 
   var g = {};
-  admFilas.forEach(function (x) {
+  gente.forEach(function (x) {
     var k = x.programa || "Sin programa";
     if (!g[k]) g[k] = { n: 0, sec: 0, fic: 0, pdf: 0 };
     g[k].n++;
@@ -4373,7 +4946,8 @@ function pintarConsolidado() {
 }
 
 function exportarConsolidado() {
-  if (!admFilas.length) { admAviso("No hay nada que exportar todavía."); return; }
+  var gente = admPersonas();
+  if (!gente.length) { admAviso("No hay nada que exportar todavía."); return; }
   if (typeof construirXLSX !== "function") {
     admAviso("El generador de Excel no está disponible en esta versión.");
     return;
@@ -4383,7 +4957,7 @@ function exportarConsolidado() {
     "Secciones completas", "Fichas escritas", "Fichas completas",
     "Descargó el PDF", "Pidió revisión con IA", "Empezó", "Última actividad"
   ]];
-  admFilas.forEach(function (x) {
+  gente.forEach(function (x) {
     filas.push([
       x.correo || "", x.nombre || "", x.facultad || "", x.programa || "",
       x.area || "", x.etapa || "", x.objetivo || "",
@@ -4400,8 +4974,8 @@ function exportarConsolidado() {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
     admAviso("");
-    $("#adm-sub").textContent = "Excel descargado con " + admFilas.length +
-      (admFilas.length === 1 ? " persona." : " personas.") +
+    $("#adm-sub").textContent = "Excel descargado con " + gente.length +
+      (gente.length === 1 ? " persona." : " personas.") +
       " Contiene datos personales: guárdalo donde corresponda y no lo reenvíes por correo.";
   } catch (e) {
     admAviso("No se pudo generar el Excel: " + e.message);
@@ -5536,9 +6110,15 @@ function migrarLocalStorageASupabase() {
   });
 }
 
-/* Un solo escuchador para todo lo que se escribe dentro del contenido */
+/* Un solo escuchador para todo lo que se escribe dentro del contenido.
+   Las hojas de administración quedan fuera: escribir en el buscador
+   del consolidado no es escribir el portafolio, y disparaba un
+   guardado por cada tecla. */
 document.addEventListener("input", function (e) {
-  if (e.target.closest && e.target.closest("main")) { render(); guardar(); }
+  if (!e.target.closest) return;
+  if (!e.target.closest("main")) return;
+  if (e.target.closest(".hoja-admin")) return;
+  render(); guardar();
 });
 
 $("#f-programa").addEventListener("change", function () { syncPrograma(); adapt(); render(); guardar(); });
@@ -5633,10 +6213,11 @@ $("#adm-excel").addEventListener("click", exportarConsolidado);
 /* El enlace del índice no lleva a una hoja del recorrido, así que
    se atiende aparte. */
 document.addEventListener("click", function (e) {
-  var a = e.target && e.target.closest ? e.target.closest('a[href="#admin"]') : null;
+  var a = e.target && e.target.closest
+    ? e.target.closest('a[href="#admin"], a[href="#usuarios"]') : null;
   if (!a) return;
   e.preventDefault();
-  irAlConsolidado();
+  irAHojaAdmin(a.getAttribute("href").slice(1));
 });
 
 /* Arranque */
@@ -5669,7 +6250,9 @@ pintarAvisoTraductor();
 pintarAvisoRevision();
 pintarAccesoAdmin();
 cargarRevisiones();
-if (window.location.hash === "#admin") { irAlConsolidado(); }
+if (HOJAS_ADMIN.indexOf(window.location.hash.slice(1)) > -1) {
+  irAHojaAdmin(window.location.hash.slice(1));
+}
 
 })();
 </script>

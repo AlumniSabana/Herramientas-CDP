@@ -110,9 +110,22 @@ create policy portafolios_borrar on public.portafolios
   for delete to authenticated using (usuario_id = auth.uid());
 
 -- El administrador NO aparece aquí, y esto sigue siendo deliberado:
--- el borrador del portafolio solo lo lee su dueño. El consolidado se
--- alimenta de la vista de más abajo, que cuenta filas y no devuelve
--- una sola palabra de lo que nadie escribió.
+-- el borrador del portafolio solo lo lee su dueño. Ni siquiera con
+-- rol de administración se puede consultar «portafolios»,
+-- «proyectos» o «secciones_portafolio» directamente.
+--
+-- El consolidado no las consulta: entra por la vista de más abajo,
+-- que se ejecuta con los permisos de su dueño y por eso sí puede
+-- contar filas. Esa vista es la única puerta, y lo que deja pasar
+-- lo decide su SELECT: cifras y las tres etiquetas de agrupación,
+-- ni una palabra de lo que nadie escribió.
+--
+-- OJO SI ALGUIEN LA REESCRIBE: con «security_invoker = true» la
+-- vista pasa a ejecutarse con los permisos de quien pregunta, y
+-- como el administrador no los tiene, devuelve cero filas sin dar
+-- ningún error. La pantalla dice entonces «todavía nadie ha abierto
+-- un portafolio», que es indistinguible de que la herramienta no
+-- esté guardando nada. Pasó, y costó encontrarlo.
 
 drop policy if exists "usuario administra sus proyectos"   on public.proyectos;
 drop policy if exists "usuarios gestionan sus proyectos"   on public.proyectos;
@@ -194,9 +207,7 @@ grant select, insert, delete         on public.revisiones_ia        to authentic
 -- Centro necesita leerlos, no basta con ampliar esta vista: hay que
 -- decírselo antes en pantalla a quien los escribe.
 drop view if exists public.portafolios_admin;
-create view public.portafolios_admin
-with (security_invoker = true)
-as
+create view public.portafolios_admin as
 with sec as (
   select
     portafolio_id,
@@ -250,14 +261,25 @@ select
   coalesce(pr.fichas_completas, 0) as fichas_completas,
   coalesce(s.descargado, false)    as descargado,
   exists (select 1 from public.revisiones_ia r where r.portafolio_id = p.id) as revisado_ia,
+  -- Las cuentas del propio Centro se marcan, no se esconden.
+  --
+  -- Antes la vista las filtraba, y el resultado era que quien
+  -- administra abría el panel, no se veía a sí mismo y no tenía
+  -- forma de saber si la herramienta estaba guardando algo. Peor
+  -- todavía cuando es la única cuenta que ha entrado: la pantalla
+  -- decía «todavía nadie», que es indistinguible de una avería.
+  --
+  -- Siguen sin contar como personas atendidas: de eso se encarga la
+  -- interfaz, que las deja fuera de los indicadores y solo las
+  -- enseña si se pide.
+  coalesce(f.rol, 'usuario') = 'admin' as es_admin,
   p.creado_en,
   p.actualizado_en
 from public.portafolios p
 join public.perfiles f on f.id = p.usuario_id
 left join sec  s  on s.portafolio_id  = p.id
 left join proy pr on pr.portafolio_id = p.id
-where public.es_admin()
-  and coalesce(f.rol, 'usuario') <> 'admin';
+where public.es_admin();
 
 revoke all on public.portafolios_admin from anon;
 grant select on public.portafolios_admin to authenticated;
@@ -265,12 +287,10 @@ grant select on public.portafolios_admin to authenticated;
 -- ── LAS REVISIONES, CON NOMBRE Y PROGRAMA ─────────────────────
 -- Cruza cada segunda opinión con el perfil de quien la pidió, para
 -- que el consolidado no tenga que hacer dos consultas y casarlas a
--- mano. Solo devuelve filas a quien tiene rol de administración y
--- deja fuera las de las propias cuentas del Centro.
+-- mano. Solo devuelve filas a quien tiene rol de administración; las
+-- de las propias cuentas del Centro vienen marcadas, no escondidas.
 drop view if exists public.revisiones_admin;
-create view public.revisiones_admin
-with (security_invoker = true)
-as
+create view public.revisiones_admin as
   select
     r.id,
     r.usuario_id,
@@ -280,11 +300,11 @@ as
     coalesce(f.facultad, '') as facultad,
     coalesce(f.programa, '') as programa,
     r.resultado,
+    coalesce(f.rol, 'usuario') = 'admin' as es_admin,
     r.creado_en
   from public.revisiones_ia r
   join public.perfiles f on f.id = r.usuario_id
-  where public.es_admin()
-    and coalesce(f.rol, 'usuario') <> 'admin';
+  where public.es_admin();
 
 revoke all on public.revisiones_admin from anon;
 grant select on public.revisiones_admin to authenticated;
@@ -301,4 +321,12 @@ grant select on public.revisiones_admin to authenticated;
 --
 --   select count(*) from public.portafolios_admin;
 --   select count(*) from public.revisiones_admin;
---   -- desde una cuenta de administración, las dos sin error
+--   -- desde una cuenta de administración, las dos sin error y con
+--   -- tantas filas como personas haya en «portafolios»
+--
+--   -- Y la comprobación que de verdad importa: la vista tiene que
+--   -- devolver a TODO el mundo, no solo a quien pregunta.
+--   select count(*) as en_la_tabla from public.portafolios;
+--   select count(*) as en_la_vista from public.portafolios_admin;
+--   -- la segunda es la primera menos nada: las cuentas del Centro
+--   -- también salen, marcadas con es_admin.
