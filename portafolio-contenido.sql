@@ -109,10 +109,10 @@ create policy portafolios_editar on public.portafolios
 create policy portafolios_borrar on public.portafolios
   for delete to authenticated using (usuario_id = auth.uid());
 
--- El administrador NO aparece aquí. Ve el consolidado a través de la
--- vista de más abajo, que cuenta filas y no devuelve una sola
--- palabra del portafolio de nadie. Es deliberado: el panel es para
--- saber si el servicio se usa, no para leer el trabajo ajeno.
+-- El administrador NO aparece aquí, y esto sigue siendo deliberado:
+-- el borrador del portafolio solo lo lee su dueño. El consolidado se
+-- alimenta de la vista de más abajo, que cuenta filas y no devuelve
+-- una sola palabra de lo que nadie escribió.
 
 drop policy if exists "usuario administra sus proyectos"   on public.proyectos;
 drop policy if exists "usuarios gestionan sus proyectos"   on public.proyectos;
@@ -148,6 +148,29 @@ create policy revisiones_crear on public.revisiones_ia
 
 create policy revisiones_borrar on public.revisiones_ia
   for delete to authenticated using (usuario_id = auth.uid());
+
+-- ── EL CENTRO PUEDE LEER LAS SEGUNDAS OPINIONES ───────────────
+-- Esta política sí es una excepción a la regla anterior, y conviene
+-- entender exactamente qué abre.
+--
+-- Una revisión es lo que el modelo respondió, no el portafolio. Pero
+-- la instrucción le pide citar entre comillas las palabras del
+-- estudiante cuando señala un problema, así que una observación
+-- puede contener frases sueltas de su texto. No es el borrador; no
+-- es texto anónimo tampoco.
+--
+-- Se abre porque el Centro de Desarrollo Profesional atiende a esa
+-- persona: llegar a la asesoría sabiendo qué le señaló la máquina
+-- ahorra media sesión. Lo que NO se abre es el borrador: el
+-- portafolio en sí sigue siendo ilegible para cualquiera que no sea
+-- su dueño, y eso no cambia con esta política.
+--
+-- Está dicho en pantalla, en la hoja «Antes de publicar» y en el pie
+-- de la herramienta, antes de que nadie pulse el botón. Si algún día
+-- se retira esta política, hay que quitarlo de ahí también.
+drop policy if exists revisiones_ver_admin on public.revisiones_ia;
+create policy revisiones_ver_admin on public.revisiones_ia
+  for select to authenticated using (public.es_admin());
 
 revoke all on public.portafolios          from anon;
 revoke all on public.proyectos            from anon;
@@ -239,6 +262,33 @@ where public.es_admin()
 revoke all on public.portafolios_admin from anon;
 grant select on public.portafolios_admin to authenticated;
 
+-- ── LAS REVISIONES, CON NOMBRE Y PROGRAMA ─────────────────────
+-- Cruza cada segunda opinión con el perfil de quien la pidió, para
+-- que el consolidado no tenga que hacer dos consultas y casarlas a
+-- mano. Solo devuelve filas a quien tiene rol de administración y
+-- deja fuera las de las propias cuentas del Centro.
+drop view if exists public.revisiones_admin;
+create view public.revisiones_admin
+with (security_invoker = true)
+as
+  select
+    r.id,
+    r.usuario_id,
+    r.portafolio_id,
+    f.correo,
+    f.nombre,
+    coalesce(f.facultad, '') as facultad,
+    coalesce(f.programa, '') as programa,
+    r.resultado,
+    r.creado_en
+  from public.revisiones_ia r
+  join public.perfiles f on f.id = r.usuario_id
+  where public.es_admin()
+    and coalesce(f.rol, 'usuario') <> 'admin';
+
+revoke all on public.revisiones_admin from anon;
+grant select on public.revisiones_admin to authenticated;
+
 -- ── COMPROBACIÓN ──────────────────────────────────────────────
 --   select column_name from information_schema.columns
 --    where table_name = 'proyectos' and column_name in ('acciones','competencias');
@@ -250,4 +300,5 @@ grant select on public.portafolios_admin to authenticated;
 --   -- una sola política por operación, sin duplicados
 --
 --   select count(*) from public.portafolios_admin;
---   -- desde una cuenta de administración, sin error
+--   select count(*) from public.revisiones_admin;
+--   -- desde una cuenta de administración, las dos sin error

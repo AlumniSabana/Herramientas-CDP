@@ -750,6 +750,29 @@ footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
 .adm-no { color: var(--ink-faint); }
 .adm-aviso { font-size: .85rem; line-height: 1.55; margin-top: 1rem; color: var(--alerta); }
 .adm-aviso:empty { display: none; }
+
+/* ─────────── LA REVISIÓN DE UNA PERSONA, EN EL CONSOLIDADO ───────────
+   Se abre debajo de la tabla, no en una ventana: quien la lee suele
+   estar comparando varias filas y una ventana le taparía la lista. */
+.adm-ver { font-size: .78rem; padding: .28rem .65rem; }
+.adm-revision {
+  margin-top: 1.4rem; padding: 1.3rem; border: 1px solid var(--azul);
+  border-radius: 6px; background: var(--surface); box-shadow: var(--shadow);
+}
+.adm-revision[hidden] { display: none; }
+.adm-revision-cab {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+}
+.adm-revision-cab h3 { margin-bottom: .1rem; }
+.adm-revision-cab button { flex: none; }
+.adm-revision-fecha { font-size: .82rem; color: var(--ink-faint); margin-top: .5rem; }
+.adm-revision-fechas { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .8rem; }
+.adm-revision-fechas button { font-family: var(--mono); font-size: .78rem; padding: .28rem .65rem; }
+.adm-revision-fechas button.activa {
+  background: var(--azul); color: var(--on-azul); border-color: var(--azul);
+}
+.adm-revision .revision-salida { margin-top: 1.1rem; }
 /* La hoja de administración se ve igual que las demás, pero no es
    una «.hoja»: queda fuera del recorrido, del paginador y de la
    barra de avance, porque no es un paso que nadie tenga que dar. */
@@ -1443,6 +1466,8 @@ footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
 
     <p class="prose"><b>La escribe una máquina, no una persona del Centro.</b> Es un modelo de inteligencia artificial que lee tu texto y responde en segundos: sirve para detectar lo obvio antes de que lo vea alguien más, pero no conoce tu trabajo y se equivoca. Léela como una opinión más, no como una calificación. Cuando quieras que la revise un asesor de verdad, tienes la hoja «Hablar con un asesor».</p>
 
+    <p class="prose"><b>Quién la puede leer.</b> La revisión queda guardada en tu cuenta y el Centro de Desarrollo Profesional también puede consultarla: así, si pides una asesoría, quien te atienda llega sabiendo por dónde va tu portafolio. Tu portafolio en sí no lo ve nadie más que tú. Si prefieres que una revisión no quede, bórrala en la lista de aquí abajo.</p>
+
     <p class="revision-nota" id="rev-nota"></p>
 
     <div class="revision-salida" id="rev-salida" hidden></div>
@@ -1524,12 +1549,17 @@ footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
       <thead>
         <tr>
           <th>Persona</th><th>Facultad</th><th>Programa</th>
-          <th>Etapa</th><th>Secciones</th><th>Fichas</th><th>PDF</th><th>Última vez</th>
+          <th>Etapa</th><th>Secciones</th><th>Fichas</th><th>PDF</th>
+          <th>Segunda opinión</th><th>Última vez</th>
         </tr>
       </thead>
       <tbody id="adm-cuerpo"></tbody>
     </table>
   </div>
+
+  <!-- La revisión de una persona concreta. La abre el botón de su
+       fila y la escribe abrirRevisionesDe() en app.js. -->
+  <div class="adm-revision" id="adm-revision" hidden></div>
 
   <h3 style="margin-top:1.8rem">Por programa</h3>
   <div class="tablewrap">
@@ -1543,7 +1573,8 @@ footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
 
   <div class="callout" style="margin-top:1.6rem">
     <b>Qué contiene y qué no</b>
-    Cada fila es el avance de una persona: su programa, cuántas secciones lleva y cuántas fichas de proyecto ha escrito. <b>No hay una sola palabra de su portafolio.</b> El texto sí está guardado, en su cuenta, pero las políticas de la base de datos solo se lo devuelven a ella: este panel cuenta, no lee. Las segundas opiniones que pide con inteligencia artificial <b>tampoco aparecen aquí</b>, por lo mismo. Si necesitas leer el trabajo de alguien, pídeselo.
+    Cada fila es el avance de una persona: su programa, cuántas secciones lleva y cuántas fichas de proyecto ha escrito. <b>No hay una sola palabra de su portafolio.</b> El texto sí está guardado, en su cuenta, pero las políticas de la base de datos solo se lo devuelven a ella: en esta tabla se cuenta, no se lee. Si necesitas leer el trabajo de alguien, pídeselo.<br><br>
+    <b>Las segundas opiniones sí se pueden abrir</b>, con «Ver» en la fila de cada quien, porque sirven para preparar la asesoría. Ten presente que la instrucción le pide al modelo citar entre comillas las palabras del estudiante, así que una observación puede traer frases sueltas de su portafolio. Está avisado en pantalla antes de que nadie pida la revisión, y por eso puede pedirla sabiendo quién la va a leer.
   </div>
 </section>
 
@@ -1587,7 +1618,7 @@ footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
         <h4>Tratamiento de datos</h4>
         <p>Con la sesión iniciada, tu portafolio se guarda <strong>en tu cuenta de la Universidad</strong>: por eso lo recuperas desde cualquier computador. <strong>Solo tú puedes leerlo.</strong> Las reglas de acceso de la base de datos devuelven cada portafolio únicamente a su dueño, y eso incluye al Centro de Desarrollo Profesional, que ve cuánta gente usa la herramienta pero no lo que escribe. Se guarda además una copia en este navegador para que puedas seguir trabajando si se cae la conexión.</p>
         <p><strong>Sin haber entrado</strong>, lo que escribas se queda solo en este navegador y en este equipo. Cuando entres, la herramienta te preguntará si quieres subirlo a tu cuenta: nunca lo hace sin preguntar.</p>
-        <p>Al pedir la «segunda opinión» o la traducción, tu texto viaja al servicio de inteligencia artificial para que lo lea; ese servicio no lo guarda. La respuesta de la revisión sí queda archivada en tu cuenta hasta que la borres.</p>
+        <p>Al pedir la «segunda opinión» o la traducción, tu texto viaja al servicio de inteligencia artificial para que lo lea; ese servicio no lo guarda. La respuesta de la revisión queda archivada en tu cuenta hasta que la borres, y <strong>el Centro de Desarrollo Profesional también puede leerla</strong>, para poder ayudarte mejor cuando pidas una asesoría. Tu portafolio no: eso sigue siendo solo tuyo. Si prefieres que nadie del Centro vea una revisión, bórrala desde «Antes de publicar».</p>
         <p><strong>El PDF que descargas es la única copia que te llevas contigo.</strong> Con «Empezar de nuevo» borras el borrador de este navegador cuando quieras.</p>
         <p>La veracidad de la información y de las evidencias que incluyas es tu responsabilidad.</p>
         <p><a class="pie-enlace" href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos" target="_blank" rel="noopener">Política de Protección de Datos de la Universidad ↗</a></p>
@@ -2999,6 +3030,12 @@ var IDX_PROYECTOS = hojas.map(function (h) { return h.id; }).indexOf("proyectos"
 
 function puertaAbierta() {
   if (IDX_PROYECTOS < 0) return true;
+  /* La regla existe para que nadie se lleve un portafolio con las
+     fichas a medias. Al CDP no le aplica: entra a revisar el
+     recorrido y a mirar el consolidado, no a construir el suyo, y
+     obligarle a inventarse una ficha para poder pasar de hoja sería
+     absurdo. */
+  if (esAdministrador()) return true;
   return evaluarProyectos().completas > 0;
 }
 
@@ -3462,7 +3499,8 @@ function puertaProyectos() {
   if (!hoja) return;
 
   var r = evaluarProyectos();
-  var abierta = r.completas > 0;
+  var admin = esAdministrador();
+  var abierta = admin || r.completas > 0;
 
   var siguiente = hoja.querySelector('.pager button.solid[data-ir]');
   if (siguiente) {
@@ -3485,7 +3523,10 @@ function puertaProyectos() {
   var aviso = document.getElementById("proy-puerta");
   if (!aviso) return;
   aviso.classList.toggle("lista", abierta);
-  if (abierta) {
+  if (admin && r.completas === 0) {
+    aviso.textContent = "Cuenta de administración: puedes recorrer las hojas sin completar fichas. " +
+      "A quien construye su portafolio sí se le pide una ficha entera para continuar.";
+  } else if (abierta) {
     aviso.textContent = r.completas === 1
       ? "Una ficha cumple los mínimos: ya puedes continuar."
       : r.completas + " fichas cumplen los mínimos: ya puedes continuar.";
@@ -4069,6 +4110,7 @@ function hayRegistro() {
    el paginador.
    ══════════════════════════════════════════════════════════════ */
 var admFilas = [];
+var admRevisiones = [];   /* las segundas opiniones de todo el mundo */
 
 function esAdministrador() {
   return typeof Cuenta !== "undefined" && Cuenta && typeof Cuenta.esAdmin === "function" && Cuenta.esAdmin();
@@ -4114,8 +4156,19 @@ function cargarConsolidado() {
   if (!esAdministrador()) return;
   admAviso("");
   $("#adm-sub").textContent = "Cargando consolidado…";
+  /* Las revisiones se piden en paralelo y su fallo no tumba el
+     consolidado: son un extra, no la razón de esta hoja. */
+  api("/admin/revisiones", "GET").then(function (r) {
+    var lista = r && r.revisiones;
+    admRevisiones = Array.isArray(lista) ? lista : [];
+  }).catch(function () {
+    admRevisiones = [];
+  }).then(function () {
+    if (admFilas.length) pintarConsolidado();
+  });
+
   api("/admin/portafolios", "GET").then(function (r) {
-    admFilas = (r && r.portafolios) ? r.portafolios : [];
+    admFilas = (r && Array.isArray(r.portafolios)) ? r.portafolios : [];
     pintarConsolidado();
   }).catch(function (err) {
     $("#adm-sub").textContent = "No se pudo cargar el consolidado.";
@@ -4125,6 +4178,7 @@ function cargarConsolidado() {
     $("#adm-cuerpo").innerHTML = "";
     $("#adm-prog-cuerpo").innerHTML = "";
     $("#adm-kpis").innerHTML = "";
+    $("#adm-revision").hidden = true;
   });
 }
 
@@ -4136,6 +4190,121 @@ function textoElegido(id) {
   var opt = sel.options[sel.selectedIndex];
   return opt ? opt.text : "";
 }
+
+/* ══════════════════════════════════════════════════════════════
+   LAS SEGUNDAS OPINIONES, DESDE EL CONSOLIDADO
+   --------------------------------------------------------------
+   El CDP atiende a estas personas. Llegar a la asesoría sabiendo
+   qué le señaló la máquina ahorra media sesión, así que aquí se
+   pueden leer las revisiones de cada quien.
+
+   Lo que NO se abre es el borrador: el portafolio en sí sigue
+   siendo ilegible para cualquiera que no sea su dueño, y de eso se
+   encargan las políticas de la base, no este código. Está dicho en
+   pantalla antes de que nadie pida una revisión.
+   ══════════════════════════════════════════════════════════════ */
+
+function revisionesPorPersona() {
+  var g = {};
+  admRevisiones.forEach(function (r) {
+    var k = r.usuario_id;
+    if (!k) return;
+    if (!g[k]) g[k] = [];
+    g[k].push(r);
+  });
+  return g;
+}
+
+function celdaRevisiones(x) {
+  var suyas = revisionesPorPersona()[x.usuario_id] || [];
+  if (!suyas.length) return '<span class="adm-no">—</span>';
+  return '<button type="button" class="adm-ver" data-revisiones="' +
+    esc(String(x.usuario_id)) + '">Ver (' + suyas.length + ")</button>";
+}
+
+var admRevAbierta = "";
+
+function abrirRevisionesDe(usuarioId, cual) {
+  var caja = $("#adm-revision");
+  if (!caja) return;
+
+  var suyas = revisionesPorPersona()[usuarioId] || [];
+  if (!suyas.length) { caja.hidden = true; return; }
+
+  admRevAbierta = usuarioId;
+  var elegida = cual
+    ? (suyas.filter(function (r) { return String(r.id) === String(cual); })[0] || suyas[0])
+    : suyas[0];
+
+  caja.hidden = false;
+  caja.innerHTML = "";
+
+  var cab = document.createElement("div");
+  cab.className = "adm-revision-cab";
+
+  var quien = document.createElement("div");
+  var h = document.createElement("h3");
+  h.textContent = elegida.nombre || elegida.correo || "Sin nombre";
+  var sub = document.createElement("p");
+  sub.className = "adm-correo";
+  sub.textContent = [elegida.correo, elegida.programa].filter(Boolean).join(" · ");
+  quien.appendChild(h);
+  quien.appendChild(sub);
+  cab.appendChild(quien);
+
+  var cerrar = document.createElement("button");
+  cerrar.type = "button";
+  cerrar.textContent = "Cerrar";
+  cerrar.addEventListener("click", function () {
+    caja.hidden = true;
+    admRevAbierta = "";
+  });
+  cab.appendChild(cerrar);
+  caja.appendChild(cab);
+
+  /* Con más de una revisión, la gracia está en comparar: la de hoy
+     contra la de hace dos semanas es donde se ve si avanzó. */
+  if (suyas.length > 1) {
+    var fechas = document.createElement("div");
+    fechas.className = "adm-revision-fechas";
+    suyas.forEach(function (r) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = fechaCorta(r.creado_en);
+      if (String(r.id) === String(elegida.id)) b.className = "activa";
+      b.setAttribute("data-revision", r.id);
+      b.setAttribute("data-de", usuarioId);
+      fechas.appendChild(b);
+    });
+    caja.appendChild(fechas);
+  } else {
+    var sola = document.createElement("p");
+    sola.className = "adm-revision-fecha";
+    sola.textContent = "Pedida el " + fechaCorta(elegida.creado_en);
+    caja.appendChild(sola);
+  }
+
+  var cuerpo = document.createElement("div");
+  cuerpo.className = "revision-salida";
+  construirRevision(cuerpo, revisionDesdeFila(elegida), false);
+  caja.appendChild(cuerpo);
+
+  caja.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+/* Los botones nacen y mueren con cada repintado de la tabla, así que
+   se escuchan desde la hoja. */
+$("#admin").addEventListener("click", function (e) {
+  var b = e.target && e.target.closest ? e.target.closest("button") : null;
+  if (!b) return;
+  if (b.hasAttribute("data-revisiones")) {
+    abrirRevisionesDe(b.getAttribute("data-revisiones"));
+    return;
+  }
+  if (b.hasAttribute("data-revision")) {
+    abrirRevisionesDe(b.getAttribute("data-de"), b.getAttribute("data-revision"));
+  }
+});
 
 function fechaCorta(t) {
   if (!t) return "—";
@@ -4151,7 +4320,7 @@ function pintarConsolidado() {
   admFilas.forEach(function (x) { if (x.programa) programas[x.programa] = 1; });
 
   $("#adm-sub").textContent = n
-    ? "Personas que han abierto un portafolio con la sesión iniciada. Se registra el avance, nunca el texto: los borradores siguen viviendo solo en el navegador de cada quien."
+    ? "Personas que han abierto un portafolio con la sesión iniciada. Del portafolio se registra el avance, nunca el texto. De las segundas opiniones sí se ve el contenido: pulsa «Ver» en la fila de cada quien."
     : "Todavía nadie ha abierto un portafolio con la sesión iniciada.";
 
   $("#adm-kpis").innerHTML = [
@@ -4159,7 +4328,8 @@ function pintarConsolidado() {
     ["Programas", Object.keys(programas).length],
     ["Secciones promedio", sec.toFixed(1) + " de 5"],
     ["Fichas promedio", fic.toFixed(1)],
-    ["Descargaron el PDF", pdf]
+    ["Descargaron el PDF", pdf],
+    ["Pidieron segunda opinión", Object.keys(revisionesPorPersona()).length]
   ].map(function (k) {
     return '<div class="adm-kpi"><div class="n">' + esc(String(k[1])) +
            '</div><div class="t">' + esc(k[0]) + "</div></div>";
@@ -4176,9 +4346,10 @@ function pintarConsolidado() {
           "<td>" + (Number(x.hojas_completas) || 0) + " de 5</td>" +
           "<td>" + (Number(x.fichas_completas) || 0) + " de " + (Number(x.fichas_total) || 0) + "</td>" +
           '<td class="' + (x.descargado ? "adm-si" : "adm-no") + '">' + (x.descargado ? "Sí" : "No") + "</td>" +
+          "<td>" + celdaRevisiones(x) + "</td>" +
           "<td>" + esc(fechaCorta(x.actualizado_en)) + "</td></tr>";
       }).join("")
-    : '<tr><td colspan="8" style="color:var(--ink-faint)">Nadie ha empezado un portafolio todavía.</td></tr>';
+    : '<tr><td colspan="9" style="color:var(--ink-faint)">Nadie ha empezado un portafolio todavía.</td></tr>';
 
   var g = {};
   admFilas.forEach(function (x) {
@@ -4275,8 +4446,8 @@ function pintarAvisoRevision() {
   nota.className = "revision-nota";
   nota.textContent = "La escribe un modelo de inteligencia artificial. Se le envía solo el texto " +
     "de tu portafolio, no tu nombre ni tu correo, y él no guarda nada. La revisión que te devuelva " +
-    "sí queda guardada en tu cuenta, para que puedas volver a ella; tu borrador sigue sin salir de " +
-    "este navegador.";
+    "queda guardada en tu cuenta y el Centro de Desarrollo Profesional puede consultarla para " +
+    "atenderte mejor; puedes borrarla cuando quieras.";
 }
 
 /* Lo que sabe la herramienta sobre quién escribe. Sirve para que la
@@ -4360,18 +4531,22 @@ function bloqueRevision(titulo, estado, observaciones) {
   return d;
 }
 
-function pintarRevision(d) {
-  var salida = $("#rev-salida");
+/* Dibuja una revisión dentro del contenedor que se le pase. Está
+   separado de pintarRevision() porque la misma ficha se enseña en
+   dos sitios: a quien la pidió, en «Antes de publicar», y al CDP en
+   el consolidado. Que sea el mismo código evita que una de las dos
+   se quede atrás cuando cambie el formato. */
+function construirRevision(salida, d, tuyo) {
   salida.innerHTML = "";
+  d = d || {};
 
   /* Salida de emergencia: si el modelo no devolvió el formato
      esperado, se muestra su texto tal cual antes que perderlo. */
-  if (d && d.crudo) {
+  if (d.crudo) {
     var c = document.createElement("p");
     c.className = "rev-crudo";
     c.textContent = d.crudo;
     salida.appendChild(c);
-    salida.hidden = false;
     return;
   }
 
@@ -4389,7 +4564,7 @@ function pintarRevision(d) {
     g1.className = "rev-grupo";
     var t1 = document.createElement("span");
     t1.className = "eyebrow";
-    t1.textContent = "Tus fichas de proyecto";
+    t1.textContent = tuyo === false ? "Sus fichas de proyecto" : "Tus fichas de proyecto";
     g1.appendChild(t1);
     d.proyectos.forEach(function (p, i) {
       var n = p.ficha || (i + 1);
@@ -4424,12 +4599,20 @@ function pintarRevision(d) {
 
   var pie = document.createElement("p");
   pie.className = "rev-pie";
-  pie.textContent = "Esta segunda opinión la generó un modelo de inteligencia artificial " +
-    "(Gemini) que no conoce tu trabajo ni habló contigo: son observaciones, no correcciones, " +
-    "y puede equivocarse. Tú decides cuáles aplicas. Para una revisión hecha por una persona, " +
-    "escribe al Centro de Desarrollo Profesional desde la hoja «Hablar con un asesor».";
+  pie.textContent = tuyo === false
+    ? "La generó un modelo de inteligencia artificial (Gemini) que no conoce su trabajo ni habló " +
+      "con esta persona. Son observaciones automáticas, no un diagnóstico del Centro: léelas como " +
+      "un punto de partida para la asesoría, no como una evaluación."
+    : "Esta segunda opinión la generó un modelo de inteligencia artificial " +
+      "(Gemini) que no conoce tu trabajo ni habló contigo: son observaciones, no correcciones, " +
+      "y puede equivocarse. Tú decides cuáles aplicas. Para una revisión hecha por una persona, " +
+      "escribe al Centro de Desarrollo Profesional desde la hoja «Hablar con un asesor».";
   salida.appendChild(pie);
+}
 
+function pintarRevision(d) {
+  var salida = $("#rev-salida");
+  construirRevision(salida, d, true);
   salida.hidden = false;
 }
 
@@ -4556,7 +4739,7 @@ function guardarRevision(d) {
 function cargarRevisiones() {
   if (!hayRevision()) { revisiones = []; pintarRevisiones(); return; }
   api("/revisiones", "GET").then(function (r) {
-    revisiones = (r && r.revisiones) || [];
+    revisiones = (r && Array.isArray(r.revisiones)) ? r.revisiones : [];
     revisionesFallo = "";
     pintarRevisiones();
   }).catch(function (err) {
@@ -4661,7 +4844,8 @@ function pintarRevisiones(activa) {
 
   var pie = document.createElement("p");
   pie.className = "rev-guardadas-nota";
-  pie.textContent = "Se guardan las diez últimas, solo en tu cuenta. Nadie más las ve.";
+  pie.textContent = "Se guardan las diez últimas. Las ves tú y el Centro de Desarrollo Profesional, " +
+    "que las usa para preparar tu asesoría. Borra la que no quieras que quede.";
   caja.appendChild(pie);
 }
 

@@ -888,7 +888,25 @@ async function supabaseAPI(ruta, metodo, cuerpo){
   if(ruta === "/admin/portafolios" && metodo === "GET"){
     const r = await sbAuth("/rest/v1/portafolios_admin?select=*&order=actualizado_en.desc",
       {method:"GET"});
-    return {portafolios: r || []};
+    return {portafolios: comoLista(r)};
+  }
+
+  /* Las segundas opiniones de todo el mundo, para el consolidado.
+     La vista ya deja fuera a las cuentas de administración y solo
+     devuelve filas a quien tiene el rol; aquí no hay que filtrar.
+
+     Si la vista todavía no existe se devuelve una lista vacía en vez
+     de propagar el error: el consolidado tiene que seguir
+     enseñándose aunque falte esta migración. */
+  if(ruta === "/admin/revisiones" && metodo === "GET"){
+    try{
+      const r = await sbAuth("/rest/v1/revisiones_admin?select=*&order=creado_en.desc",
+        {method:"GET"});
+      return {revisiones: comoLista(r)};
+    }catch(err){
+      if(esVistaInexistente(err)){ return {revisiones: [], faltaVista: true}; }
+      throw err;
+    }
   }
 
   /* ---------- Traducción con IA ----------
@@ -948,7 +966,7 @@ async function supabaseAPI(ruta, metodo, cuerpo){
     if(!mio){ return {revisiones: []}; }
     const r = await sbAuth("/rest/v1/revisiones_ia?select=*&usuario_id=eq." +
       encodeURIComponent(mio) + "&order=creado_en.desc&limit=10", {method:"GET"});
-    return {revisiones: r || []};
+    return {revisiones: comoLista(r)};
   }
 
   if(ruta === "/revisiones" && metodo === "POST"){
@@ -983,7 +1001,7 @@ async function supabaseAPI(ruta, metodo, cuerpo){
     if(!mio){ return {rondas: []}; }
     const r = await sbAuth("/rest/v1/rondas?select=*&usuario_id=eq." +
       encodeURIComponent(mio) + "&order=creada_en.desc", {method:"GET"});
-    return {rondas: r || []};
+    return {rondas: comoLista(r)};
   }
 
   if(ruta === "/rondas" && metodo === "POST"){
@@ -1039,7 +1057,7 @@ async function supabaseAPI(ruta, metodo, cuerpo){
   /* ---------- Administración ---------- */
   if(ruta === "/admin/rondas" && metodo === "GET"){
     const r = await sbAuth("/rest/v1/rondas_admin?select=*&order=creada_en.desc", {method:"GET"});
-    return {rondas: r || []};
+    return {rondas: comoLista(r)};
   }
 
   if(ruta === "/admin/usuarios" && metodo === "GET"){
@@ -1293,6 +1311,7 @@ async function demoAPI(ruta, metodo, cuerpo){
   if(ruta === "/portafolio/contenido"){ return {portafolio: null, proyectos: [], secciones: []}; }
   if(ruta.indexOf("/portafolio") === 0){ return null; }
   if(ruta === "/admin/portafolios"){ return {portafolios: []}; }
+  if(ruta === "/admin/revisiones"){ return {revisiones: []}; }
 
   /* Sin servidor no hay dónde guardar las revisiones. Se contesta
      una lista vacía en vez de fallar: la interfaz simplemente no
@@ -1418,6 +1437,12 @@ function destinoRecuperacion(){
    no se ha inyectado. Los caminos que responden sin esperar a la red
    —el enlace vencido— llegaban antes que él y se quedaban sin dónde
    escribir. Esto los hace esperar a que exista. */
+/* PostgREST devuelve listas, pero un proxy, un error servido con
+   200 o una vista que no existe pueden devolver un objeto. «r || []»
+   lo dejaba pasar (un objeto vacío es verdadero) y la pantalla que
+   luego hiciera «forEach» se caía entera. */
+function comoLista(r){ return Array.isArray(r) ? r : []; }
+
 function conModal(fn){
   if(document.getElementById("modal-cuenta")){ fn(); return; }
   document.addEventListener("DOMContentLoaded", function(){ setTimeout(fn, 0); }, {once:true});
