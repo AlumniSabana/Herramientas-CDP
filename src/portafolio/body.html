@@ -148,7 +148,7 @@
     <div class="card"><span class="eyebrow" style="color:var(--ink-faint)">Antes de empezar</span><h3>Ten a mano</h3><p style="font-size:.92rem;color:var(--ink-soft)">Los trabajos, proyectos o prácticas que quieras mostrar, y los enlaces o archivos que los respaldan.</p></div>
   </div>
 
-  <div class="warn prose"><b>Tu borrador se guarda en este navegador.</b> Lo que escribas queda en este equipo y en este navegador; no se envía a ningún servidor ni viaja a otro dispositivo. Si usas un computador compartido o quieres borrarlo, usa «Empezar de nuevo» en la hoja «Antes de publicar». Y descarga tu portafolio cuando lo tengas listo: es la única copia que te llevas contigo.</div>
+  <div class="warn prose"><b>Tu borrador se guarda en este navegador.</b> Lo que escribas queda en este equipo y en este navegador; no se envía a ningún servidor ni viaja a otro dispositivo, y si entras con tu cuenta, cada cuenta tiene su propio borrador. La única excepción es lo que tú pidas: la «segunda opinión» y la traducción con inteligencia artificial sí mandan tu texto para que lo lean. Si usas un computador compartido o quieres borrarlo, usa «Empezar de nuevo» en la hoja «Antes de publicar». Y descarga tu portafolio cuando lo tengas listo: es la única copia que te llevas contigo.</div>
 </section>
 
 <!-- ─────────── TU PROGRAMA ─────────── -->
@@ -371,16 +371,48 @@
     </table>
   </div>
 
-  <h3 style="margin-top:.8rem">Redacta tus fichas</h3>
+  <!-- ─────────── QUÉ SE ESPERA EN «EVIDENCIA» ───────────
+       La pregunta más repetida sobre este formulario es qué va en
+       ese campo, y la segunda es por qué no se puede adjuntar un
+       archivo del computador. Las dos se contestan aquí, al lado
+       del campo, y no en un manual que nadie abre. -->
+  <div class="evidencia-guia">
+    <span class="eyebrow">El campo «Evidencia»</span>
+    <h3>Va un enlace, no un archivo</h3>
+    <p class="prose">La evidencia es la prueba de que el proyecto existió: algo que quien te lea pueda <b>abrir por su cuenta</b> sin pedirte nada. Por eso se escribe como una dirección de internet.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Si tu evidencia es…</th><th>El enlace que se espera</th></tr></thead>
+        <tbody>
+          <tr><td>Código o un desarrollo técnico</td><td>El repositorio en GitHub o GitLab, con su README.</td></tr>
+          <tr><td>Un documento, informe o plan</td><td>El archivo en tu OneDrive de la Universidad, compartido para lectura.</td></tr>
+          <tr><td>Una pieza gráfica, audiovisual o de diseño</td><td>Behance, Vimeo o YouTube como «no listado».</td></tr>
+          <tr><td>Un artículo, ponencia o publicación</td><td>El DOI, el repositorio institucional o la página de la revista.</td></tr>
+          <tr><td>Un producto ya publicado</td><td>La dirección donde está funcionando.</td></tr>
+          <tr><td>Un reconocimiento o certificación</td><td>La credencial verificable, o la publicación de la entidad que lo otorgó.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>¿Y si lo que tengo es un archivo en mi computador?</h4>
+    <p class="prose">Esta herramienta no sube archivos, y es a propósito: tu borrador no sale de este navegador, así que no hay dónde dejarlos. Pero además, un archivo suelto tampoco te serviría en el portafolio final: quien te lee lo abre desde un enlace, no desde tu disco duro. Lo que hay que hacer es convertirlo en enlace, y con tu cuenta de la Universidad ya puedes:</p>
+    <ol class="prose">
+      <li>Sube el archivo a tu <b>OneDrive institucional</b> (entra a Office 365 con tu correo <span class="mono">@unisabana.edu.co</span>).</li>
+      <li>Pulsa <b>Compartir</b> y elige un enlace de <b>solo lectura</b>. Si va a leerlo alguien de fuera de la Universidad, marca «Cualquier persona con el vínculo»; si lo dejas en «Solo personas de mi organización», un empleador no podrá abrirlo.</li>
+      <li>Copia el enlace y pégalo aquí.</li>
+    </ol>
+
+    <p class="warn prose"><b>Compruébalo antes de publicar.</b> Abre cada enlace en una ventana de incógnito, sin tu sesión iniciada. Un enlace que pide permiso es peor que no poner ninguno: quien lo encuentra cerrado casi nunca escribe para pedirlo. Y si el archivo tiene datos de una empresa, un cliente o un paciente, no lo compartas: describe el trabajo sin mostrarlo.</p>
+  </div>
+
+  <h3 style="margin-top:1.2rem">Redacta tus fichas</h3>
   <p class="prose">Cada proyecto se cuenta igual: contexto, objetivo, tu rol, lo que hiciste, el resultado y la evidencia que lo respalda.</p>
   <p class="prose">Cada campo lleva un mínimo de palabras debajo. No es un trámite: por debajo de ese umbral la ficha no le dice nada a quien la lee. <b>Para pasar a la siguiente hoja necesitas al menos una ficha completa.</b> Las demás puedes dejarlas a medias: lo que falte aparecerá como marcador pendiente en tu portafolio, y eso es preferible a inventar.</p>
 
   <!-- FUTURA CONEXIÓN SUPABASE: PROYECTOS
        Cada ficha de proyecto será una fila propia, con su identificador,
-       para poder editarla y recuperarla entre sesiones.
-       FUTURA CONEXIÓN SUPABASE: EVIDENCIAS
-       El campo «Evidencia» aceptará además archivos subidos al
-       almacenamiento, no solo un enlace escrito a mano. -->
+       para poder editarla y recuperarla entre sesiones. -->
   <div id="proyectos-wrap" class="stack"></div>
 
   <div class="actions">
@@ -463,7 +495,7 @@
   <div class="revision" id="revision">
     <div class="revision-cab">
       <div>
-        <span class="eyebrow">Segunda opinión</span>
+        <span class="eyebrow">Segunda opinión <span class="sello-ia">Generada con inteligencia artificial</span></span>
         <h3>¿Qué diría un asesor de tu portafolio?</h3>
       </div>
       <button class="solid" id="rev-pedir" type="button">Revisar mi portafolio</button>
@@ -471,9 +503,15 @@
 
     <p class="prose">Lee lo que has escrito y te señala qué no aguantaría una entrevista. Empieza por las fichas de proyecto. <b>No reescribe tu texto</b>: te dice qué falta y te pregunta lo que tendrías que responder, porque el portafolio tiene que seguir siendo tuyo.</p>
 
+    <p class="prose"><b>La escribe una máquina, no una persona del Centro.</b> Es un modelo de inteligencia artificial que lee tu texto y responde en segundos: sirve para detectar lo obvio antes de que lo vea alguien más, pero no conoce tu trabajo y se equivoca. Léela como una opinión más, no como una calificación. Cuando quieras que la revise un asesor de verdad, tienes la hoja «Hablar con un asesor».</p>
+
     <p class="revision-nota" id="rev-nota"></p>
 
     <div class="revision-salida" id="rev-salida" hidden></div>
+
+    <!-- Las revisiones anteriores, guardadas en la cuenta de quien
+         las pidió. Lo escribe pintarRevisiones() en app.js. -->
+    <div class="rev-guardadas" id="rev-guardadas" hidden></div>
   </div>
 
   <div class="actions">
@@ -567,7 +605,7 @@
 
   <div class="callout" style="margin-top:1.6rem">
     <b>Qué contiene y qué no</b>
-    Cada fila es el avance de una persona: su programa, cuántas secciones lleva y cuántas fichas de proyecto ha escrito. <b>No hay una sola palabra de su portafolio</b>, porque el texto no se envía a ningún servidor. Si necesitas leer el trabajo de alguien, pídeselo.
+    Cada fila es el avance de una persona: su programa, cuántas secciones lleva y cuántas fichas de proyecto ha escrito. <b>No hay una sola palabra de su portafolio</b>, porque el borrador no sale de su navegador. Las segundas opiniones que pide con inteligencia artificial <b>tampoco aparecen aquí</b>: se guardan en su cuenta y solo las ve ella. Si necesitas leer el trabajo de alguien, pídeselo.
   </div>
 </section>
 
@@ -609,7 +647,8 @@
 
       <div class="pie-col">
         <h4>Tratamiento de datos</h4>
-        <p>Lo que escribes se guarda <strong>únicamente en este navegador</strong> y en este equipo: no se envía a ningún servidor, no viaja a otro dispositivo y nadie más puede consultarlo.</p>
+        <p>El borrador de tu portafolio se guarda <strong>únicamente en este navegador</strong> y en este equipo: no se envía a ningún servidor, no viaja a otro dispositivo y nadie más puede consultarlo. Si entras con tu cuenta, cada cuenta tiene su propio borrador.</p>
+        <p><strong>Dos excepciones, y solo si tú las pides.</strong> Al pedir la «segunda opinión» tu texto viaja al servicio de inteligencia artificial para que lo lea (no lo guarda), y la respuesta queda archivada en tu cuenta hasta que la borres. Al traducir sin traductor propio del navegador ocurre lo mismo con el texto que traduces. Sin cuenta iniciada, nada de esto sale de aquí.</p>
         <p><strong>El PDF que descargas es la única copia que te llevas contigo.</strong> Con «Empezar de nuevo» borras el borrador de este navegador cuando quieras.</p>
         <p>La veracidad de la información y de las evidencias que incluyas es tu responsabilidad.</p>
         <p><a class="pie-enlace" href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos" target="_blank" rel="noopener">Política de Protección de Datos de la Universidad ↗</a></p>
@@ -626,7 +665,7 @@
     </div>
 
     <div class="pie-legal">
-      <span>Universidad de La Sabana &middot; Personería Jurídica: Resolución 130 del 14 de enero de 1980, Ministerio de Educación Nacional<br>Versión del archivo: <b>2026.08.20</b></span>
+      <span>Universidad de La Sabana &middot; Personería Jurídica: Resolución 130 del 14 de enero de 1980, Ministerio de Educación Nacional<br>Versión del archivo: <b>2026.08.26</b></span>
       <span><a class="pie-enlace" href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos" target="_blank" rel="noopener">Política de Protección de Datos</a> &middot; Vigilada Mineducación</span>
     </div>
   </div>

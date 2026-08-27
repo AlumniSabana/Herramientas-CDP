@@ -743,7 +743,11 @@ var REGLAS_PROY = {
   rol:       { min: 10, etiqueta: "Mi rol",                 ayuda: "Lo que hiciste tú, no el equipo." },
   acciones:  { min: 15, etiqueta: "Acciones y decisiones",  ayuda: "Cómo lo abordaste y qué decidiste." },
   resultado: { min: 10, etiqueta: "Resultado o impacto",    ayuda: "Qué cambió, o qué aprendiste si no hubo cifra." },
-  evidencia: { min: 2,  etiqueta: "Evidencia",              ayuda: "Enlace, archivo o repositorio que lo respalde." }
+  /* La evidencia se mide distinto: es una dirección, no una
+     redacción. Un enlace pegado cuenta como una sola palabra, así
+     que exigirle dos rechazaba justamente la respuesta correcta.
+     «unidad» cambia el contador por un aviso que sí tiene sentido. */
+  evidencia: { min: 1,  etiqueta: "Evidencia (enlace)",     ayuda: "Una dirección que quien te lea pueda abrir.", unidad: "enlace" }
 };
 
 /* Estructura de la ficha, en datos: así el formulario y las reglas
@@ -756,7 +760,7 @@ var CAMPOS_PROY = [
   { clave: "acciones",     tipo: "textarea", filas: 3, ph: "Cómo abordaste el trabajo y qué decidiste." },
   { clave: "herr",         tipo: "input",    ph: "Solo si es relevante para el proyecto", label: "Herramientas o métodos" },
   { clave: "resultado",    tipo: "textarea", filas: 3, ph: "Qué se consiguió, o qué aprendiste si no hubo resultado medible." },
-  { clave: "evidencia",    tipo: "input",    ph: "Enlace, archivo, imagen, repositorio, publicación" },
+  { clave: "evidencia",    tipo: "input",    ph: "Pega el enlace: repositorio, documento, publicación, video, perfil" },
   { clave: "competencias", tipo: "input",    ph: "Solo las que se infieran de lo que describiste", label: "Competencias demostradas" }
 ];
 
@@ -769,7 +773,8 @@ function campoHTML(c, i) {
     : '<input type="text" id="' + id + '" class="p-' + c.clave + '" placeholder="' + c.ph + '">';
 
   var pie = r
-    ? '<span class="cuenta" data-regla="' + c.clave + '"><b>0</b> de ' + r.min + ' palabras</span>'
+    ? '<span class="cuenta" data-regla="' + c.clave + '">' +
+        (r.unidad ? "Falta el " + r.unidad : '<b>0</b> de ' + r.min + ' palabras') + '</span>'
     : '<span class="hint opcional">Opcional</span>';
 
   return '<div class="field' + (c.ancho === "full" ? " field-full" : "") + '" data-campo="' + c.clave + '">' +
@@ -844,9 +849,11 @@ function evaluarFicha(fs) {
     if (cuenta) {
       /* Alcanzado el mínimo, el objetivo deja de ser información útil
          y estorba: se queda solo la cuenta. */
-      cuenta.innerHTML = n >= r.min
-        ? "<b>" + n + "</b> palabras"
-        : "<b>" + n + "</b> de " + r.min + " palabras";
+      cuenta.innerHTML = r.unidad
+        ? (n >= r.min ? "Enlace escrito" : "Falta el " + r.unidad)
+        : (n >= r.min
+            ? "<b>" + n + "</b> palabras"
+            : "<b>" + n + "</b> de " + r.min + " palabras");
       cuenta.classList.toggle("ok", n >= r.min);
       cuenta.classList.toggle("corto", n > 0 && n < r.min);
     }
@@ -1563,8 +1570,10 @@ function pintarAvisoRevision() {
   }
   btn.disabled = false;
   nota.className = "revision-nota";
-  nota.textContent = "Se envía solo el texto de tu portafolio, no tu nombre ni tu correo. " +
-    "Nada de lo que escribas se guarda en el servicio de inteligencia artificial.";
+  nota.textContent = "La escribe un modelo de inteligencia artificial. Se le envía solo el texto " +
+    "de tu portafolio, no tu nombre ni tu correo, y él no guarda nada. La revisión que te devuelva " +
+    "sí queda guardada en tu cuenta, para que puedas volver a ella; tu borrador sigue sin salir de " +
+    "este navegador.";
 }
 
 /* Lo que sabe la herramienta sobre quién escribe. Sirve para que la
@@ -1591,11 +1600,36 @@ function haySuficienteParaRevisar() {
   return proy.length > 0 || contarPalabras(texto) >= 25;
 }
 
+/* CÓMO SE NOMBRA EL ESTADO DE CADA BLOQUE
+   Las etiquetas dicen qué falta por hacer, no cuánto vale lo que hay
+   escrito. Antes la tercera era «Insuficiente», y eso es un juicio
+   sobre la persona: dicho por una máquina que no conoce su trabajo,
+   ni es justo ni sirve para nada, porque quien lo lee cierra la
+   herramienta en vez de arreglar la ficha. «Por desarrollar» dice
+   exactamente lo mismo del texto y además dice qué sigue.
+
+   Los nombres antiguos se siguen aceptando: la función del servidor
+   puede tardar en actualizarse, y mientras tanto la interfaz traduce
+   en vez de mostrar una revisión rota. */
+var ESTADOS = {
+  solido:      "Sólido",
+  afinar:      "Por afinar",
+  desarrollar: "Por desarrollar"
+};
+var ESTADOS_ANTIGUOS = {
+  mejorable:    "afinar",
+  insuficiente: "desarrollar",
+  flojo:        "desarrollar",
+  vacio:        "desarrollar"
+};
+
 function estadoValido(e) {
-  return e === "solido" || e === "mejorable" || e === "insuficiente" ? e : "mejorable";
+  var k = String(e == null ? "" : e).trim().toLowerCase();
+  if (ESTADOS_ANTIGUOS[k]) k = ESTADOS_ANTIGUOS[k];
+  return ESTADOS[k] ? k : "afinar";
 }
 function etiquetaEstado(e) {
-  return e === "solido" ? "Sólido" : e === "insuficiente" ? "Insuficiente" : "Mejorable";
+  return ESTADOS[estadoValido(e)];
 }
 
 function bloqueRevision(titulo, estado, observaciones) {
@@ -1688,8 +1722,9 @@ function pintarRevision(d) {
 
   var pie = document.createElement("p");
   pie.className = "rev-pie";
-  pie.textContent = "Esto lo escribió una máquina que no conoce tu trabajo: son observaciones, " +
-    "no correcciones. Tú decides cuáles aplicas. Si quieres una revisión de verdad, " +
+  pie.textContent = "Esta segunda opinión la generó un modelo de inteligencia artificial " +
+    "(Gemini) que no conoce tu trabajo ni habló contigo: son observaciones, no correcciones, " +
+    "y puede equivocarse. Tú decides cuáles aplicas. Para una revisión hecha por una persona, " +
     "escribe al Centro de Desarrollo Profesional desde la hoja «Hablar con un asesor».";
   salida.appendChild(pie);
 
@@ -1724,8 +1759,10 @@ function pedirRevision() {
     pintarRevision(d || {});
     registrarAvance({ revisado_ia: true });
     nota.className = "revision-nota";
-    nota.textContent = "Revisión hecha. Vuelve a pedirla cuando hayas corregido.";
+    nota.textContent = "Revisión hecha y guardada en tu cuenta. " +
+      "Vuelve a pedirla cuando hayas corregido: se guardan las últimas diez.";
     btn.textContent = "Revisar otra vez";
+    guardarRevision(d || {});
   }).catch(function (err) {
     nota.className = "revision-nota aviso";
     nota.textContent = "No se pudo revisar: " + ((err && err.message) || "error desconocido") + ".";
@@ -1734,6 +1771,184 @@ function pedirRevision() {
     btn.disabled = false;
     nota.dataset.ocupada = "";
   });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LAS SEGUNDAS OPINIONES SE QUEDAN EN LA CUENTA
+   --------------------------------------------------------------
+   Hasta ahora la revisión vivía solo en la pantalla: al recargar
+   desaparecía, y quien la había pedido tenía que gastar otra para
+   volver a leer lo mismo. Peor todavía, no había forma de comparar
+   la de hoy con la de la semana pasada, que es justamente donde se
+   ve si el portafolio mejoró.
+
+   Se guarda la revisión, no el borrador. Son cosas distintas: el
+   borrador es el portafolio de la persona y sigue sin salir de su
+   navegador; la revisión es lo que el modelo respondió, y guardarla
+   es lo que le da sentido a haberla pedido.
+
+   Si la tabla todavía no existe en Supabase, esto falla en silencio:
+   la revisión se ve igual en pantalla, simplemente no se guarda. Una
+   migración pendiente no puede romper una funcionalidad que ya
+   estaba andando.
+   ══════════════════════════════════════════════════════════════ */
+
+var revisiones = [];        /* las últimas, más reciente primero */
+var revisionesFallo = "";   /* por qué no se pudieron guardar */
+
+/* Lo que se manda a la base. El detalle va en una sola columna
+   JSON: la forma de la respuesta la decide la función del
+   servidor, y no vale la pena tener que migrar la tabla cada vez
+   que allí se añada un campo. */
+function filaDeRevision(d) {
+  return {
+    veredicto: String(d.veredicto || "").slice(0, 1000),
+    listo: d.listo === true,
+    prioridad: String(d.prioridad || "").slice(0, 1000),
+    fichas: (d.proyectos || []).length,
+    detalle: {
+      proyectos: d.proyectos || [],
+      secciones: d.secciones || [],
+      crudo: d.crudo ? String(d.crudo) : ""
+    }
+  };
+}
+
+/* El camino de vuelta: de la fila guardada a lo que espera
+   pintarRevision(). */
+function revisionDesdeFila(f) {
+  var det = (f && f.detalle) || {};
+  if (typeof det === "string") { try { det = JSON.parse(det); } catch (e) { det = {}; } }
+  if (det.crudo) return { crudo: det.crudo };
+  return {
+    veredicto: f.veredicto || "",
+    listo: f.listo === true,
+    prioridad: f.prioridad || "",
+    proyectos: det.proyectos || [],
+    secciones: det.secciones || []
+  };
+}
+
+function guardarRevision(d) {
+  if (!hayRevision()) return;
+  api("/revisiones", "POST", filaDeRevision(d)).then(function () {
+    revisionesFallo = "";
+    cargarRevisiones();
+  }).catch(function (err) {
+    /* Se dice, pero sin alarmar: lo que la persona pidió ya lo
+       tiene delante. Lo único que se perdió es poder volver. */
+    revisionesFallo = (err && err.message) || "no se pudo guardar";
+    if (window.console) console.warn("No se pudo guardar la revisión:", revisionesFallo);
+    pintarRevisiones();
+  });
+}
+
+function cargarRevisiones() {
+  if (!hayRevision()) { revisiones = []; pintarRevisiones(); return; }
+  api("/revisiones", "GET").then(function (r) {
+    revisiones = (r && r.revisiones) || [];
+    revisionesFallo = "";
+    pintarRevisiones();
+  }).catch(function (err) {
+    revisiones = [];
+    revisionesFallo = (err && err.message) || "no se pudieron leer";
+    pintarRevisiones();
+  });
+}
+
+function borrarRevision(id) {
+  if (!id) return;
+  if (!window.confirm("¿Borrar esta revisión guardada? No se puede deshacer.")) return;
+  api("/revisiones/" + encodeURIComponent(id), "DELETE").then(function () {
+    revisiones = revisiones.filter(function (x) { return String(x.id) !== String(id); });
+    pintarRevisiones();
+  }).catch(function (err) {
+    revisionesFallo = (err && err.message) || "no se pudo borrar";
+    pintarRevisiones();
+  });
+}
+
+function abrirRevisionGuardada(id) {
+  var f = revisiones.filter(function (x) { return String(x.id) === String(id); })[0];
+  if (!f) return;
+  pintarRevision(revisionDesdeFila(f));
+  var nota = $("#rev-nota");
+  if (nota && nota.dataset.ocupada !== "1") {
+    nota.className = "revision-nota";
+    nota.textContent = "Estás viendo la revisión del " + fechaCorta(f.creada_en) +
+      ". Pulsa «Revisar mi portafolio» para pedir una nueva sobre lo que tienes escrito ahora.";
+  }
+  var salida = $("#rev-salida");
+  if (salida) salida.scrollIntoView({ block: "nearest" });
+  pintarRevisiones(id);
+}
+
+function pintarRevisiones(activa) {
+  var caja = $("#rev-guardadas");
+  if (!caja) return;
+
+  if (revisionesFallo && !revisiones.length) {
+    caja.hidden = false;
+    caja.innerHTML = "";
+    var av = document.createElement("p");
+    av.className = "rev-guardadas-nota";
+    /* El detalle técnico no se le enseña a quien está escribiendo su
+       portafolio: no puede hacer nada con él. Queda en el «title» y
+       en la consola, que es donde lo busca quien mantiene esto. */
+    av.title = revisionesFallo;
+    av.textContent = "Las revisiones todavía no se están guardando en tu cuenta. " +
+      "La de esta pantalla se ve igual, pero se perderá al recargar.";
+    caja.appendChild(av);
+    return;
+  }
+
+  if (!revisiones.length) { caja.hidden = true; caja.innerHTML = ""; return; }
+
+  caja.hidden = false;
+  caja.innerHTML = "";
+
+  var t = document.createElement("span");
+  t.className = "eyebrow";
+  t.textContent = "Tus revisiones anteriores";
+  caja.appendChild(t);
+
+  var ul = document.createElement("ul");
+  ul.className = "rev-guardadas-lista";
+  revisiones.forEach(function (f) {
+    var li = document.createElement("li");
+    if (activa && String(activa) === String(f.id)) li.className = "activa";
+
+    var fecha = document.createElement("b");
+    fecha.textContent = fechaCorta(f.creada_en);
+    li.appendChild(fecha);
+
+    var res = document.createElement("span");
+    res.className = "rev-guardadas-res";
+    res.textContent = (f.listo ? "Lista para publicar" : "Con observaciones") +
+      " · " + (Number(f.fichas) || 0) + (Number(f.fichas) === 1 ? " ficha" : " fichas");
+    li.appendChild(res);
+
+    var ver = document.createElement("button");
+    ver.type = "button";
+    ver.textContent = "Ver";
+    ver.setAttribute("data-ver-revision", f.id);
+    li.appendChild(ver);
+
+    var bor = document.createElement("button");
+    bor.type = "button";
+    bor.className = "enlace";
+    bor.textContent = "Borrar";
+    bor.setAttribute("data-borrar-revision", f.id);
+    li.appendChild(bor);
+
+    ul.appendChild(li);
+  });
+  caja.appendChild(ul);
+
+  var pie = document.createElement("p");
+  pie.className = "rev-guardadas-nota";
+  pie.textContent = "Se guardan las diez últimas, solo en tu cuenta. Nadie más las ve.";
+  caja.appendChild(pie);
 }
 
 /* Hay dos formas de traducir y el mensaje depende de cuál falta.
@@ -2047,11 +2262,25 @@ if (typeof alCambiarSesion === "function") {
     pintarAvisoTraductor();
     pintarAvisoRevision();
     pintarAccesoAdmin();
+    /* Las revisiones son de la cuenta, igual que el borrador: al
+       cambiar de sesión hay que traer las de quien entra y soltar
+       las del anterior. */
+    revisionesFallo = "";
+    cargarRevisiones();
     if (sesion) registrarAvance();
   });
 }
 
 $("#rev-pedir").addEventListener("click", pedirRevision);
+
+/* Los botones de la lista de revisiones se crean y se destruyen al
+   repintarla, así que se escuchan desde el contenedor. */
+$("#rev-guardadas").addEventListener("click", function (e) {
+  var b = e.target && e.target.closest ? e.target.closest("button") : null;
+  if (!b) return;
+  if (b.hasAttribute("data-ver-revision")) { abrirRevisionGuardada(b.getAttribute("data-ver-revision")); return; }
+  if (b.hasAttribute("data-borrar-revision")) { borrarRevision(b.getAttribute("data-borrar-revision")); }
+});
 $("#adm-actualizar").addEventListener("click", cargarConsolidado);
 $("#adm-excel").addEventListener("click", exportarConsolidado);
 
@@ -2088,6 +2317,7 @@ if (typeof Cuenta !== "undefined" && Cuenta && Cuenta.sesion) {
 pintarAvisoTraductor();
 pintarAvisoRevision();
 pintarAccesoAdmin();
+cargarRevisiones();
 if (window.location.hash === "#admin") { irAlConsolidado(); }
 
 })();

@@ -49,6 +49,27 @@ supabase functions deploy revisar-portafolio
 
 El portafolio las encuentra solo. No hay que tocar el HTML.
 
+### 4 · Crea la tabla donde se guardan las segundas opiniones
+
+**SQL Editor → New query.** Pega el contenido completo de
+`supabase/sql/revisiones.sql` y presiona **Run**. Necesita que antes hayas
+corrido `portafolios.sql`, de donde sale la función `es_admin()`.
+
+Eso crea la tabla `revisiones`, sus tres políticas y un disparador que deja solo
+las diez últimas de cada persona.
+
+**Qué guarda y qué no.** Guarda la respuesta del modelo: el veredicto, la
+prioridad y las observaciones por ficha y por sección. No guarda el borrador del
+portafolio, que sigue viviendo solo en el navegador de cada quien. La tabla es
+estrictamente privada: cada persona lee únicamente las suyas y **el
+administrador no tiene acceso**, a diferencia de lo que pasa con el avance y con
+las rondas del Pitch. Si algún día el Centro necesita leerlas, no basta con
+añadir una política: hay que decírselo antes en pantalla a quien las escribe.
+
+**Si no corres este script**, la revisión sigue funcionando igual. Simplemente no
+se guarda: aparece en pantalla y desaparece al recargar, con un aviso discreto
+que lo dice.
+
 ---
 
 ## Comprobar que quedaron bien
@@ -94,6 +115,34 @@ es lo que se le exige a una de Derecho.
 
 Las dos funciones piden `store: false`, de modo que Google no conserva la
 conversación.
+
+Lo que sí se conserva, si corriste el paso 4, es **la respuesta**: queda en la
+tabla `revisiones`, en la cuenta de quien la pidió y a la vista de nadie más.
+Conviene tener presente un matiz al leer esa tabla: la instrucción le pide al
+modelo citar entre comillas las palabras del estudiante cuando señala un
+problema, así que una observación puede contener frases sueltas de su
+portafolio. No es el borrador, pero tampoco es texto anónimo.
+
+---
+
+## Los tres estados, y por qué ninguno descalifica
+
+Cada ficha y cada sección vuelve con un estado: `solido`, `afinar` o
+`desarrollar`. El tercero fue `insuficiente` hasta agosto de 2026 y se cambió a
+propósito.
+
+«Insuficiente» es un juicio sobre la persona, y dicho por una máquina que no
+conoce su trabajo no es ni justo ni útil: quien lo lee cierra la herramienta en
+vez de arreglar la ficha, que es el único desenlace que no le sirve a nadie.
+«Por desarrollar» dice exactamente lo mismo del texto y además dice qué sigue.
+La regla 8 de la instrucción lo extiende a las observaciones: se describe lo que
+falta, no se reparten notas.
+
+La interfaz traduce los nombres antiguos por si la Edge Function tarda en
+actualizarse, así que **se puede desplegar en cualquier orden**. Pero mientras no
+la redespliegues, el modelo seguirá recibiendo la instrucción vieja y podrá usar
+la palabra «insuficiente» dentro de una observación, donde la interfaz ya no
+puede traducirla.
 
 ---
 

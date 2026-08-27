@@ -125,7 +125,13 @@ with sync_playwright() as p:
           return g.length>=2 && g[0].textContent.indexOf('ficha')>-1})()"""),
        pg.evaluate("""Array.from(document.querySelectorAll('#rev-salida .eyebrow')).map(e=>e.textContent)"""))
     ok("muestra las dos fichas", salida.count("Ficha ") == 2, salida.count("Ficha "))
-    ok("muestra el estado de cada una", "INSUFICIENTE" in salida.upper() and "MEJORABLE" in salida.upper())
+    # La función del servidor manda «mejorable» e «insuficiente» a
+    # propósito en este montaje: son los nombres antiguos. La interfaz
+    # tiene que traducirlos, porque la Edge Function puede tardar en
+    # actualizarse y nadie debe ver una revisión rota mientras tanto.
+    ok("traduce los estados antiguos", "POR DESARROLLAR" in salida.upper() and "POR AFINAR" in salida.upper(),
+       salida.upper()[:200])
+    ok("no llama insuficiente a nadie", "INSUFICIENTE" not in salida.upper())
     ok("muestra las observaciones", "¿De cuánto a cuánto" in salida)
     ok("muestra las secciones", "Perfil profesional" in salida and "Contacto" in salida)
     ok("muestra la prioridad", "SOLO ARREGLAS UNA COSA" in salida.upper() and "cifra o un hecho verificable" in salida)

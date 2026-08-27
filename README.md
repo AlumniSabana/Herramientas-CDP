@@ -45,6 +45,8 @@ escribe repartida en `src/` y se cose con un guion.
 │   │   ├── traducir/               portafolio al inglés (Gemini)
 │   │   └── revisar-portafolio/     revisión antes de publicar (Gemini)
 │   └── sql/                        migraciones y permisos
+│       ├── portafolios.sql        avance de cada persona (nunca su borrador)
+│       └── revisiones.sql         segundas opiniones con IA, privadas de su dueño
 │
 ├── docs/                           instalación y despliegue
 └── pruebas/                        suites de Playwright

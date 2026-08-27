@@ -855,6 +855,41 @@ async function supabaseAPI(ruta, metodo, cuerpo){
     }
   }
 
+  /* ---------- Segundas opiniones guardadas ----------
+     La revisión que devuelve el modelo se guarda en la cuenta de
+     quien la pidió, para que pueda volver a ella y compararla con
+     las anteriores. Es lo único del portafolio que se guarda en el
+     servidor: el borrador sigue viviendo solo en el navegador.
+
+     El filtro por usuario_id es explícito, igual que en «rondas»:
+     no se confía en que la política de la tabla sea lo que uno
+     recuerda. */
+  if(ruta === "/revisiones" && metodo === "GET"){
+    const mio = Cuenta.sesion ? Cuenta.sesion.id : "";
+    if(!mio){ return {revisiones: []}; }
+    const r = await sbAuth("/rest/v1/revisiones?select=*&usuario_id=eq." +
+      encodeURIComponent(mio) + "&order=creada_en.desc&limit=10", {method:"GET"});
+    return {revisiones: r || []};
+  }
+
+  if(ruta === "/revisiones" && metodo === "POST"){
+    if(!Cuenta.sesion){ return null; }
+    const fila = Object.assign({usuario_id: Cuenta.sesion.id}, b);
+    const r = await sbAuth("/rest/v1/revisiones", {
+      method: "POST",
+      headers: {"Prefer":"return=representation"},
+      body: JSON.stringify(fila)
+    });
+    return {revision: (r && r[0]) ? r[0] : fila};
+  }
+
+  if(ruta.indexOf("/revisiones/") === 0 && metodo === "DELETE"){
+    const id = decodeURIComponent(ruta.slice("/revisiones/".length));
+    await sbAuth("/rest/v1/revisiones?id=eq." + encodeURIComponent(id),
+      {method:"DELETE", headers:{"Prefer":"return=minimal"}});
+    return null;
+  }
+
   /* ---------- Rondas ---------- */
   if(ruta === "/rondas" && metodo === "GET"){
     /* El filtro por usuario_id es explícito y no sobra.
@@ -1178,6 +1213,12 @@ async function demoAPI(ruta, metodo, cuerpo){
      funcionalidad, y no tiene por qué romper la herramienta. */
   if(ruta === "/portafolio"){ return null; }
   if(ruta === "/admin/portafolios"){ return {portafolios: []}; }
+
+  /* Sin servidor no hay dónde guardar las revisiones. Se contesta
+     una lista vacía en vez de fallar: la interfaz simplemente no
+     enseña el apartado de «revisiones anteriores». */
+  if(ruta === "/revisiones" && metodo === "GET"){ return {revisiones: []}; }
+  if(ruta.indexOf("/revisiones") === 0){ return null; }
 
   throw new Error("Operación no disponible en modo demostración.");
 }

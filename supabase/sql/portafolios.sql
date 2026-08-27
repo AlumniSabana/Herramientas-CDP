@@ -13,6 +13,14 @@
 --  columna con el contenido, esa promesa deja de ser cierta y hay
 --  que cambiarla en la interfaz antes que en la base.
 --
+--  La única cosa del portafolio que sí se guarda en el servidor
+--  está en otra tabla, «revisiones» (script revisiones.sql): la
+--  respuesta que devuelve la inteligencia artificial cuando alguien
+--  pide una segunda opinión. Es la RESPUESTA, no el borrador, y no
+--  la lee nadie más que su dueño, ni siquiera el administrador.
+--  Está separada de esta tabla justamente para que la diferencia
+--  siga siendo evidente al leer el esquema.
+--
 --  UNA FILA POR PERSONA, no por evento. Interesa en qué punto está
 --  cada quien, no reconstruir su sesión minuto a minuto.
 --

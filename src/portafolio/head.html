@@ -68,6 +68,13 @@
   --ok-soft: #E4F2EC;
   --alerta: #A3252F;     /* mismo rojo que «Estudio de Pitch» */
   --alerta-soft: #FAE8E9;
+  /* Ámbar para «hay trabajo pendiente». Deliberadamente NO es el
+     rojo de alerta: una ficha a medio escribir no es un error, y
+     pintarla de rojo hace que quien la lee cierre la herramienta en
+     vez de terminarla. Oscuro para que el texto pequeño en
+     mayúsculas siga leyéndose sobre blanco. */
+  --ambar: #8A5200;
+  --ambar-soft: #FBEFDD;
 
   /* Contraste sobre relleno de color */
   --field: #FFFFFF;
@@ -787,16 +794,19 @@ footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
   border: 1px solid var(--rule); border-left: 3px solid var(--rule-soft);
   border-radius: 5px; padding: .9rem 1.1rem; margin-bottom: .7rem; background: var(--surface-2);
 }
-.rev-item.solido       { border-left-color: var(--ok); }
-.rev-item.mejorable    { border-left-color: var(--azul-300); }
-.rev-item.insuficiente { border-left-color: var(--alerta); }
+/* Tres estados, tres colores. El tercero es ámbar y no rojo: dice
+   «falta escribirlo», no «está mal». Ver ESTADOS en app.js. */
+.rev-item.solido      { border-left-color: var(--ok); }
+.rev-item.afinar      { border-left-color: var(--azul-300); }
+.rev-item.desarrollar { border-left-color: var(--ambar); }
 .rev-item h4 { font-family: var(--sans); font-size: .92rem; font-weight: 700; margin-bottom: .1rem; }
 .rev-estado {
   font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
   font-weight: 700; color: var(--ink-faint);
 }
-.rev-item.solido .rev-estado       { color: var(--ok); }
-.rev-item.insuficiente .rev-estado { color: var(--alerta); }
+.rev-item.solido .rev-estado      { color: var(--ok); }
+.rev-item.afinar .rev-estado      { color: var(--azul-500); }
+.rev-item.desarrollar .rev-estado { color: var(--ambar); }
 .rev-item ul { margin: .6rem 0 0; padding-left: 1.1rem; }
 .rev-item li { margin-bottom: .35rem; font-size: .93rem; line-height: 1.55; color: var(--ink-soft); }
 .rev-item li:last-child { margin-bottom: 0; }
@@ -814,6 +824,62 @@ footer.pie { background: var(--azul); color: #B9C9E2; padding: 3rem 0 1.6rem; }
   margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--rule);
   font-size: .8rem; line-height: 1.55; color: var(--ink-faint);
 }
+
+/* ─────────── SELLO «HECHO CON IA» ───────────
+   Va pegado al título del bloque, no escondido en la letra pequeña
+   del final. Quien lea la revisión tiene que saber quién la escribió
+   antes de leerla, no después. */
+.sello-ia {
+  display: inline-block; margin-left: .5rem; vertical-align: middle;
+  padding: .16rem .5rem; border-radius: 999px;
+  background: var(--azul-soft); color: var(--azul-500);
+  font-size: .6rem; letter-spacing: .08em; text-transform: uppercase;
+  font-weight: 700; white-space: nowrap;
+}
+
+/* ─────────── REVISIONES GUARDADAS ───────────
+   La lista de las anteriores. Sirve para comparar la de hoy con la
+   de hace dos semanas, que es donde se ve si el portafolio avanzó. */
+.rev-guardadas {
+  margin-top: 1.5rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+}
+.rev-guardadas[hidden] { display: none; }
+.rev-guardadas > .eyebrow { display: block; margin-bottom: .6rem; }
+.rev-guardadas-lista { list-style: none; margin: 0; padding: 0; }
+.rev-guardadas-lista li {
+  display: flex; align-items: center; gap: .7rem; flex-wrap: wrap;
+  padding: .55rem .8rem; margin-bottom: .4rem;
+  border: 1px solid var(--rule); border-radius: 5px; background: var(--surface-2);
+}
+.rev-guardadas-lista li.activa { border-color: var(--azul-500); background: var(--azul-soft); }
+.rev-guardadas-lista li b { font-family: var(--mono); font-size: .82rem; color: var(--ink); }
+.rev-guardadas-res { font-size: .82rem; color: var(--ink-soft); flex: 1 1 auto; }
+.rev-guardadas-lista button { font-size: .8rem; padding: .3rem .7rem; flex: none; }
+.rev-guardadas-lista button.enlace {
+  background: none; border: 0; padding: .3rem .2rem; color: var(--ink-faint);
+  text-decoration: underline; box-shadow: none;
+}
+.rev-guardadas-lista button.enlace:hover { color: var(--alerta); }
+.rev-guardadas-nota { font-size: .8rem; color: var(--ink-faint); margin-top: .5rem; line-height: 1.5; }
+
+/* ─────────── GUÍA DEL CAMPO «EVIDENCIA» ───────────
+   Se separa del resto de la hoja porque contesta una pregunta
+   concreta que se hace justo antes de rellenar el formulario. */
+.evidencia-guia {
+  margin: 1.6rem 0; padding: 1.3rem; border: 1px solid var(--rule);
+  border-left: 3px solid var(--azul-500); border-radius: 0 6px 6px 0;
+  background: var(--surface-2);
+}
+.evidencia-guia h3 { margin: .3rem 0 .6rem; }
+.evidencia-guia h4 {
+  font-family: var(--sans); font-size: .95rem; font-weight: 700;
+  margin: 1.2rem 0 .4rem; color: var(--ink);
+}
+.evidencia-guia .tablewrap { margin: .9rem 0; }
+.evidencia-guia ol { margin: .5rem 0 0; padding-left: 1.3rem; }
+.evidencia-guia ol li { margin-bottom: .45rem; line-height: 1.6; }
+.evidencia-guia .warn { margin-top: 1.1rem; background: var(--ambar-soft); border-left-color: var(--ambar); }
+.mono { font-family: var(--mono); font-size: .92em; }
 
 /* ═══════════════ ZONA DE CUENTA EN EL ÍNDICE ═══════════════
    Los estilos de los botones y del modal los trae auth.js. Aquí
