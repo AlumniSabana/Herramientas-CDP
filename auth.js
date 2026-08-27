@@ -781,22 +781,65 @@ async function supabaseAPI(ruta, metodo, cuerpo){
     return await sbSesionDesde(d);
   }
 
-  /* ---------- Uso del portafolio ----------
-     Una fila por persona, con su avance. Nunca el texto del
-     borrador: eso sigue viviendo solo en el navegador de cada quien,
-     que es lo que la herramienta promete en pantalla. */
-  if(ruta === "/portafolio" && metodo === "PUT"){
-    if(!Cuenta.sesion){ return null; }
+  /* ══════════════════════════════════════════════════════════
+     CONTENIDO DEL PORTAFOLIO
+     ----------------------------------------------------------
+     El portafolio dejó de vivir en el navegador y pasó a vivir en
+     la cuenta. Son cuatro tablas:
+
+       portafolios            una fila por persona (unique usuario_id)
+         proyectos            una fila por ficha
+         secciones_portafolio una fila por casilla del formulario
+         revisiones_ia        una fila por segunda opinión
+
+     Las tres hijas cuelgan de «portafolios.id» con borrado en
+     cascada, así que retirar el portafolio se lleva todo lo demás
+     sin código extra.
+
+     Aquí solo está la fontanería REST. Qué casilla va a qué fila lo
+     decide el portafolio, que es quien conoce su formulario.
+     ══════════════════════════════════════════════════════════ */
+
+  /* Colecciones que el portafolio puede tocar. La lista es blanca a
+     propósito: el nombre de la tabla llega desde la ruta y no se
+     construye con lo que mande quien llama. */
+  const COLECCIONES = {proyectos: "proyectos", secciones: "secciones_portafolio"};
+
+  if(ruta === "/portafolio/contenido" && metodo === "GET"){
+    const vacio = {portafolio: null, proyectos: [], secciones: []};
+    if(!Cuenta.sesion){ return vacio; }
+
+    const p = await sbAuth("/rest/v1/portafolios?select=*&usuario_id=eq." +
+      encodeURIComponent(Cuenta.sesion.id) + "&limit=1", {method:"GET"});
+    const cab = (p && p[0]) ? p[0] : null;
+    if(!cab){ return vacio; }
+
+    /* Las dos consultas hijas no dependen una de otra: en paralelo
+       se ahorra un viaje de ida y vuelta en la carga, que es el
+       momento en que la persona está esperando delante. */
+    const [pr, se] = await Promise.all([
+      sbAuth("/rest/v1/proyectos?select=*&portafolio_id=eq." +
+        encodeURIComponent(cab.id) + "&order=orden.asc", {method:"GET"}),
+      sbAuth("/rest/v1/secciones_portafolio?select=*&portafolio_id=eq." +
+        encodeURIComponent(cab.id) + "&order=orden.asc", {method:"GET"})
+    ]);
+    return {portafolio: cab, proyectos: pr || [], secciones: se || []};
+  }
+
+  /* La cabecera se crea o se actualiza en una sola petición.
+     «on_conflict=usuario_id» es obligatorio: sin él PostgREST
+     resuelve el conflicto contra la llave primaria, que es «id» y se
+     genera nueva cada vez, así que el segundo guardado chocaría
+     contra el UNIQUE(usuario_id) en vez de actualizar la fila. */
+  if(ruta === "/portafolio/cabecera" && metodo === "PUT"){
+    if(!Cuenta.sesion){ return {portafolio: null}; }
     const fila = Object.assign({usuario_id: Cuenta.sesion.id}, b);
-    /* «resolution=merge-duplicates» convierte el POST en un upsert
-       sobre la llave primaria, así que sirve tanto la primera vez
-       como las siguientes sin tener que preguntar antes si existe. */
-    await sbAuth("/rest/v1/portafolios", {
+    const r = await sbAuth("/rest/v1/portafolios?on_conflict=usuario_id", {
       method: "POST",
-      headers: {"Prefer": "resolution=merge-duplicates,return=minimal"},
+      headers: {"Prefer": "resolution=merge-duplicates,return=representation"},
       body: JSON.stringify(fila)
     });
-    return null;
+    return {portafolio: (r && r[0]) ? r[0] : null};
   }
 
   if(ruta === "/portafolio" && metodo === "DELETE"){
@@ -804,6 +847,42 @@ async function supabaseAPI(ruta, metodo, cuerpo){
     await sbAuth("/rest/v1/portafolios?usuario_id=eq." + encodeURIComponent(Cuenta.sesion.id),
       {method:"DELETE", headers:{"Prefer":"return=minimal"}});
     return null;
+  }
+
+  /* Filas sueltas de proyectos y secciones. Se escriben una a una y
+     no en bloque a propósito: mientras alguien escribe solo cambia
+     una casilla, y reenviar el portafolio entero cada cuatro
+     segundos es tráfico que nadie necesita. */
+  if(ruta.indexOf("/portafolio/") === 0){
+    const trozos = ruta.slice("/portafolio/".length).split("/");
+    const tabla = COLECCIONES[trozos[0]];
+    if(tabla){
+      const id = trozos[1] ? decodeURIComponent(trozos[1]) : "";
+
+      if(metodo === "POST"){
+        const r = await sbAuth("/rest/v1/" + tabla, {
+          method: "POST",
+          headers: {"Prefer": "return=representation"},
+          body: JSON.stringify(b)
+        });
+        return {fila: (r && r[0]) ? r[0] : null};
+      }
+
+      if(metodo === "PATCH" && id){
+        await sbAuth("/rest/v1/" + tabla + "?id=eq." + encodeURIComponent(id), {
+          method: "PATCH",
+          headers: {"Prefer": "return=minimal"},
+          body: JSON.stringify(b)
+        });
+        return null;
+      }
+
+      if(metodo === "DELETE" && id){
+        await sbAuth("/rest/v1/" + tabla + "?id=eq." + encodeURIComponent(id),
+          {method:"DELETE", headers:{"Prefer":"return=minimal"}});
+        return null;
+      }
+    }
   }
 
   if(ruta === "/admin/portafolios" && metodo === "GET"){
@@ -867,15 +946,15 @@ async function supabaseAPI(ruta, metodo, cuerpo){
   if(ruta === "/revisiones" && metodo === "GET"){
     const mio = Cuenta.sesion ? Cuenta.sesion.id : "";
     if(!mio){ return {revisiones: []}; }
-    const r = await sbAuth("/rest/v1/revisiones?select=*&usuario_id=eq." +
-      encodeURIComponent(mio) + "&order=creada_en.desc&limit=10", {method:"GET"});
+    const r = await sbAuth("/rest/v1/revisiones_ia?select=*&usuario_id=eq." +
+      encodeURIComponent(mio) + "&order=creado_en.desc&limit=10", {method:"GET"});
     return {revisiones: r || []};
   }
 
   if(ruta === "/revisiones" && metodo === "POST"){
     if(!Cuenta.sesion){ return null; }
     const fila = Object.assign({usuario_id: Cuenta.sesion.id}, b);
-    const r = await sbAuth("/rest/v1/revisiones", {
+    const r = await sbAuth("/rest/v1/revisiones_ia", {
       method: "POST",
       headers: {"Prefer":"return=representation"},
       body: JSON.stringify(fila)
@@ -885,7 +964,7 @@ async function supabaseAPI(ruta, metodo, cuerpo){
 
   if(ruta.indexOf("/revisiones/") === 0 && metodo === "DELETE"){
     const id = decodeURIComponent(ruta.slice("/revisiones/".length));
-    await sbAuth("/rest/v1/revisiones?id=eq." + encodeURIComponent(id),
+    await sbAuth("/rest/v1/revisiones_ia?id=eq." + encodeURIComponent(id),
       {method:"DELETE", headers:{"Prefer":"return=minimal"}});
     return null;
   }
@@ -1211,7 +1290,8 @@ async function demoAPI(ruta, metodo, cuerpo){
   /* En demostración el avance del portafolio no se registra en
      ninguna parte. Se calla en vez de fallar: es una métrica, no una
      funcionalidad, y no tiene por qué romper la herramienta. */
-  if(ruta === "/portafolio"){ return null; }
+  if(ruta === "/portafolio/contenido"){ return {portafolio: null, proyectos: [], secciones: []}; }
+  if(ruta.indexOf("/portafolio") === 0){ return null; }
   if(ruta === "/admin/portafolios"){ return {portafolios: []}; }
 
   /* Sin servidor no hay dónde guardar las revisiones. Se contesta
