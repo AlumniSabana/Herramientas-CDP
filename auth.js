@@ -885,9 +885,18 @@ async function supabaseAPI(ruta, metodo, cuerpo){
     }
   }
 
+  /* El consolidado entra por una función, no por una vista.
+
+     Con vista devolvía cero filas: aunque figure como «owner», el
+     RLS de las tablas se sigue aplicando a quien consulta, y el
+     administrador no tiene lectura sobre «portafolios». Una función
+     «security definer» sí garantiza que lo de dentro se ejecute con
+     los permisos de quien la definió. PostgREST las expone en /rpc.
+
+     Se pide por POST porque es lo que hace PostgREST con las
+     funciones; el cuerpo va vacío porque no llevan argumentos. */
   if(ruta === "/admin/portafolios" && metodo === "GET"){
-    const r = await sbAuth("/rest/v1/portafolios_admin?select=*&order=actualizado_en.desc",
-      {method:"GET"});
+    const r = await sbAuth("/rest/v1/rpc/portafolios_admin", {method:"POST", body:"{}"});
     return {portafolios: comoLista(r)};
   }
 
@@ -900,8 +909,7 @@ async function supabaseAPI(ruta, metodo, cuerpo){
      enseñándose aunque falte esta migración. */
   if(ruta === "/admin/revisiones" && metodo === "GET"){
     try{
-      const r = await sbAuth("/rest/v1/revisiones_admin?select=*&order=creado_en.desc",
-        {method:"GET"});
+      const r = await sbAuth("/rest/v1/rpc/revisiones_admin", {method:"POST", body:"{}"});
       return {revisiones: comoLista(r)};
     }catch(err){
       if(esVistaInexistente(err)){ return {revisiones: [], faltaVista: true}; }
