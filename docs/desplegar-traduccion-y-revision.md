@@ -49,22 +49,24 @@ supabase functions deploy revisar-portafolio
 
 El portafolio las encuentra solo. No hay que tocar el HTML.
 
-### 4 · Crea la tabla donde se guardan las segundas opiniones
+### 4 · Deja lista la tabla donde se guardan las segundas opiniones
+
+La tabla `revisiones_ia` ya existe, pero al crearse se quedó solo con la
+política de lectura: nadie podía escribir en ella, así que la revisión aparecía
+en pantalla y se perdía al recargar.
 
 **SQL Editor → New query.** Pega el contenido completo de
-`supabase/sql/revisiones.sql` y presiona **Run**. Necesita que antes hayas
-corrido `portafolios.sql`, de donde sale la función `es_admin()`.
-
-Eso crea la tabla `revisiones`, sus tres políticas y un disparador que deja solo
-las diez últimas de cada persona.
+`supabase/sql/portafolio-contenido.sql` y presiona **Run**. Entre otras cosas
+añade la política que faltaba, la de borrado, y la función `revisiones_admin()`
+que alimenta el consolidado.
 
 **Qué guarda y qué no.** Guarda la respuesta del modelo: el veredicto, la
-prioridad y las observaciones por ficha y por sección. No guarda el borrador del
-portafolio, que sigue viviendo solo en el navegador de cada quien. La tabla es
-estrictamente privada: cada persona lee únicamente las suyas y **el
-administrador no tiene acceso**, a diferencia de lo que pasa con el avance y con
-las rondas del Pitch. Si algún día el Centro necesita leerlas, no basta con
-añadir una política: hay que decírselo antes en pantalla a quien las escribe.
+prioridad y las observaciones por ficha y por sección, todo en la columna
+`resultado`. No guarda el borrador del portafolio.
+
+**Quién la puede leer.** Su dueño, siempre; y el Centro, desde el consolidado
+del portafolio, para preparar la asesoría. Está dicho en pantalla antes de que
+nadie pida una revisión.
 
 **Si no corres este script**, la revisión sigue funcionando igual. Simplemente no
 se guarda: aparece en pantalla y desaparece al recargar, con un aviso discreto
@@ -116,12 +118,21 @@ es lo que se le exige a una de Derecho.
 Las dos funciones piden `store: false`, de modo que Google no conserva la
 conversación.
 
-Lo que sí se conserva, si corriste el paso 4, es **la respuesta**: queda en la
-tabla `revisiones`, en la cuenta de quien la pidió y a la vista de nadie más.
+Lo que sí se conserva es **la respuesta**: queda en la tabla `revisiones_ia`,
+en la cuenta de quien la pidió. La ve esa persona y la ve el Centro, desde el
+consolidado del portafolio, para poder preparar la asesoría.
+
 Conviene tener presente un matiz al leer esa tabla: la instrucción le pide al
 modelo citar entre comillas las palabras del estudiante cuando señala un
 problema, así que una observación puede contener frases sueltas de su
-portafolio. No es el borrador, pero tampoco es texto anónimo.
+portafolio. No es el borrador, pero tampoco es texto anónimo. Por eso está
+dicho en pantalla, en «Antes de publicar» y en el pie, **antes** de que nadie
+pulse el botón. Si algún día se retira ese acceso, hay que quitarlo de ahí
+también.
+
+El borrador del portafolio es otra cosa y no se abre: las políticas de la base
+solo se lo devuelven a su dueño, y el consolidado cuenta filas sin leer una
+palabra.
 
 ---
 

@@ -584,7 +584,9 @@ button{font-family:inherit;font-size:inherit;cursor:pointer}
   font-family:var(--font-mono);font-size:66px;font-weight:600;line-height:1;
   font-variant-numeric:tabular-nums;letter-spacing:-.03em;
 }
-.puntaje-de{font-family:var(--font-mono);font-size:13px;color:var(--texto-3)}
+.puntaje-de{font-family:var(--font-mono);font-size:13px;color:var(--texto-3);line-height:1.35}
+/* «de 100» en su propia línea: la unidad manda, la escala acompaña. */
+.puntaje-de-100{display:block;font-size:11.5px;letter-spacing:.02em}
 .puntaje-sello{
   margin-top:9px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
   padding:6px 14px;border-radius:100px;
@@ -3430,8 +3432,13 @@ function generarReporte(res){
   $("#reporte-contenido").innerHTML = `
     <div class="marcador">
       <div class="puntaje">
-        <div class="puntaje-n" style="color:var(--${sello === "bien" ? "bien" : sello === "ajusta" ? "ajusta" : "revisa"})">${res.puntaje}</div>
-        <div class="puntaje-de">de 100</div>
+        <!-- «65» a secas no dice de qué es. El número grande se lee
+             solo, así que la unidad va debajo y completa la frase:
+             «65 puntos de 100». El aria-label la dice entera, porque
+             un lector de pantalla leía tres trozos sin relación. -->
+        <div class="puntaje-n" style="color:var(--${sello === "bien" ? "bien" : sello === "ajusta" ? "ajusta" : "revisa"})"
+             role="img" aria-label="${res.puntaje} puntos de 100">${res.puntaje}</div>
+        <div class="puntaje-de" aria-hidden="true">puntos <span class="puntaje-de-100">de 100</span></div>
         <div class="puntaje-sello chip ${sello}">${esc(etiquetaNivel(res.puntaje))}</div>
       </div>
       <div class="veredicto">
@@ -4877,7 +4884,7 @@ function fichaRondaHTML(r){
 
   return `
     <div class="det-ficha">
-      <h4>${esc(r.tipo_nombre || r.tipo)} · ${fechaCorta(r.creada_en)} · puntaje ${r.puntaje}</h4>
+      <h4>${esc(r.tipo_nombre || r.tipo)} · ${fechaCorta(r.creada_en)} · ${r.puntaje} puntos de 100</h4>
       <div class="det-dims">${dims || '<span style="color:var(--texto-3)">Sin dimensiones registradas.</span>'}</div>
       <div class="det-bloque">
         <span class="et">Transcripción</span>

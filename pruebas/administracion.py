@@ -46,11 +46,32 @@ PORTAFOLIOS = [
 def montar(ctx, rondas_admin_falla=False):
     def ruta(route):
         req = route.request; u, m = req.url, req.method
-        if "/rest/v1/portafolios_admin" in u:
+        if "rpc/portafolios_admin" in u:
+            pedidos.append({"_consolidado": u, "_metodo": m})
             return route.fulfill(status=200, content_type="application/json", body=json.dumps(PORTAFOLIOS))
+        if "/rest/v1/portafolios_admin" in u:
+            # La vista ya no existe. Si alguien vuelve a apuntar aquí,
+            # en producción son cero filas sin ningún error.
+            pedidos.append({"_vista_muerta": u})
+            return route.fulfill(status=200, content_type="application/json", body="[]")
+        if "/rest/v1/portafolios" in u and m == "GET":
+            return route.fulfill(status=200, content_type="application/json", body="[]")
         if "/rest/v1/portafolios" in u and m == "POST":
-            pedidos.append(json.loads(req.post_data))
-            return route.fulfill(status=201, content_type="application/json", body="")
+            cuerpo = json.loads(req.post_data)
+            pedidos.append(cuerpo)
+            cuerpo = dict(cuerpo); cuerpo["id"] = "port-1"
+            return route.fulfill(status=201, content_type="application/json",
+                                 body=json.dumps([cuerpo]))
+        if ("/rest/v1/proyectos" in u or "/rest/v1/secciones_portafolio" in u):
+            if m == "GET":
+                return route.fulfill(status=200, content_type="application/json", body="[]")
+            if m == "POST":
+                cuerpo = json.loads(req.post_data)
+                pedidos.append(cuerpo)
+                cuerpo = dict(cuerpo); cuerpo["id"] = "fila-1"
+                return route.fulfill(status=201, content_type="application/json",
+                                     body=json.dumps([cuerpo]))
+            return route.fulfill(status=204, body="")
         if "/rest/v1/portafolios" in u and m == "DELETE":
             pedidos.append({"_borrado": True})
             return route.fulfill(status=204, body="")
@@ -125,20 +146,32 @@ with sync_playwright() as p:
     ok("la hoja está oculta", pg.evaluate("document.getElementById('admin').hidden"))
     ok("sin errores de JS", not errs, errs)
 
-    print("\n5 · PORTAFOLIO: SE REGISTRA EL AVANCE")
+    print("\n5 · PORTAFOLIO: EL CONTENIDO SE GUARDA EN LA CUENTA")
+    # Antes se mandaba a una tabla de métricas una contabilidad
+    # («hojas_completas», «fichas_total») mientras el texto se quedaba
+    # en el navegador. Ahora se guarda el contenido de verdad y las
+    # cifras las calcula la vista del consolidado.
     pg.evaluate("location.hash='#identidad'"); pg.wait_for_timeout(300)
     pg.fill("#f-nombre", "Ana Pérez")
     pg.fill("#f-valor", "Ingeniera industrial que reduce paradas de línea en planta")
-    pg.wait_for_timeout(5200)
-    envios = [x for x in pedidos if "hojas_completas" in x]
-    ok("mandó el avance", len(envios) >= 1, len(envios))
-    if envios:
-        e = envios[-1]
-        ok("incluye el programa", e.get("programa") == "Ingeniería Industrial", e.get("programa"))
-        ok("cuenta las secciones", e.get("hojas_completas", 0) >= 1, e.get("hojas_completas"))
-        ok("NO manda el texto del portafolio",
-           "reduce paradas" not in json.dumps(e, ensure_ascii=False) and
-           "Ana Pérez" not in json.dumps(e, ensure_ascii=False), list(e.keys()))
+    pg.wait_for_timeout(4200)
+
+    cabecera = [x for x in pedidos if "titulo" in x]
+    ok("creó la cabecera del portafolio", len(cabecera) >= 1, len(cabecera))
+    if cabecera:
+        ok("con el nombre como título", cabecera[-1].get("titulo") == "Ana Pérez",
+           cabecera[-1].get("titulo"))
+
+    secciones = [x for x in pedidos if x.get("tipo")]
+    ok("guardó la propuesta de valor",
+       any("reduce paradas" in (x.get("contenido") or "") for x in secciones),
+       [x.get("tipo") for x in secciones])
+    ok("y el programa en claro para el consolidado",
+       any(x.get("tipo") == "programa_nombre" and x.get("contenido") == "Ingeniería Industrial"
+           for x in secciones),
+       [x.get("tipo") for x in secciones])
+    ok("ya no manda la contabilidad aparte",
+       not [x for x in pedidos if "hojas_completas" in x], pedidos[:2])
     ok("sin errores de JS", not errs, errs)
     ctx.close()
 
@@ -149,6 +182,16 @@ with sync_playwright() as p:
     pg.evaluate("""document.querySelector('a[href="#admin"]').click()""")
     pg.wait_for_timeout(900)
     ok("la hoja se muestra", pg.evaluate("document.getElementById('admin').classList.contains('on')"))
+    # El consolidado entra por una función «security definer», no por
+    # una vista: con vista el RLS dejaba al administrador viendo solo
+    # su propia fila, y el panel salía en blanco sin dar ningún error.
+    ok("pide la función, no la vista",
+       any(x.get("_consolidado") for x in pedidos) and
+       not any(x.get("_vista_muerta") for x in pedidos),
+       [k for x in pedidos for k in x if k.startswith("_")])
+    ok("y la pide por POST, como hace PostgREST con las funciones",
+       any(x.get("_metodo") == "POST" for x in pedidos if x.get("_consolidado")),
+       [x.get("_metodo") for x in pedidos if x.get("_consolidado")])
     t = pg.inner_text("#admin")
     ok("lista a las dos personas", "Ana Pérez" in t and "Luis Gómez" in t)
     ok("muestra el avance", "4 de 5" in t and "2 de 5" in t, [l for l in t.split("\n") if "de 5" in l][:4])

@@ -60,6 +60,7 @@ class Base:
     no sirve de nada si el doble del servidor devuelve todas."""
     def __init__(self, guarda=True):
         self.filas = []
+        self.portafolios = []
         self.guarda = guarda       # False = la tabla no existe todavía
         self.n = 0
 
@@ -73,7 +74,7 @@ class Base:
         self.n += 1
         fila = dict(fila)
         fila["id"] = "rev-%d" % self.n
-        fila["creada_en"] = "2026-08-%02dT10:00:00" % (10 + self.n)
+        fila["creado_en"] = "2026-08-%02dT10:00:00" % (10 + self.n)
         self.filas.insert(0, fila)
         return [fila]
 
@@ -85,10 +86,27 @@ class Base:
 def montar(ctx, base, revision=None, estado_revision=200):
     def ruta(route):
         u, m = route.request.url, route.request.method
+        if "/rest/v1/portafolios" in u:
+            if m == "GET":
+                return route.fulfill(status=200, content_type="application/json",
+                                     body=json.dumps(base.portafolios))
+            if m == "POST":
+                cuerpo = json.loads(route.request.post_data)
+                cuerpo["id"] = "port-1"
+                base.portafolios = [cuerpo]
+                return route.fulfill(status=201, content_type="application/json",
+                                     body=json.dumps([cuerpo]))
+        if "/rest/v1/proyectos" in u or "/rest/v1/secciones_portafolio" in u:
+            if m == "GET":
+                return route.fulfill(status=200, content_type="application/json", body="[]")
+            if m == "POST":
+                return route.fulfill(status=201, content_type="application/json",
+                                     body=json.dumps([{"id": "x-1"}]))
+            return route.fulfill(status=204, body="")
         if "/functions/v1/revisar-portafolio" in u:
             return route.fulfill(status=estado_revision, content_type="application/json",
                                  body=json.dumps(revision if revision is not None else RESPUESTA))
-        if "/rest/v1/revisiones" in u:
+        if "/rest/v1/revisiones_ia" in u:
             if not base.guarda:
                 return route.fulfill(status=404, content_type="application/json",
                                      body=json.dumps({"message": "relation \"public.revisiones\" does not exist"}))
@@ -163,15 +181,20 @@ with sync_playwright() as p:
     ok("se guardó una fila", len(base.filas) == 1, len(base.filas))
     fila = base.filas[0] if base.filas else {}
     ok("con el identificador de quien la pidió", fila.get("usuario_id") == "u-1", fila.get("usuario_id"))
-    ok("guarda el veredicto", "habla en adjetivos" in (fila.get("veredicto") or ""))
-    ok("guarda las observaciones por ficha",
-       len((fila.get("detalle") or {}).get("proyectos", [])) == 2)
+    res = fila.get("resultado") or {}
+    ok("guarda el veredicto", "habla en adjetivos" in (res.get("veredicto") or ""), res.get("veredicto"))
+    ok("guarda las observaciones por ficha", len(res.get("proyectos", [])) == 2)
+    ok("cuelga del portafolio de esa persona", bool(fila.get("portafolio_id")), fila.get("portafolio_id"))
     ok("NO guarda el borrador del portafolio",
        "parada diaria" not in json.dumps(fila, ensure_ascii=False))
     ok("aparece en la lista de anteriores", not pg.query_selector("#rev-guardadas").is_hidden())
     ok("la lista dice cuándo fue",
        "2026-08-11" in pg.inner_text("#rev-guardadas"), pg.inner_text("#rev-guardadas"))
-    ok("y dice que son privadas", "Nadie más las ve" in pg.inner_text("#rev-guardadas"))
+    # Desde que el CDP puede leerlas para preparar la asesoría, decir
+    # «nadie más las ve» sería mentira. Se dice quién y cómo evitarlo.
+    lista = pg.inner_text("#rev-guardadas")
+    ok("dice quién más las ve", "Centro de Desarrollo Profesional" in lista, lista)
+    ok("y cómo evitarlo", "Borra la que no quieras" in lista)
 
     print("\n4 · SE PUEDEN VOLVER A ABRIR")
     pg.evaluate("document.getElementById('rev-salida').innerHTML=''")

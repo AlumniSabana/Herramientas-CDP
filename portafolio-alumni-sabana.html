@@ -4376,8 +4376,9 @@ function cargarConsolidado() {
   }).catch(function (err) {
     $("#adm-sub").textContent = "No se pudo cargar el consolidado.";
     admAviso("No se pudo leer el consolidado: " + ((err && err.message) || "error desconocido") +
-      ". Si es la primera vez, corre supabase/sql/portafolio-contenido.sql en el editor SQL de " +
-      "Supabase: reconstruye la vista portafolios_admin sobre las tablas nuevas.");
+      ". Corre supabase/sql/portafolio-contenido.sql en el editor SQL de Supabase y, justo " +
+      "después, «notify pgrst, \'reload schema\';»: si el mensaje habla de «schema cache», la " +
+      "función existe pero la API todavía no la ve.");
     $("#adm-cuerpo").innerHTML = "";
     $("#adm-prog-cuerpo").innerHTML = "";
     $("#adm-kpis").innerHTML = "";

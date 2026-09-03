@@ -27,10 +27,9 @@
          asigna desde el script, en el bloque VUELTA. -->
     <a class="volver" id="volver-inicio" href="#"><span class="fl" aria-hidden="true">←</span> Herramientas del CDP</a>
 
-    <!-- FUTURA CONEXIÓN SUPABASE: PROGRESO DEL USUARIO
-         El avance se calcula hoy con lo que hay en el formulario.
-         Cuando exista cuenta, se leerá del progreso guardado en el
-         servidor para que continúe entre dispositivos. -->
+    <!-- El avance se calcula con lo que hay en el formulario, que
+         con la sesión abierta viene de la cuenta: por eso continúa
+         igual al abrirlo desde otro computador. -->
     <div class="nav-progreso">
       <div class="rot-fila">
         <span class="rot">Tu avance</span>
@@ -79,9 +78,10 @@
     </button>
     <div class="navgrupo" id="g-admin" hidden>
       <a class="simple" href="#admin">Consolidado del portafolio</a>
+      <a class="simple" href="#usuarios">Revisión usuarios</a>
     </div>
 
-    <span class="guardado" id="guardado" title="El borrador se guarda en este navegador y por cuenta: nadie más ve el tuyo, pero no te sigue a otro computador."><span class="punto" aria-hidden="true"></span><span id="guardado-txt">Sin cambios todavía</span></span>
+    <span class="guardado" id="guardado" title="Con la sesión abierta se guarda en tu cuenta y te sigue a cualquier computador. Sin entrar, solo en este navegador."><span class="punto" aria-hidden="true"></span><span id="guardado-txt">Sin cambios todavía</span></span>
   </div>
 </nav>
 
@@ -89,6 +89,13 @@
 <main id="contenido">
 
 <div class="hojas-barra" id="barra" aria-hidden="true"></div>
+
+<!-- Aviso de sincronización. Solo aparece en dos casos: cuando hay
+     un borrador de este navegador que se puede subir a la cuenta, y
+     cuando la sincronización falla. Que el guardado funcione no es
+     noticia, así que el resto del tiempo no se ve. Lo escribe
+     pintarAvisoNube() en app.js. -->
+<div class="nube-aviso" id="nube-aviso" role="status" hidden></div>
 
 <noscript>
   <div class="warn prose" style="margin-bottom:1.4rem">
@@ -148,7 +155,7 @@
     <div class="card"><span class="eyebrow" style="color:var(--ink-faint)">Antes de empezar</span><h3>Ten a mano</h3><p style="font-size:.92rem;color:var(--ink-soft)">Los trabajos, proyectos o prácticas que quieras mostrar, y los enlaces o archivos que los respaldan.</p></div>
   </div>
 
-  <div class="warn prose"><b>Tu borrador se guarda en este navegador.</b> Lo que escribas queda en este equipo y en este navegador; no se envía a ningún servidor ni viaja a otro dispositivo, y si entras con tu cuenta, cada cuenta tiene su propio borrador. La única excepción es lo que tú pidas: la «segunda opinión» y la traducción con inteligencia artificial sí mandan tu texto para que lo lean. Si usas un computador compartido o quieres borrarlo, usa «Empezar de nuevo» en la hoja «Antes de publicar». Y descarga tu portafolio cuando lo tengas listo: es la única copia que te llevas contigo.</div>
+  <div class="warn prose"><b>Con tu cuenta abierta, tu portafolio se guarda solo.</b> Lo que escribas queda en tu cuenta de la Universidad, así que puedes cerrar el computador y seguir desde otro sin perder nada. Solo tú lo ves. <b>Sin haber entrado</b>, lo que escribas se queda únicamente en este navegador y en este equipo: sirve para probar, pero no te sigue a ningún lado y se pierde si limpias el navegador. Cuando entres te preguntaremos si quieres subirlo. Con «Empezar de nuevo», en la hoja «Antes de publicar», lo borras entero cuando quieras. Y descarga tu portafolio cuando lo tengas listo: el PDF es tuyo y no depende de nosotros.</div>
 </section>
 
 <!-- ─────────── TU PROGRAMA ─────────── -->
@@ -505,6 +512,8 @@
 
     <p class="prose"><b>La escribe una máquina, no una persona del Centro.</b> Es un modelo de inteligencia artificial que lee tu texto y responde en segundos: sirve para detectar lo obvio antes de que lo vea alguien más, pero no conoce tu trabajo y se equivoca. Léela como una opinión más, no como una calificación. Cuando quieras que la revise un asesor de verdad, tienes la hoja «Hablar con un asesor».</p>
 
+    <p class="prose"><b>Quién la puede leer.</b> La revisión queda guardada en tu cuenta y el Centro de Desarrollo Profesional también puede consultarla: así, si pides una asesoría, quien te atienda llega sabiendo por dónde va tu portafolio. Tu portafolio en sí no lo ve nadie más que tú. Si prefieres que una revisión no quede, bórrala en la lista de aquí abajo.</p>
+
     <p class="revision-nota" id="rev-nota"></p>
 
     <div class="revision-salida" id="rev-salida" hidden></div>
@@ -586,12 +595,17 @@
       <thead>
         <tr>
           <th>Persona</th><th>Facultad</th><th>Programa</th>
-          <th>Etapa</th><th>Secciones</th><th>Fichas</th><th>PDF</th><th>Última vez</th>
+          <th>Etapa</th><th>Secciones</th><th>Fichas</th><th>PDF</th>
+          <th>Segunda opinión</th><th>Última vez</th>
         </tr>
       </thead>
       <tbody id="adm-cuerpo"></tbody>
     </table>
   </div>
+
+  <!-- La revisión de una persona concreta. La abre el botón de su
+       fila y la escribe abrirRevisionesDe() en app.js. -->
+  <div class="adm-revision" id="adm-revision" hidden></div>
 
   <h3 style="margin-top:1.8rem">Por programa</h3>
   <div class="tablewrap">
@@ -605,7 +619,88 @@
 
   <div class="callout" style="margin-top:1.6rem">
     <b>Qué contiene y qué no</b>
-    Cada fila es el avance de una persona: su programa, cuántas secciones lleva y cuántas fichas de proyecto ha escrito. <b>No hay una sola palabra de su portafolio</b>, porque el borrador no sale de su navegador. Las segundas opiniones que pide con inteligencia artificial <b>tampoco aparecen aquí</b>: se guardan en su cuenta y solo las ve ella. Si necesitas leer el trabajo de alguien, pídeselo.
+    Cada fila es el avance de una persona: su programa, cuántas secciones lleva y cuántas fichas de proyecto ha escrito. <b>No hay una sola palabra de su portafolio.</b> El texto sí está guardado, en su cuenta, pero las políticas de la base de datos solo se lo devuelven a ella: en esta tabla se cuenta, no se lee. Si necesitas leer el trabajo de alguien, pídeselo.<br><br>
+    <b>Las segundas opiniones sí se pueden abrir</b>, con «Ver» en la fila de cada quien, porque sirven para preparar la asesoría. Ten presente que la instrucción le pide al modelo citar entre comillas las palabras del estudiante, así que una observación puede traer frases sueltas de su portafolio. Está avisado en pantalla antes de que nadie pida la revisión, y por eso puede pedirla sabiendo quién la va a leer.
+  </div>
+</section>
+
+<!-- ─────────── REVISIÓN USUARIOS (solo administración) ───────────
+     El consolidado de arriba cuenta; esta hoja mira persona por
+     persona. Trae lo mismo que el panel del Pitch: la rosca con su
+     desglose, los filtros por facultad y programa, y la ficha de
+     cada quien con lo que de verdad se puede consultar. -->
+<section id="usuarios" class="hoja-admin" data-titulo="Revisión usuarios" hidden>
+  <div class="admin-cab">
+    <div>
+      <span class="eyebrow">Administración · CDP</span>
+      <h2 class="sec">Revisión usuarios</h2>
+    </div>
+    <div class="actions">
+      <button id="us-actualizar" type="button">Actualizar</button>
+    </div>
+  </div>
+
+  <p class="prose" id="us-sub">Persona por persona: en qué punto va cada quien y qué le devolvió la revisión con inteligencia artificial. El texto de su portafolio no está aquí, solo lo lee su dueño.</p>
+
+  <!-- Dónde estás y cómo volver. Lo escribe pintarRutaUsuarios(). -->
+  <div class="admin-ruta" id="us-ruta"></div>
+
+  <figure class="rosca-zona" id="rosca-zona" hidden>
+    <div>
+      <div class="rosca-caja">
+        <svg id="rosca-svg" viewBox="0 0 100 100" role="img" aria-labelledby="rosca-alt"></svg>
+        <div class="rosca-centro"><span class="n" id="rosca-total">0</span><span class="t">Personas</span></div>
+      </div>
+    </div>
+    <figcaption>
+      <div class="rosca-titulo" id="rosca-titulo"></div>
+      <div class="rosca-leyenda" id="rosca-leyenda"></div>
+      <span id="rosca-alt" class="sr-solo"></span>
+    </figcaption>
+  </figure>
+
+  <div class="us-filtros">
+    <div class="field">
+      <label for="us-facultad">Facultad</label>
+      <select id="us-facultad"></select>
+    </div>
+    <div class="field">
+      <label for="us-programa">Programa</label>
+      <select id="us-programa"></select>
+    </div>
+    <div class="field">
+      <label for="us-busca">Buscar</label>
+      <input type="text" id="us-busca" placeholder="Nombre o correo">
+    </div>
+    <label class="us-check" for="us-centro">
+      <input type="checkbox" id="us-centro">
+      Incluir cuentas del Centro
+    </label>
+    <button id="us-limpiar" type="button">Quitar filtros</button>
+  </div>
+
+  <p class="us-cuenta" id="us-cuenta" role="status"></p>
+
+  <div class="tablewrap">
+    <table id="us-tabla">
+      <thead>
+        <tr>
+          <th>Persona</th><th>Facultad</th><th>Programa</th>
+          <th>Etapa</th><th>Secciones</th><th>Fichas</th><th>PDF</th>
+          <th>Segunda opinión</th><th>Última vez</th>
+        </tr>
+      </thead>
+      <tbody id="us-cuerpo"></tbody>
+    </table>
+  </div>
+
+  <div class="adm-revision" id="us-revision" hidden></div>
+
+  <p class="adm-aviso" id="us-aviso"></p>
+
+  <div class="callout" style="margin-top:1.6rem">
+    <b>Qué puedes consultar aquí</b>
+    El avance de cada persona y las segundas opiniones que haya pedido, con sus observaciones. <b>No su portafolio:</b> el texto que escribe solo se lo devuelve la base de datos a ella. Si necesitas leerlo, pídeselo: tiene el PDF a un clic en «Tu portafolio».
   </div>
 </section>
 
@@ -647,8 +742,9 @@
 
       <div class="pie-col">
         <h4>Tratamiento de datos</h4>
-        <p>El borrador de tu portafolio se guarda <strong>únicamente en este navegador</strong> y en este equipo: no se envía a ningún servidor, no viaja a otro dispositivo y nadie más puede consultarlo. Si entras con tu cuenta, cada cuenta tiene su propio borrador.</p>
-        <p><strong>Dos excepciones, y solo si tú las pides.</strong> Al pedir la «segunda opinión» tu texto viaja al servicio de inteligencia artificial para que lo lea (no lo guarda), y la respuesta queda archivada en tu cuenta hasta que la borres. Al traducir sin traductor propio del navegador ocurre lo mismo con el texto que traduces. Sin cuenta iniciada, nada de esto sale de aquí.</p>
+        <p>Con la sesión iniciada, tu portafolio se guarda <strong>en tu cuenta de la Universidad</strong>: por eso lo recuperas desde cualquier computador. <strong>Solo tú puedes leerlo.</strong> Las reglas de acceso de la base de datos devuelven cada portafolio únicamente a su dueño, y eso incluye al Centro de Desarrollo Profesional, que ve cuánta gente usa la herramienta pero no lo que escribe. Se guarda además una copia en este navegador para que puedas seguir trabajando si se cae la conexión.</p>
+        <p><strong>Sin haber entrado</strong>, lo que escribas se queda solo en este navegador y en este equipo. Cuando entres, la herramienta te preguntará si quieres subirlo a tu cuenta: nunca lo hace sin preguntar.</p>
+        <p>Al pedir la «segunda opinión» o la traducción, tu texto viaja al servicio de inteligencia artificial para que lo lea; ese servicio no lo guarda. La respuesta de la revisión queda archivada en tu cuenta hasta que la borres, y <strong>el Centro de Desarrollo Profesional también puede leerla</strong>, para poder ayudarte mejor cuando pidas una asesoría. Tu portafolio no: eso sigue siendo solo tuyo. Si prefieres que nadie del Centro vea una revisión, bórrala desde «Antes de publicar».</p>
         <p><strong>El PDF que descargas es la única copia que te llevas contigo.</strong> Con «Empezar de nuevo» borras el borrador de este navegador cuando quieras.</p>
         <p>La veracidad de la información y de las evidencias que incluyas es tu responsabilidad.</p>
         <p><a class="pie-enlace" href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos" target="_blank" rel="noopener">Política de Protección de Datos de la Universidad ↗</a></p>

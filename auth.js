@@ -586,6 +586,39 @@ async function sbAuth(ruta, opciones){
   }
 }
 
+/* ------------------------------------------------------------
+   REINTENTO CUANDO SUPABASE SE QUEDA SIN RECURSOS
+   ------------------------------------------------------------
+   «Function failed due to not having enough compute resources» no
+   es un fallo del código ni de la clave: es el pool compartido de
+   Supabase, que en el plan gratuito a veces no tiene un worker
+   libre cuando llega la petición. Es transitorio y se resuelve
+   volviendo a pedir un segundo después.
+
+   Sin esto, quien practica ve un error en inglés por algo que no
+   hizo, y la única salida es volver a pulsar el botón a ciegas.
+   Se reintenta dos veces con esperas crecientes; si a la tercera
+   sigue fallando, el error sube y se traduce arriba.
+   ------------------------------------------------------------ */
+function esFaltaDeRecursos(err){
+  const m = String((err && err.message) || "").toLowerCase();
+  const d = (err && err.datos && String(err.datos.error || "").toLowerCase()) || "";
+  return m.indexOf("compute resources") >= 0 || d.indexOf("compute resources") >= 0 ||
+         m.indexOf("worker_limit") >= 0 || err.status === 546;
+}
+
+async function conReintentoDeCarga(hacer){
+  const ESPERAS = [900, 2200];   /* ms; la tercera intentona es la última */
+  for(let i = 0; ; i++){
+    try{
+      return await hacer();
+    }catch(err){
+      if(i >= ESPERAS.length || !esFaltaDeRecursos(err)) throw err;
+      await new Promise(function(r){ setTimeout(r, ESPERAS[i]); });
+    }
+  }
+}
+
 async function sbPerfil(usuario){
   const meta = (usuario && usuario.user_metadata) || {};
   try{
@@ -943,7 +976,9 @@ async function supabaseAPI(ruta, metodo, cuerpo){
      instrucción que recibe el modelo. */
   if(ruta === "/revisar-portafolio" && metodo === "POST"){
     try{
-      return await sbAuth("/functions/v1/revisar-portafolio", {method:"POST", body: JSON.stringify(b)});
+      return await conReintentoDeCarga(function(){
+        return sbAuth("/functions/v1/revisar-portafolio", {method:"POST", body: JSON.stringify(b)});
+      });
     }catch(err){
       const m = String((err && err.message) || "");
       if(err.status === 404 || m.indexOf("No hay conexión") >= 0){
@@ -954,6 +989,10 @@ async function supabaseAPI(ruta, metodo, cuerpo){
       }
       if(err.status === 504){
         throw new Error("la revisión tardó demasiado. Vuelve a intentarlo");
+      }
+      if(esFaltaDeRecursos(err)){
+        throw new Error("el servicio de revisión está saturado en este momento. " +
+                        "Espera un minuto y vuelve a intentarlo: lo que escribiste no se pierde");
       }
       if(err.datos && err.datos.error){ throw new Error(err.datos.error); }
       throw err;
@@ -1096,7 +1135,9 @@ async function supabaseAPI(ruta, metodo, cuerpo){
   /* ---------- Observaciones con IA (Edge Function) ---------- */
   if(ruta === "/observaciones" && metodo === "POST"){
     try{
-      return await sbAuth("/functions/v1/observaciones", {method:"POST", body: JSON.stringify(b)});
+      return await conReintentoDeCarga(function(){
+        return sbAuth("/functions/v1/observaciones", {method:"POST", body: JSON.stringify(b)});
+      });
     }catch(err){
       /* Cuando la función no está desplegada, el gateway devuelve 404
          sin permitir la cabecera Content-Type en CORS, así que el
@@ -1117,6 +1158,13 @@ async function supabaseAPI(ruta, metodo, cuerpo){
            Supabase: hay que mostrar el mensaje tal como lo escribió
            la función, no el genérico de «demasiados intentos». */
         throw new Error(err.datos.error);
+      }
+      if(esFaltaDeRecursos(err)){
+        /* Ya se reintentó tres veces. El mensaje original llega en
+           inglés y habla de «compute resources», que a quien está
+           practicando no le dice nada y parece culpa suya. */
+        throw new Error("el servicio de IA está saturado en este momento. " +
+                        "Espera un minuto y vuelve a intentarlo: tu reporte y tus cifras no se pierden");
       }
       throw err;
     }

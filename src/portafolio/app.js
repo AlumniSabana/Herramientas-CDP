@@ -430,6 +430,12 @@ var IDX_PROYECTOS = hojas.map(function (h) { return h.id; }).indexOf("proyectos"
 
 function puertaAbierta() {
   if (IDX_PROYECTOS < 0) return true;
+  /* La regla existe para que nadie se lleve un portafolio con las
+     fichas a medias. Al CDP no le aplica: entra a revisar el
+     recorrido y a mirar el consolidado, no a construir el suyo, y
+     obligarle a inventarse una ficha para poder pasar de hoja sería
+     absurdo. */
+  if (esAdministrador()) return true;
   return evaluarProyectos().completas > 0;
 }
 
@@ -893,7 +899,8 @@ function puertaProyectos() {
   if (!hoja) return;
 
   var r = evaluarProyectos();
-  var abierta = r.completas > 0;
+  var admin = esAdministrador();
+  var abierta = admin || r.completas > 0;
 
   var siguiente = hoja.querySelector('.pager button.solid[data-ir]');
   if (siguiente) {
@@ -916,7 +923,10 @@ function puertaProyectos() {
   var aviso = document.getElementById("proy-puerta");
   if (!aviso) return;
   aviso.classList.toggle("lista", abierta);
-  if (abierta) {
+  if (admin && r.completas === 0) {
+    aviso.textContent = "Cuenta de administración: puedes recorrer las hojas sin completar fichas. " +
+      "A quien construye su portafolio sí se le pide una ficha entera para continuar.";
+  } else if (abierta) {
     aviso.textContent = r.completas === 1
       ? "Una ficha cumple los mínimos: ya puedes continuar."
       : r.completas + " fichas cumplen los mínimos: ya puedes continuar.";
@@ -1182,7 +1192,7 @@ function armar() {
   var ctx = [];
   if (val("f-facultad")) ctx.push("Facultad: " + val("f-facultad"));
   if (a) ctx.push("Área: " + a.label);
-  ctx.push("Etapa: " + $("#f-etapa").options[$("#f-etapa").selectedIndex].text);
+  ctx.push("Etapa: " + textoElegido("f-etapa"));
   ctx.push("Objetivo: " + (OBJETIVOS[val("f-objetivo")] || val("f-objetivo")));
   if (val("f-audiencia")) ctx.push("Audiencia: " + val("f-audiencia"));
   o.push("*" + ctx.join(" · ") + "*", "");
@@ -1266,25 +1276,22 @@ function abiertaDesdeArchivo() {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   REGISTRO DE AVANCE
+   EL PORTAFOLIO ES DE LA CUENTA
    --------------------------------------------------------------
-   Con la sesión abierta se guarda en Supabase en qué punto va cada
-   persona. Sirve para que el Centro sepa si la herramienta se usa,
-   quién se queda a medias y en qué programas.
+   Con la sesión abierta, lo que se escribe se guarda en Supabase
+   bajo la cuenta de quien lo escribe: sigue en el mismo punto al
+   abrirlo desde otro computador, y el Centro puede saber si la
+   herramienta se usa y quién se queda a medias.
 
-   LO QUE SE MANDA son números y etiquetas: programa, etapa,
-   objetivo, cuántas secciones lleva, cuántas fichas ha escrito y si
-   ya descargó el PDF.
+   Antes había aquí una contabilidad aparte (cuántas secciones,
+   cuántas fichas) que se mandaba a una tabla de métricas mientras el
+   texto se quedaba en el navegador. Ya no hace falta: guardado el
+   contenido de verdad, esas cifras se calculan en el consolidado a
+   partir de él, y así no pueden quedar desfasadas.
 
-   LO QUE NO SE MANDA es una sola palabra del borrador. El texto del
-   portafolio no sale de este navegador, y eso es lo que la
-   herramienta promete en pantalla. Si algún día hace falta añadir
-   algo aquí, primero hay que cambiar esa promesa.
-
-   Sin cuenta no se registra nada, porque no habría a quién
-   atribuirlo ni tendría sentido hacerlo.
+   Sin cuenta no se manda nada: se trabaja contra el navegador,
+   igual que siempre.
    ══════════════════════════════════════════════════════════════ */
-var avanceTimer = null, avanceUltimo = "";
 
 /* ── Cambio de cuenta ─────────────────────────────────────────
    Al entrar o salir hay que cambiar de borrador, no solo de llave.
@@ -1306,65 +1313,193 @@ function vaciarFormulario(){
 
 var llaveActual = "";
 
+function arrancarVacio() {
+  addProyecto(); addProyecto(); addProyecto();
+  marcarGuardado("Se guarda solo mientras escribes", false);
+}
+
 function cambiarDeBorrador(){
   var nueva = llaveDelBorrador();
   if (nueva === llaveActual) return;      /* la sesión no cambió de dueño */
   llaveActual = nueva;
 
-  /* El guardado va con retraso: se cancela para que no escriba lo de
-     la cuenta anterior bajo la llave de la nueva. */
+  /* Lo pendiente se cancela: si no, el temporizador escribiría lo de
+     la cuenta anterior bajo la llave (y en el portafolio) de la nueva. */
   clearTimeout(guardarTimer);
+  clearTimeout(nubeTimer);
+  Nube.portafolioId = "";
+  Nube.proyectoIds = [];
+  Nube.seccionIds = {};
+  Nube.enviado = null;
+  Nube.fallo = "";
+  migracionPendiente = false;
+
   vaciarFormulario();
 
-  if (!restaurar()) {
-    addProyecto(); addProyecto(); addProyecto();
-    marcarGuardado("Se guarda solo mientras escribes", false);
+  /* Sin cuenta se trabaja como siempre, contra el navegador. */
+  if (!hayNube()) {
+    if (!restaurar()) { arrancarVacio(); }
+    syncPrograma();
+    render();
+    pintarAvisoNube();
+    return;
   }
-  syncPrograma();
-  render();
+
+  marcarGuardado("Abriendo tu portafolio…", true);
+  cargarDeNube();
+}
+
+/* La carga desde la cuenta. Es el único sitio donde el formulario se
+   rellena con algo que viene de fuera de este navegador. */
+function cargarDeNube() {
+  Nube.cargando = true;
+  api("/portafolio/contenido", "GET").then(function (r) {
+    r = r || {};
+    indexarNube(r);
+
+    if (r.portafolio) {
+      aplicarDatos(datosDesdeNube(r));
+      Nube.enviado = instantanea();
+      escribirLocal(serializar());          /* copia de respaldo al día */
+      marcarGuardado("Recuperado de tu cuenta", false);
+      Nube.fallo = "";
+      Nube.cargando = false;
+      syncPrograma();
+      render();
+      pintarAvisoNube();
+      return;
+    }
+
+    /* La cuenta está vacía. Si en este navegador hay trabajo escrito,
+       se muestra y se pregunta antes de subirlo. */
+    var candidato = borradorMigrable();
+    if (candidato) {
+      arrancarVacio();
+      Nube.cargando = false;
+      migracionPendiente = true;
+      migracionCandidato = candidato;
+      marcarGuardado("Sin subir a tu cuenta todavía", false);
+      syncPrograma();
+      render();
+      pintarAvisoNube("migrar");
+      return;
+    }
+
+    arrancarVacio();
+    Nube.cargando = false;
+    marcarGuardado("Se guarda solo en tu cuenta", false);
+    syncPrograma();
+    render();
+    pintarAvisoNube();
+
+  }).catch(function (err) {
+    /* No se pudo leer la cuenta. Se sigue con lo que haya en el
+       navegador en vez de dejar a nadie con la pantalla en blanco. */
+    Nube.fallo = (err && err.message) || "sin detalle";
+    if (window.console) console.warn("No se pudo abrir el portafolio de la cuenta:", Nube.fallo);
+    Nube.cargando = false;
+    if (!restaurar()) { arrancarVacio(); }
+    syncPrograma();
+    render();
+    pintarAvisoNube();
+  });
+}
+
+/* ── El aviso de arriba ──────────────────────────────────────
+   Dos estados y nada más: la pregunta de la migración y el fallo de
+   sincronización. Cuando todo va bien no hay banda: que el guardado
+   funcione no es noticia. */
+function pintarAvisoNube(modo) {
+  var caja = $("#nube-aviso");
+  if (!caja) return;
+
+  /* Una pregunta sin contestar no la tapa nada: cualquier otro
+     repintado la vuelve a dibujar en vez de esconderla. */
+  if (migracionPendiente) modo = "migrar";
+  caja.innerHTML = "";
+
+  if (modo === "migrar") {
+    caja.className = "nube-aviso pregunta";
+    caja.hidden = false;
+
+    var p = document.createElement("p");
+    p.textContent = "Encontramos información guardada en este dispositivo. " +
+      "¿Quieres sincronizarla con tu cuenta?";
+    caja.appendChild(p);
+
+    /* Se dice cuánto hay, no qué dice. Quien lo escribió pudo ser
+       otra persona en este mismo computador. */
+    var resumen = document.createElement("p");
+    resumen.className = "nube-resumen";
+    resumen.textContent = resumenDelCandidato() +
+      " No la mostramos hasta que digas que es tuya.";
+    caja.appendChild(resumen);
+
+    var acciones = document.createElement("div");
+    acciones.className = "actions";
+
+    var si = document.createElement("button");
+    si.type = "button";
+    si.className = "solid";
+    si.textContent = "Sí, sincronizarla";
+    si.addEventListener("click", function () {
+      migracionPendiente = false;
+      si.disabled = true;
+      si.textContent = "Sincronizando…";
+      /* Ahora sí: la persona dijo que es suya. */
+      if (migracionCandidato) {
+        aplicarDatos(migracionCandidato);
+        syncPrograma();
+        render();
+      }
+      migrarLocalStorageASupabase().then(function (bien) {
+        if (bien) { caja.hidden = true; toast("Tu portafolio quedó guardado en tu cuenta"); }
+        else { pintarAvisoNube(); }
+      });
+    });
+
+    var no = document.createElement("button");
+    no.type = "button";
+    no.textContent = "No, empezar en blanco";
+    no.addEventListener("click", function () {
+      /* Hay que vaciar de verdad: si el formulario se quedara con el
+         texto viejo, el primer guardado lo subiría igualmente y la
+         respuesta de la persona no habría servido de nada. */
+      migracionPendiente = false;
+      migracionCandidato = null;
+      apuntarQueDijoQueNo();
+      vaciarFormulario();
+      arrancarVacio();
+      syncPrograma();
+      render();
+      caja.hidden = true;
+    });
+
+    acciones.appendChild(si);
+    acciones.appendChild(no);
+    caja.appendChild(acciones);
+    return;
+  }
+
+  if (Nube.fallo) {
+    caja.className = "nube-aviso fallo";
+    caja.hidden = false;
+    var f = document.createElement("p");
+    /* El detalle técnico no se le enseña a quien está escribiendo su
+       portafolio: no puede hacer nada con él. Queda en el «title» y
+       en la consola, que es donde lo busca quien mantiene esto. */
+    f.title = Nube.fallo;
+    f.textContent = "Estamos teniendo dificultades para sincronizar tu información. " +
+      "Tus datos permanecen disponibles temporalmente en este dispositivo.";
+    caja.appendChild(f);
+    return;
+  }
+
+  caja.hidden = true;
 }
 
 function hayRegistro() {
   return typeof api === "function" && typeof Cuenta !== "undefined" && !!(Cuenta && Cuenta.sesion);
-}
-
-function medirAvance() {
-  var proy = leerProyectos(false);
-  var completas = 0;
-  $$("#proyectos-wrap fieldset").forEach(function (fs) {
-    if (evaluarFicha(fs).completa) completas++;
-  });
-  var c = contextoRevision();
-  return {
-    programa: c.programa || "",
-    facultad: val("f-facultad") || "",
-    area: areaKey() || "",
-    etapa: c.etapa || "",
-    objetivo: c.objetivo || "",
-    hojas_completas: progreso(),
-    fichas_total: proy.length,
-    fichas_completas: completas
-  };
-}
-
-/* Se manda con retraso y solo si algo cambió de verdad. Escribir
-   una frase dispara decenas de guardados locales; no tiene sentido
-   que cada tecla sea una petición al servidor. */
-function registrarAvance(extra) {
-  if (!hayRegistro()) return;
-  var datos = medirAvance();
-  if (extra) { Object.keys(extra).forEach(function (k) { datos[k] = extra[k]; }); }
-
-  var firma = JSON.stringify(datos);
-  if (firma === avanceUltimo && !extra) return;
-
-  clearTimeout(avanceTimer);
-  avanceTimer = setTimeout(function () {
-    avanceUltimo = firma;
-    /* Si falla, se calla. Es una métrica: que no se registre no
-       puede estropearle el trabajo a nadie. */
-    api("/portafolio", "PUT", datos).catch(function () { avanceUltimo = ""; });
-  }, extra ? 0 : 4000);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1375,41 +1510,69 @@ function registrarAvance(extra) {
    el paginador.
    ══════════════════════════════════════════════════════════════ */
 var admFilas = [];
+var admRevisiones = [];   /* las segundas opiniones de todo el mundo */
+
+/* Una cuenta del propio Centro. Aparece en la lista, marcada, pero
+   no cuenta como persona atendida: quien administra necesita verse
+   a sí mismo para saber que la herramienta está guardando, y a la
+   vez no quiere salir en la estadística del servicio. */
+function esCuentaDelCentro(x) { return x && x.es_admin === true; }
+
+/* Las personas atendidas: todo el mundo menos el Centro. Es lo que
+   alimenta los indicadores, el desglose por programa y el Excel. */
+function admPersonas() {
+  return admFilas.filter(function (x) { return !esCuentaDelCentro(x); });
+}
 
 function esAdministrador() {
   return typeof Cuenta !== "undefined" && Cuenta && typeof Cuenta.esAdmin === "function" && Cuenta.esAdmin();
 }
 
 /* Muestra o esconde todo lo de administración de una vez. */
+/* Las dos hojas de administración. No son parte del recorrido: no
+   cuentan para el avance ni salen en el paginador. */
+var HOJAS_ADMIN = ["admin", "usuarios"];
+
 function pintarAccesoAdmin() {
   var admin = esAdministrador();
-  var hoja = $("#admin"), nav = $("#nav-admin"), grupo = $("#g-admin");
-  if (!hoja || !nav || !grupo) return;
+  var nav = $("#nav-admin"), grupo = $("#g-admin");
+  if (!nav || !grupo) return;
 
   nav.hidden = !admin;
   grupo.hidden = !admin;
-  if (!admin) {
-    hoja.hidden = true;
-    hoja.classList.remove("on");
-    return;
-  }
-  hoja.hidden = false;
-  if (!admFilas.length) cargarConsolidado();
+
+  HOJAS_ADMIN.forEach(function (id) {
+    var hoja = document.getElementById(id);
+    if (!hoja) return;
+    hoja.hidden = !admin;
+    if (!admin) hoja.classList.remove("on");
+  });
+
+  if (admin && !admFilas.length) cargarConsolidado();
 }
 
-function irAlConsolidado() {
+function irAHojaAdmin(id) {
   if (!esAdministrador()) return;
+  var hoja = document.getElementById(id);
+  if (!hoja) return;
+
   hojas.forEach(function (h) { h.classList.remove("on"); });
-  $("#admin").classList.add("on");
+  HOJAS_ADMIN.forEach(function (x) {
+    var el = document.getElementById(x);
+    if (el) el.classList.toggle("on", x === id);
+  });
+
   navLinks.forEach(function (l) {
-    var activo = l.getAttribute("href") === "#admin";
+    var activo = l.getAttribute("href") === "#" + id;
     l.classList.toggle("on", activo);
     if (activo) { l.setAttribute("aria-current", "page"); } else { l.removeAttribute("aria-current"); }
   });
-  abrirGrupoDeHoja("admin");
+  abrirGrupoDeHoja(id);
   cerrarMenu();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+function irAlConsolidado() { irAHojaAdmin("admin"); }
 
 function admAviso(txt) {
   var a = $("#adm-aviso");
@@ -1420,19 +1583,518 @@ function cargarConsolidado() {
   if (!esAdministrador()) return;
   admAviso("");
   $("#adm-sub").textContent = "Cargando consolidado…";
+  /* Las revisiones se piden en paralelo y su fallo no tumba el
+     consolidado: son un extra, no la razón de esta hoja. */
+  api("/admin/revisiones", "GET").then(function (r) {
+    var lista = r && r.revisiones;
+    admRevisiones = Array.isArray(lista) ? lista : [];
+  }).catch(function () {
+    admRevisiones = [];
+  }).then(function () {
+    if (admFilas.length) { pintarConsolidado(); pintarUsuarios(); }
+  });
+
   api("/admin/portafolios", "GET").then(function (r) {
-    admFilas = (r && r.portafolios) ? r.portafolios : [];
+    admFilas = (r && Array.isArray(r.portafolios)) ? r.portafolios : [];
     pintarConsolidado();
+    pintarUsuarios();
   }).catch(function (err) {
     $("#adm-sub").textContent = "No se pudo cargar el consolidado.";
     admAviso("No se pudo leer el consolidado: " + ((err && err.message) || "error desconocido") +
-      ". Si es la primera vez, corre supabase/sql/portafolios.sql en el editor SQL de Supabase: " +
-      "crea la tabla, sus políticas y la vista portafolios_admin.");
+      ". Corre supabase/sql/portafolio-contenido.sql en el editor SQL de Supabase y, justo " +
+      "después, «notify pgrst, \'reload schema\';»: si el mensaje habla de «schema cache», la " +
+      "función existe pero la API todavía no la ve.");
     $("#adm-cuerpo").innerHTML = "";
     $("#adm-prog-cuerpo").innerHTML = "";
     $("#adm-kpis").innerHTML = "";
+    $("#adm-revision").hidden = true;
   });
 }
+
+/* El texto visible de un desplegable, o cadena vacía si lo
+   seleccionado ya no existe entre las opciones. */
+function textoElegido(id) {
+  var sel = document.getElementById(id);
+  if (!sel || sel.selectedIndex < 0) return "";
+  var opt = sel.options[sel.selectedIndex];
+  return opt ? opt.text : "";
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LAS SEGUNDAS OPINIONES, DESDE EL CONSOLIDADO
+   --------------------------------------------------------------
+   El CDP atiende a estas personas. Llegar a la asesoría sabiendo
+   qué le señaló la máquina ahorra media sesión, así que aquí se
+   pueden leer las revisiones de cada quien.
+
+   Lo que NO se abre es el borrador: el portafolio en sí sigue
+   siendo ilegible para cualquiera que no sea su dueño, y de eso se
+   encargan las políticas de la base, no este código. Está dicho en
+   pantalla antes de que nadie pida una revisión.
+   ══════════════════════════════════════════════════════════════ */
+
+function revisionesPorPersona() {
+  var g = {};
+  admRevisiones.forEach(function (r) {
+    var k = r.usuario_id;
+    if (!k) return;
+    if (!g[k]) g[k] = [];
+    g[k].push(r);
+  });
+  return g;
+}
+
+function celdaRevisiones(x) {
+  var suyas = revisionesPorPersona()[x.usuario_id] || [];
+  if (!suyas.length) return '<span class="adm-no">—</span>';
+  return '<button type="button" class="adm-ver" data-revisiones="' +
+    esc(String(x.usuario_id)) + '">Ver (' + suyas.length + ")</button>";
+}
+
+var admRevAbierta = "";
+
+function abrirRevisionesDe(usuarioId, cual, dondeId) {
+  var caja = $(dondeId || "#adm-revision");
+  if (!caja) return;
+
+  var suyas = revisionesPorPersona()[usuarioId] || [];
+  if (!suyas.length) { caja.hidden = true; return; }
+
+  admRevAbierta = usuarioId;
+  var elegida = cual
+    ? (suyas.filter(function (r) { return String(r.id) === String(cual); })[0] || suyas[0])
+    : suyas[0];
+
+  caja.hidden = false;
+  caja.innerHTML = "";
+
+  var cab = document.createElement("div");
+  cab.className = "adm-revision-cab";
+
+  var quien = document.createElement("div");
+  var h = document.createElement("h3");
+  h.textContent = elegida.nombre || elegida.correo || "Sin nombre";
+  var sub = document.createElement("p");
+  sub.className = "adm-correo";
+  sub.textContent = [elegida.correo, elegida.programa].filter(Boolean).join(" · ");
+  quien.appendChild(h);
+  quien.appendChild(sub);
+  cab.appendChild(quien);
+
+  var cerrar = document.createElement("button");
+  cerrar.type = "button";
+  cerrar.textContent = "Cerrar";
+  cerrar.addEventListener("click", function () {
+    caja.hidden = true;
+    admRevAbierta = "";
+  });
+  cab.appendChild(cerrar);
+  caja.appendChild(cab);
+
+  /* Con más de una revisión, la gracia está en comparar: la de hoy
+     contra la de hace dos semanas es donde se ve si avanzó. */
+  if (suyas.length > 1) {
+    var fechas = document.createElement("div");
+    fechas.className = "adm-revision-fechas";
+    suyas.forEach(function (r) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = fechaCorta(r.creado_en);
+      if (String(r.id) === String(elegida.id)) b.className = "activa";
+      b.setAttribute("data-revision", r.id);
+      b.setAttribute("data-de", usuarioId);
+      fechas.appendChild(b);
+    });
+    caja.appendChild(fechas);
+  } else {
+    var sola = document.createElement("p");
+    sola.className = "adm-revision-fecha";
+    sola.textContent = "Pedida el " + fechaCorta(elegida.creado_en);
+    caja.appendChild(sola);
+  }
+
+  var cuerpo = document.createElement("div");
+  cuerpo.className = "revision-salida";
+  construirRevision(cuerpo, revisionDesdeFila(elegida), false);
+  caja.appendChild(cuerpo);
+
+  caja.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+/* Los botones nacen y mueren con cada repintado de la tabla, así que
+   se escuchan desde la hoja. */
+$("#admin").addEventListener("click", function (e) {
+  var b = e.target && e.target.closest ? e.target.closest("button") : null;
+  if (!b) return;
+  if (b.hasAttribute("data-revisiones")) {
+    abrirRevisionesDe(b.getAttribute("data-revisiones"));
+    return;
+  }
+  if (b.hasAttribute("data-revision")) {
+    abrirRevisionesDe(b.getAttribute("data-de"), b.getAttribute("data-revision"));
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   REVISIÓN USUARIOS
+   --------------------------------------------------------------
+   El consolidado cuenta; esta hoja mira persona por persona. Trae
+   lo mismo que el panel del Pitch, para que las dos herramientas se
+   usen igual: la rosca del reparto con su desglose, los filtros por
+   facultad y programa, y la ficha de cada quien.
+
+   POR QUÉ LA ROSCA ES DE UN SOLO TONO Y DE CINCO SECTORES
+   Una rosca sirve para ver una proporción de un vistazo, no para
+   comparar valores parecidos, y deja de leerse pasados unos seis
+   sectores. Con diez facultades se pintan las cuatro mayores y el
+   resto se agrupa; el detalle completo está en la tabla, que es
+   además el respaldo accesible de la gráfica.
+
+   Cualquier sector puede quedar junto a cualquier otro, así que
+   todos los pares cuentan: con más de tres tonos distintos esos
+   pares dejan de distinguirse para quien no percibe bien el color.
+   Una escala de claridad del azul institucional lo evita y dice dos
+   veces lo mismo, más grande y más oscuro es más gente. La
+   identidad nunca depende del color: cada sector lleva su etiqueta,
+   su cifra y su porcentaje en la leyenda.
+   ══════════════════════════════════════════════════════════════ */
+
+var ROSCA_TONOS = ["#001459", "#2A5AA8", "#5E93CE", "#A3C3E6"];
+var ROSCA_OTRAS = "#5C6472";
+var ROSCA_MAX = 4;      /* sectores con nombre propio; el quinto agrupa */
+
+/* Un sector es un arco entre dos radios. Se dibuja como trazo
+   grueso sobre un círculo: sale más simple y más nítido que
+   componer el path a mano. */
+function arcoRosca(desde, hasta, color, id) {
+  var R = 36, C = 2 * Math.PI * R;
+  var largo = Math.max(0, hasta - desde) * C;
+  var hueco = 1.6;      /* aire entre sectores, sin inventar un borde */
+  var visible = Math.max(0.5, largo - hueco);
+  return '<circle class="rosca-sector" data-sector="' + id + '"' +
+    ' cx="50" cy="50" r="' + R + '" fill="none"' +
+    ' stroke="' + color + '" stroke-width="17"' +
+    ' stroke-dasharray="' + visible.toFixed(2) + " " + (C - visible).toFixed(2) + '"' +
+    ' stroke-dashoffset="' + (-desde * C).toFixed(2) + '"' +
+    ' transform="rotate(-90 50 50)"><title></title></circle>';
+}
+
+/* datos: [{nombre, valor, clave}] sin ordenar. «clave» es a dónde
+   lleva el sector si se pulsa. Sin alElegir la rosca solo se mira. */
+function pintarRosca(titulo, datos, etiquetaCentro, alElegir) {
+  var zona = $("#rosca-zona");
+  if (!zona) return;
+
+  var con = datos.filter(function (d) { return d.valor > 0; })
+                 .sort(function (a, b) { return b.valor - a.valor; });
+  var total = con.reduce(function (a, d) { return a + d.valor; }, 0);
+
+  zona.hidden = false;
+  $("#rosca-titulo").textContent = titulo;
+
+  if (!total) {
+    $("#rosca-svg").innerHTML =
+      '<circle cx="50" cy="50" r="36" fill="none" stroke="#E9EEF7" stroke-width="17"/>';
+    $("#rosca-total").textContent = "0";
+    $("#rosca-leyenda").innerHTML =
+      '<div class="rosca-vacia">Todavía no hay a nadie registrado aquí.</div>';
+    $("#rosca-alt").textContent = "Sin datos que representar.";
+    return;
+  }
+
+  var trozos = con.slice(0, ROSCA_MAX).map(function (d, i) {
+    return { nombre: d.nombre, valor: d.valor, color: ROSCA_TONOS[i], clave: d.clave || d.nombre };
+  });
+  var resto = con.slice(ROSCA_MAX);
+  if (resto.length) {
+    var uno = resto.length === 1;
+    trozos.push({
+      nombre: uno ? resto[0].nombre : "Otras " + resto.length,
+      valor: resto.reduce(function (a, d) { return a + d.valor; }, 0),
+      color: uno ? ROSCA_TONOS[ROSCA_MAX - 1] : ROSCA_OTRAS,
+      /* El sector agrupado no lleva a ninguna parte: son varias. */
+      clave: uno ? (resto[0].clave || resto[0].nombre) : null,
+      agrupa: uno ? null : resto.map(function (d) { return d.nombre; })
+    });
+  }
+
+  var acumulado = 0;
+  $("#rosca-svg").innerHTML = trozos.map(function (t, i) {
+    var desde = acumulado;
+    acumulado += t.valor / total;
+    return arcoRosca(desde, acumulado, t.color, i);
+  }).join("");
+  $("#rosca-total").textContent = total;
+
+  var navegable = function (i) { return !!(alElegir && trozos[i].clave); };
+
+  $("#rosca-leyenda").innerHTML = trozos.map(function (t, i) {
+    var pct = Math.round(t.valor / total * 100);
+    var eti = t.agrupa ? "Agrupa " + t.agrupa.length + ": " + t.agrupa.join(", ") : t.nombre;
+    /* La leyenda es un botón cuando lleva a alguna parte: es un
+       blanco mucho mayor que el arco y funciona con el teclado. */
+    var tag = navegable(i) ? "button" : "div";
+    var extra = navegable(i)
+      ? ' type="button" class="rosca-item navega" data-rosca="' + i + '"'
+      : ' class="rosca-item"';
+    return "<" + tag + extra + ' title="' + esc(eti) + '">' +
+      '<span class="rosca-punto" style="background:' + t.color + '"></span>' +
+      '<span class="rosca-nom">' + esc(t.nombre) + "</span>" +
+      '<span class="rosca-val">' + t.valor + "</span>" +
+      '<span class="rosca-pct">' + pct + " %</span></" + tag + ">";
+  }).join("");
+
+  $$("#rosca-svg [data-sector]").forEach(function (el) {
+    var i = Number(el.getAttribute("data-sector")), t = trozos[i];
+    var pct = Math.round(t.valor / total * 100);
+    var tit = el.querySelector("title");
+    if (tit) {
+      tit.textContent = t.nombre + ": " + t.valor + " de " + total + " (" + pct + " %)" +
+        (navegable(i) ? ". Pulsa para ver solo esta parte."
+                      : (t.agrupa ? ". Agrupa " + t.agrupa.length + ", están en la tabla." : ""));
+    }
+    if (!navegable(i)) return;
+    el.classList.add("navega");
+    el.addEventListener("click", function () { alElegir(t.clave); });
+  });
+
+  $$("#rosca-leyenda [data-rosca]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      alElegir(trozos[Number(b.getAttribute("data-rosca"))].clave);
+    });
+  });
+
+  $("#rosca-alt").textContent = titulo + ". " +
+    trozos.map(function (t) { return t.nombre + ", " + t.valor; }).join("; ") +
+    ". Total " + total + " " + (etiquetaCentro || "personas") +
+    ". El detalle completo está en la tabla siguiente.";
+}
+
+/* ── Estado de los filtros ──────────────────────────────────── */
+var usFacultad = "", usPrograma = "", usBusca = "", usElegida = "";
+var usConCentro = false;   /* ¿se enseñan también las cuentas del CDP? */
+
+function usTodas() {
+  var cuenta = revisionesPorPersona();
+  var base = usConCentro ? admFilas : admPersonas();
+  return base.map(function (x) {
+    var suyas = cuenta[x.usuario_id] || [];
+    return {
+      id: x.usuario_id,
+      nombre: x.nombre || x.correo || "Sin nombre",
+      correo: x.correo || "",
+      facultad: x.facultad || "",
+      programa: x.programa || "",
+      etapa: x.etapa || "",
+      hojas: Number(x.hojas_completas) || 0,
+      fichas: Number(x.fichas_completas) || 0,
+      fichasTotal: Number(x.fichas_total) || 0,
+      descargado: !!x.descargado,
+      actualizado: x.actualizado_en,
+      revisiones: suyas.length,
+      delCentro: esCuentaDelCentro(x)
+    };
+  });
+}
+
+function usFiltradas() {
+  var q = usBusca.trim().toLowerCase();
+  return usTodas().filter(function (p) {
+    if (usFacultad && p.facultad !== usFacultad) return false;
+    if (usPrograma && p.programa !== usPrograma) return false;
+    if (q && (p.nombre + " " + p.correo).toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+}
+
+/* Cuenta por clave, para la rosca. */
+function usAgrupar(lista, campo) {
+  var g = {};
+  lista.forEach(function (p) {
+    var k = p[campo] || "Sin " + campo;
+    g[k] = (g[k] || 0) + 1;
+  });
+  return Object.keys(g).map(function (k) { return { nombre: k, valor: g[k], clave: k }; });
+}
+
+function pintarRutaUsuarios() {
+  var ruta = $("#us-ruta");
+  if (!ruta) return;
+  ruta.innerHTML = "";
+
+  var pasos = [{ txt: "Todas las facultades", ir: function () { usFacultad = ""; usPrograma = ""; pintarUsuarios(); } }];
+  if (usFacultad) pasos.push({ txt: usFacultad, ir: function () { usPrograma = ""; pintarUsuarios(); } });
+  if (usPrograma) pasos.push({ txt: usPrograma, ir: null });
+
+  pasos.forEach(function (p, i) {
+    if (i) {
+      var sep = document.createElement("span");
+      sep.className = "sep";
+      sep.textContent = "›";
+      ruta.appendChild(sep);
+    }
+    var ultimo = i === pasos.length - 1;
+    if (ultimo) {
+      var aqui = document.createElement("span");
+      aqui.className = "aqui";
+      aqui.textContent = p.txt;
+      ruta.appendChild(aqui);
+      return;
+    }
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = p.txt;
+    b.addEventListener("click", p.ir);
+    ruta.appendChild(b);
+  });
+}
+
+/* Los desplegables traen TODAS las facultades del catálogo, no solo
+   las que ya tienen gente: si una está vacía, esa también es una
+   respuesta y hay que poder verla. */
+function pintarFiltrosUsuarios() {
+  var selF = $("#us-facultad"), selP = $("#us-programa");
+  if (!selF || !selP) return;
+
+  var facs = {};
+  if (typeof FACULTADES !== "undefined" && FACULTADES) {
+    Object.keys(FACULTADES).forEach(function (f) { facs[f] = 1; });
+  }
+  usTodas().forEach(function (p) { if (p.facultad) facs[p.facultad] = 1; });
+
+  var listaF = Object.keys(facs).sort();
+  selF.innerHTML = '<option value="">Todas</option>' + listaF.map(function (f) {
+    return '<option value="' + esc(f) + '">' + esc(f) + "</option>";
+  }).join("");
+  selF.value = usFacultad;
+
+  var progs = {};
+  if (usFacultad && typeof FACULTADES !== "undefined" && FACULTADES[usFacultad]) {
+    (FACULTADES[usFacultad] || []).forEach(function (x) {
+      progs[typeof x === "string" ? x : (x && x.nombre) || ""] = 1;
+    });
+  }
+  usTodas().forEach(function (p) {
+    if (!p.programa) return;
+    if (usFacultad && p.facultad !== usFacultad) return;
+    progs[p.programa] = 1;
+  });
+  delete progs[""];
+
+  var listaP = Object.keys(progs).sort();
+  selP.innerHTML = '<option value="">Todos</option>' + listaP.map(function (x) {
+    return '<option value="' + esc(x) + '">' + esc(x) + "</option>";
+  }).join("");
+  selP.value = usPrograma;
+  selP.disabled = !listaP.length;
+}
+
+function pintarTablaUsuarios() {
+  var filas = usFiltradas().sort(function (a, b) {
+    return String(b.actualizado || "").localeCompare(String(a.actualizado || ""));
+  });
+
+  $("#us-cuenta").textContent = filas.length === 1
+    ? "1 persona"
+    : filas.length + " personas" + (usFacultad || usPrograma || usBusca ? " con estos filtros" : "");
+
+  $("#us-cuerpo").innerHTML = filas.length
+    ? filas.map(function (p) {
+        return '<tr data-persona="' + esc(p.id) + '"' +
+          (p.id === usElegida ? ' class="elegida"' : "") + ">" +
+          '<td><div class="adm-persona">' + esc(p.nombre) +
+            (p.delCentro ? ' <span class="us-marca">Centro</span>' : "") + "</div>" +
+          '<div class="adm-correo">' + esc(p.correo) + "</div></td>" +
+          "<td>" + esc(p.facultad || "—") + "</td>" +
+          "<td>" + esc(p.programa || "—") + "</td>" +
+          "<td>" + esc(p.etapa || "—") + "</td>" +
+          "<td>" + p.hojas + " de 5</td>" +
+          "<td>" + p.fichas + " de " + p.fichasTotal + "</td>" +
+          '<td class="' + (p.descargado ? "adm-si" : "adm-no") + '">' + (p.descargado ? "Sí" : "No") + "</td>" +
+          "<td>" + (p.revisiones
+            ? '<button type="button" class="adm-ver" data-revisiones="' + esc(p.id) +
+              '">Ver (' + p.revisiones + ")</button>"
+            : '<span class="adm-no">—</span>') + "</td>" +
+          "<td>" + esc(fechaCorta(p.actualizado)) + "</td></tr>";
+      }).join("")
+    : '<tr><td colspan="9" style="color:var(--ink-faint)">Nadie cumple estos filtros.</td></tr>';
+}
+
+function pintarUsuarios() {
+  if (!$("#us-cuerpo")) return;
+
+  pintarRutaUsuarios();
+  pintarFiltrosUsuarios();
+
+  /* La rosca desglosa el nivel en el que estás: por facultad al
+     principio, por programa dentro de una, y nada cuando ya se eligió
+     un programa (un solo sector no dice nada). */
+  var base = usTodas().filter(function (p) {
+    if (usFacultad && p.facultad !== usFacultad) return false;
+    return true;
+  });
+
+  if (usPrograma) {
+    $("#rosca-zona").hidden = true;
+  } else if (usFacultad) {
+    pintarRosca("Personas por programa · " + usFacultad,
+      usAgrupar(base, "programa"), "personas",
+      function (clave) { usPrograma = clave; usElegida = ""; pintarUsuarios(); });
+  } else {
+    pintarRosca("Personas por facultad",
+      usAgrupar(base, "facultad"), "personas",
+      function (clave) { usFacultad = clave; usPrograma = ""; usElegida = ""; pintarUsuarios(); });
+  }
+
+  pintarTablaUsuarios();
+}
+
+/* Los controles se escuchan desde la hoja: la tabla se repinta
+   entera con cada filtro y sus botones nacen y mueren con ella. */
+$("#us-facultad").addEventListener("change", function () {
+  usFacultad = this.value; usPrograma = ""; usElegida = ""; pintarUsuarios();
+});
+$("#us-programa").addEventListener("change", function () {
+  usPrograma = this.value; usElegida = ""; pintarUsuarios();
+});
+$("#us-busca").addEventListener("input", function () {
+  usBusca = this.value; pintarUsuarios();
+});
+$("#us-centro").addEventListener("change", function () {
+  usConCentro = this.checked; usElegida = ""; pintarUsuarios();
+});
+$("#us-limpiar").addEventListener("click", function () {
+  usFacultad = ""; usPrograma = ""; usBusca = ""; usElegida = "";
+  $("#us-busca").value = "";
+  /* La casilla del Centro no se toca: no es un filtro de búsqueda
+     sino una decisión sobre qué se está mirando. */
+  $("#us-revision").hidden = true;
+  pintarUsuarios();
+});
+$("#us-actualizar").addEventListener("click", cargarConsolidado);
+
+$("#usuarios").addEventListener("click", function (e) {
+  var b = e.target && e.target.closest ? e.target.closest("button") : null;
+  if (b && b.hasAttribute("data-revisiones")) {
+    usElegida = b.getAttribute("data-revisiones");
+    pintarTablaUsuarios();
+    abrirRevisionesDe(usElegida, null, "#us-revision");
+    return;
+  }
+  if (b && b.hasAttribute("data-revision")) {
+    abrirRevisionesDe(b.getAttribute("data-de"), b.getAttribute("data-revision"), "#us-revision");
+    return;
+  }
+  if (b) return;
+
+  /* Pulsar la fila entera abre lo de esa persona: es un blanco
+     mucho mayor que el botón. */
+  var tr = e.target && e.target.closest ? e.target.closest("tr[data-persona]") : null;
+  if (!tr) return;
+  usElegida = tr.getAttribute("data-persona");
+  pintarTablaUsuarios();
+  abrirRevisionesDe(usElegida, null, "#us-revision");
+});
 
 function fechaCorta(t) {
   if (!t) return "—";
@@ -1440,30 +2102,40 @@ function fechaCorta(t) {
 }
 
 function pintarConsolidado() {
-  var n = admFilas.length;
-  var sec = n ? admFilas.reduce(function (a, x) { return a + (Number(x.hojas_completas) || 0); }, 0) / n : 0;
-  var fic = n ? admFilas.reduce(function (a, x) { return a + (Number(x.fichas_completas) || 0); }, 0) / n : 0;
-  var pdf = admFilas.filter(function (x) { return x.descargado; }).length;
+  var gente = admPersonas();
+  var n = gente.length;
+  var sec = n ? gente.reduce(function (a, x) { return a + (Number(x.hojas_completas) || 0); }, 0) / n : 0;
+  var fic = n ? gente.reduce(function (a, x) { return a + (Number(x.fichas_completas) || 0); }, 0) / n : 0;
+  var pdf = gente.filter(function (x) { return x.descargado; }).length;
   var programas = {};
-  admFilas.forEach(function (x) { if (x.programa) programas[x.programa] = 1; });
+  gente.forEach(function (x) { if (x.programa) programas[x.programa] = 1; });
+
+  var delCentro = admFilas.length - n;
+  var coletilla = delCentro
+    ? (delCentro === 1 ? " Queda fuera una cuenta del Centro" : " Quedan fuera " + delCentro + " cuentas del Centro") +
+      ": las ves en «Revisión usuarios», marcando la casilla."
+    : "";
 
   $("#adm-sub").textContent = n
-    ? "Personas que han abierto un portafolio con la sesión iniciada. Se registra el avance, nunca el texto: los borradores siguen viviendo solo en el navegador de cada quien."
-    : "Todavía nadie ha abierto un portafolio con la sesión iniciada.";
+    ? "Personas que han abierto un portafolio con la sesión iniciada. Del portafolio se registra el avance, nunca el texto. De las segundas opiniones sí se ve el contenido: pulsa «Ver» en la fila de cada quien." + coletilla
+    : (admFilas.length
+        ? "Todavía no ha entrado nadie de fuera del Centro." + coletilla
+        : "Todavía nadie ha abierto un portafolio con la sesión iniciada.");
 
   $("#adm-kpis").innerHTML = [
     ["Personas", n],
     ["Programas", Object.keys(programas).length],
     ["Secciones promedio", sec.toFixed(1) + " de 5"],
     ["Fichas promedio", fic.toFixed(1)],
-    ["Descargaron el PDF", pdf]
+    ["Descargaron el PDF", pdf],
+    ["Pidieron segunda opinión", Object.keys(revisionesPorPersona()).length]
   ].map(function (k) {
     return '<div class="adm-kpi"><div class="n">' + esc(String(k[1])) +
            '</div><div class="t">' + esc(k[0]) + "</div></div>";
   }).join("");
 
   $("#adm-cuerpo").innerHTML = n
-    ? admFilas.map(function (x) {
+    ? gente.map(function (x) {
         return "<tr>" +
           '<td><div class="adm-persona">' + esc(x.nombre || x.correo) + "</div>" +
           '<div class="adm-correo">' + esc(x.correo || "") + "</div></td>" +
@@ -1473,12 +2145,13 @@ function pintarConsolidado() {
           "<td>" + (Number(x.hojas_completas) || 0) + " de 5</td>" +
           "<td>" + (Number(x.fichas_completas) || 0) + " de " + (Number(x.fichas_total) || 0) + "</td>" +
           '<td class="' + (x.descargado ? "adm-si" : "adm-no") + '">' + (x.descargado ? "Sí" : "No") + "</td>" +
+          "<td>" + celdaRevisiones(x) + "</td>" +
           "<td>" + esc(fechaCorta(x.actualizado_en)) + "</td></tr>";
       }).join("")
-    : '<tr><td colspan="8" style="color:var(--ink-faint)">Nadie ha empezado un portafolio todavía.</td></tr>';
+    : '<tr><td colspan="9" style="color:var(--ink-faint)">Nadie ha empezado un portafolio todavía.</td></tr>';
 
   var g = {};
-  admFilas.forEach(function (x) {
+  gente.forEach(function (x) {
     var k = x.programa || "Sin programa";
     if (!g[k]) g[k] = { n: 0, sec: 0, fic: 0, pdf: 0 };
     g[k].n++;
@@ -1499,7 +2172,8 @@ function pintarConsolidado() {
 }
 
 function exportarConsolidado() {
-  if (!admFilas.length) { admAviso("No hay nada que exportar todavía."); return; }
+  var gente = admPersonas();
+  if (!gente.length) { admAviso("No hay nada que exportar todavía."); return; }
   if (typeof construirXLSX !== "function") {
     admAviso("El generador de Excel no está disponible en esta versión.");
     return;
@@ -1509,7 +2183,7 @@ function exportarConsolidado() {
     "Secciones completas", "Fichas escritas", "Fichas completas",
     "Descargó el PDF", "Pidió revisión con IA", "Empezó", "Última actividad"
   ]];
-  admFilas.forEach(function (x) {
+  gente.forEach(function (x) {
     filas.push([
       x.correo || "", x.nombre || "", x.facultad || "", x.programa || "",
       x.area || "", x.etapa || "", x.objetivo || "",
@@ -1526,8 +2200,8 @@ function exportarConsolidado() {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
     admAviso("");
-    $("#adm-sub").textContent = "Excel descargado con " + admFilas.length +
-      (admFilas.length === 1 ? " persona." : " personas.") +
+    $("#adm-sub").textContent = "Excel descargado con " + gente.length +
+      (gente.length === 1 ? " persona." : " personas.") +
       " Contiene datos personales: guárdalo donde corresponda y no lo reenvíes por correo.";
   } catch (e) {
     admAviso("No se pudo generar el Excel: " + e.message);
@@ -1572,8 +2246,8 @@ function pintarAvisoRevision() {
   nota.className = "revision-nota";
   nota.textContent = "La escribe un modelo de inteligencia artificial. Se le envía solo el texto " +
     "de tu portafolio, no tu nombre ni tu correo, y él no guarda nada. La revisión que te devuelva " +
-    "sí queda guardada en tu cuenta, para que puedas volver a ella; tu borrador sigue sin salir de " +
-    "este navegador.";
+    "queda guardada en tu cuenta y el Centro de Desarrollo Profesional puede consultarla para " +
+    "atenderte mejor; puedes borrarla cuando quieras.";
 }
 
 /* Lo que sabe la herramienta sobre quién escribe. Sirve para que la
@@ -1581,12 +2255,11 @@ function pintarAvisoRevision() {
    le pide a una ficha de Ingeniería no es lo mismo que en Derecho. */
 function contextoRevision() {
   var a = AREAS[areaKey()];
-  var sel = $("#f-etapa"), so = $("#f-objetivo");
   return {
     programa: programaNombre(),
     area: a ? a.label : "",
-    etapa: sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : "",
-    objetivo: so && so.selectedIndex >= 0 ? so.options[so.selectedIndex].text : "",
+    etapa: textoElegido("f-etapa"),
+    objetivo: textoElegido("f-objetivo"),
     audiencia: val("f-audiencia"),
     aviso: a ? a.aviso : ""
   };
@@ -1658,18 +2331,22 @@ function bloqueRevision(titulo, estado, observaciones) {
   return d;
 }
 
-function pintarRevision(d) {
-  var salida = $("#rev-salida");
+/* Dibuja una revisión dentro del contenedor que se le pase. Está
+   separado de pintarRevision() porque la misma ficha se enseña en
+   dos sitios: a quien la pidió, en «Antes de publicar», y al CDP en
+   el consolidado. Que sea el mismo código evita que una de las dos
+   se quede atrás cuando cambie el formato. */
+function construirRevision(salida, d, tuyo) {
   salida.innerHTML = "";
+  d = d || {};
 
   /* Salida de emergencia: si el modelo no devolvió el formato
      esperado, se muestra su texto tal cual antes que perderlo. */
-  if (d && d.crudo) {
+  if (d.crudo) {
     var c = document.createElement("p");
     c.className = "rev-crudo";
     c.textContent = d.crudo;
     salida.appendChild(c);
-    salida.hidden = false;
     return;
   }
 
@@ -1687,7 +2364,7 @@ function pintarRevision(d) {
     g1.className = "rev-grupo";
     var t1 = document.createElement("span");
     t1.className = "eyebrow";
-    t1.textContent = "Tus fichas de proyecto";
+    t1.textContent = tuyo === false ? "Sus fichas de proyecto" : "Tus fichas de proyecto";
     g1.appendChild(t1);
     d.proyectos.forEach(function (p, i) {
       var n = p.ficha || (i + 1);
@@ -1722,12 +2399,20 @@ function pintarRevision(d) {
 
   var pie = document.createElement("p");
   pie.className = "rev-pie";
-  pie.textContent = "Esta segunda opinión la generó un modelo de inteligencia artificial " +
-    "(Gemini) que no conoce tu trabajo ni habló contigo: son observaciones, no correcciones, " +
-    "y puede equivocarse. Tú decides cuáles aplicas. Para una revisión hecha por una persona, " +
-    "escribe al Centro de Desarrollo Profesional desde la hoja «Hablar con un asesor».";
+  pie.textContent = tuyo === false
+    ? "La generó un modelo de inteligencia artificial (Gemini) que no conoce su trabajo ni habló " +
+      "con esta persona. Son observaciones automáticas, no un diagnóstico del Centro: léelas como " +
+      "un punto de partida para la asesoría, no como una evaluación."
+    : "Esta segunda opinión la generó un modelo de inteligencia artificial " +
+      "(Gemini) que no conoce tu trabajo ni habló contigo: son observaciones, no correcciones, " +
+      "y puede equivocarse. Tú decides cuáles aplicas. Para una revisión hecha por una persona, " +
+      "escribe al Centro de Desarrollo Profesional desde la hoja «Hablar con un asesor».";
   salida.appendChild(pie);
+}
 
+function pintarRevision(d) {
+  var salida = $("#rev-salida");
+  construirRevision(salida, d, true);
   salida.hidden = false;
 }
 
@@ -1757,7 +2442,6 @@ function pedirRevision() {
     portafolio: armar()
   }).then(function (d) {
     pintarRevision(d || {});
-    registrarAvance({ revisado_ia: true });
     nota.className = "revision-nota";
     nota.textContent = "Revisión hecha y guardada en tu cuenta. " +
       "Vuelve a pedirla cuando hayas corregido: se guardan las últimas diez.";
@@ -1796,17 +2480,18 @@ function pedirRevision() {
 var revisiones = [];        /* las últimas, más reciente primero */
 var revisionesFallo = "";   /* por qué no se pudieron guardar */
 
-/* Lo que se manda a la base. El detalle va en una sola columna
-   JSON: la forma de la respuesta la decide la función del
-   servidor, y no vale la pena tener que migrar la tabla cada vez
+/* Lo que se manda a la base. Todo el contenido va en la columna
+   «resultado», que es JSON: la forma de la respuesta la decide la
+   función del servidor, y no vale la pena migrar la tabla cada vez
    que allí se añada un campo. */
 function filaDeRevision(d) {
   return {
-    veredicto: String(d.veredicto || "").slice(0, 1000),
-    listo: d.listo === true,
-    prioridad: String(d.prioridad || "").slice(0, 1000),
-    fichas: (d.proyectos || []).length,
-    detalle: {
+    portafolio_id: Nube.portafolioId,
+    resultado: {
+      veredicto: String(d.veredicto || "").slice(0, 1000),
+      listo: d.listo === true,
+      prioridad: String(d.prioridad || "").slice(0, 1000),
+      fichas: (d.proyectos || []).length,
       proyectos: d.proyectos || [],
       secciones: d.secciones || [],
       crudo: d.crudo ? String(d.crudo) : ""
@@ -1817,21 +2502,29 @@ function filaDeRevision(d) {
 /* El camino de vuelta: de la fila guardada a lo que espera
    pintarRevision(). */
 function revisionDesdeFila(f) {
-  var det = (f && f.detalle) || {};
-  if (typeof det === "string") { try { det = JSON.parse(det); } catch (e) { det = {}; } }
-  if (det.crudo) return { crudo: det.crudo };
+  var r = (f && f.resultado) || {};
+  if (typeof r === "string") { try { r = JSON.parse(r); } catch (e) { r = {}; } }
+  if (r.crudo) return { crudo: r.crudo };
   return {
-    veredicto: f.veredicto || "",
-    listo: f.listo === true,
-    prioridad: f.prioridad || "",
-    proyectos: det.proyectos || [],
-    secciones: det.secciones || []
+    veredicto: r.veredicto || "",
+    listo: r.listo === true,
+    prioridad: r.prioridad || "",
+    proyectos: r.proyectos || [],
+    secciones: r.secciones || []
   };
 }
 
 function guardarRevision(d) {
   if (!hayRevision()) return;
-  api("/revisiones", "POST", filaDeRevision(d)).then(function () {
+
+  /* La revisión cuelga del portafolio. Si todavía no se ha creado la
+     fila (alguien que pidió la revisión antes de que se vaciara la
+     cola de guardado), se sincroniza primero. */
+  var listo = Nube.portafolioId ? Promise.resolve() : sincronizar();
+
+  listo.then(function () {
+    return api("/revisiones", "POST", filaDeRevision(d));
+  }).then(function () {
     revisionesFallo = "";
     cargarRevisiones();
   }).catch(function (err) {
@@ -1846,7 +2539,7 @@ function guardarRevision(d) {
 function cargarRevisiones() {
   if (!hayRevision()) { revisiones = []; pintarRevisiones(); return; }
   api("/revisiones", "GET").then(function (r) {
-    revisiones = (r && r.revisiones) || [];
+    revisiones = (r && Array.isArray(r.revisiones)) ? r.revisiones : [];
     revisionesFallo = "";
     pintarRevisiones();
   }).catch(function (err) {
@@ -1875,7 +2568,7 @@ function abrirRevisionGuardada(id) {
   var nota = $("#rev-nota");
   if (nota && nota.dataset.ocupada !== "1") {
     nota.className = "revision-nota";
-    nota.textContent = "Estás viendo la revisión del " + fechaCorta(f.creada_en) +
+    nota.textContent = "Estás viendo la revisión del " + fechaCorta(f.creado_en) +
       ". Pulsa «Revisar mi portafolio» para pedir una nueva sobre lo que tienes escrito ahora.";
   }
   var salida = $("#rev-salida");
@@ -1918,14 +2611,18 @@ function pintarRevisiones(activa) {
     var li = document.createElement("li");
     if (activa && String(activa) === String(f.id)) li.className = "activa";
 
+    var r = f.resultado || {};
+    if (typeof r === "string") { try { r = JSON.parse(r); } catch (e) { r = {}; } }
+
     var fecha = document.createElement("b");
-    fecha.textContent = fechaCorta(f.creada_en);
+    fecha.textContent = fechaCorta(f.creado_en);
     li.appendChild(fecha);
 
+    var n = Number(r.fichas) || 0;
     var res = document.createElement("span");
     res.className = "rev-guardadas-res";
-    res.textContent = (f.listo ? "Lista para publicar" : "Con observaciones") +
-      " · " + (Number(f.fichas) || 0) + (Number(f.fichas) === 1 ? " ficha" : " fichas");
+    res.textContent = (r.listo ? "Lista para publicar" : "Con observaciones") +
+      " · " + n + (n === 1 ? " ficha" : " fichas");
     li.appendChild(res);
 
     var ver = document.createElement("button");
@@ -1947,7 +2644,8 @@ function pintarRevisiones(activa) {
 
   var pie = document.createElement("p");
   pie.className = "rev-guardadas-nota";
-  pie.textContent = "Se guardan las diez últimas, solo en tu cuenta. Nadie más las ve.";
+  pie.textContent = "Se guardan las diez últimas. Las ves tú y el Centro de Desarrollo Profesional, " +
+    "que las usa para preparar tu asesoría. Borra la que no quieras que quede.";
   caja.appendChild(pie);
 }
 
@@ -2108,14 +2806,121 @@ function descargarPortafolioIngles(btn) {
   });
 }
 
-/* ═══════════════ 9 · GUARDADO LOCAL ═══════════════ */
-/* Solo localStorage: nada sale de este navegador. Sustituirlo por el
-   guardado en servidor es el punto donde entrará Supabase.
-   FUTURA CONEXIÓN SUPABASE: PROGRESO DEL USUARIO Y PROYECTOS */
-var guardarTimer, hayAlmacen = (function () {
+/* ═══════════════════════════════════════════════════════════════
+   9 · ALMACENAMIENTO
+   ---------------------------------------------------------------
+   El borrador vivía solo en localStorage. Ahora la fuente principal
+   es Supabase, atada a la cuenta del estudiante, y localStorage se
+   queda como copia de seguridad de este navegador.
+
+   POR QUÉ LAS DOS COSAS Y NO SOLO LA NUBE
+   Escribir por red tarda y a veces falla. Si el guardado dependiera
+   únicamente de Supabase, cada corte de wifi en el campus le
+   costaría a alguien un párrafo. Se escribe siempre primero en
+   local, que es instantáneo y no puede fallar, y se sincroniza
+   después. Si la sincronización falla, el trabajo sigue estando y se
+   dice en pantalla en vez de fingir que todo va bien.
+
+   QUÉ VA A DÓNDE
+     portafolios            titulo, objetivo, etapa      (una fila)
+     secciones_portafolio   las otras dieciséis casillas y el
+                            estado de la lista de verificación
+     proyectos              una fila por ficha, con su orden
+
+   Las tres hijas cuelgan de «portafolios.id» con borrado en
+   cascada: retirar el portafolio se lleva todo lo demás.
+   =============================================================== */
+
+var guardarTimer, nubeTimer, hayAlmacen = (function () {
   try { window.localStorage.setItem("_t", "1"); window.localStorage.removeItem("_t"); return true; }
   catch (e) { return false; }
 })();
+
+/* ── El mapa del esquema ─────────────────────────────────────
+   Todo lo que este módulo sabe de la forma de las tablas está
+   aquí. Si mañana una columna cambia de nombre, se arregla en
+   estas veinte líneas y no en quince sitios repartidos. */
+
+/* Las tres casillas con columna propia en «portafolios». */
+var CABECERA = { "f-nombre": "titulo", "f-objetivo": "objetivo", "f-etapa": "etapa" };
+
+/* Las demás casillas del formulario, una fila cada una en
+   «secciones_portafolio». El «tipo» es el identificador sin el
+   prefijo «f-», salvo donde ese nombre resultaba ambiguo. */
+var SECCION_DE_CAMPO = {
+  "f-programa": "programa",
+  "f-programa-otro": "programa_otro",
+  "f-area-otro": "area_otro",
+  "f-audiencia": "audiencia",
+  "f-campo": "campo",
+  "f-valor": "valor",
+  "f-perfil": "perfil",
+  "f-capacidades": "capacidades",
+  "f-herramientas": "herramientas",
+  "f-formacion": "formacion",
+  "f-logros": "logros",
+  "f-testimonio": "testimonio",
+  "f-correo": "correo",
+  "f-linkedin": "linkedin",
+  "f-otro": "contacto_otro",
+  "f-cta": "cta"
+};
+var CAMPO_DE_SECCION = {};
+Object.keys(SECCION_DE_CAMPO).forEach(function (id) {
+  CAMPO_DE_SECCION[SECCION_DE_CAMPO[id]] = id;
+});
+
+/* De casilla de la ficha a columna de «proyectos». Los nombres no
+   coinciden porque la tabla se escribió aparte; se traducen aquí. */
+var COLUMNA_DE_FICHA = {
+  titulo: "nombre", contexto: "contexto", objetivo: "objetivo", rol: "rol",
+  acciones: "acciones", herr: "herramientas", resultado: "resultados",
+  evidencia: "evidencia", competencias: "competencias"
+};
+
+/* La lista de verificación no tiene tabla propia: son diez
+   booleanos y crear una tabla para eso sería ceremonia. Va como una
+   sección más, en JSON, con un tipo que no puede chocar con ninguna
+   casilla del formulario. */
+var TIPO_CHECK = "_checklist";
+var ORDEN_CHECK = 900;
+
+/* Filas que no son una casilla del formulario sino algo que se
+   deduce de él. Existen para que el consolidado del CDP pueda
+   agrupar sin tener que interpretar valores internos: el de
+   «f-programa» es «clave|slug», que no se le enseña a nadie.
+   Se escriben pero no se leen de vuelta: al abrir se recalculan. */
+var TIPO_DESCARGADO = "_descargado";
+var pdfDescargado = false;
+
+function seccionesDerivadas() {
+  return {
+    programa_nombre: programaNombre() || "",
+    facultad: val("f-facultad") || "",
+    area: areaKey() || "",
+    _descargado: pdfDescargado ? "si" : ""
+  };
+}
+
+/* ── Estado de la sincronización ─────────────────────────────── */
+var Nube = {
+  portafolioId: "",   /* el id de la fila de «portafolios» */
+  proyectoIds: [],    /* paralelo al orden de las fichas en pantalla */
+  seccionIds: {},     /* tipo de sección → id de su fila */
+  enviado: null,      /* lo último que el servidor confirmó */
+  fallo: "",
+  ocupado: false,
+  pendiente: false,
+  /* Mientras se está leyendo la cuenta no se escribe en ella: la
+     pantalla todavía está vacía y sincronizarla borraría el
+     portafolio que se está intentando abrir. */
+  cargando: false
+};
+
+function hayNube() {
+  return typeof api === "function" && typeof Cuenta !== "undefined" &&
+         !!(Cuenta && Cuenta.sesion);
+}
 
 function marcarGuardado(texto, activo) {
   var caja = $("#guardado"), txt = $("#guardado-txt");
@@ -2131,32 +2936,10 @@ function serializar() {
   return d;
 }
 
-function guardar() {
-  /* El avance se registra con el mismo disparador que el guardado
-     local, que ya se llama en cada cambio. Va aparte por si no hay
-     almacenamiento en el navegador: son cosas distintas. */
-  registrarAvance();
-  if (!hayAlmacen) return;
-  clearTimeout(guardarTimer);
-  guardarTimer = setTimeout(function () {
-    try {
-      window.localStorage.setItem(llaveDelBorrador(), JSON.stringify(serializar()));
-      marcarGuardado("Guardado en este navegador", true);
-      setTimeout(function () { marcarGuardado("Guardado en este navegador", false); }, 1600);
-    } catch (e) {
-      marcarGuardado("No se pudo guardar en este navegador", false);
-    }
-  }, 500);
-}
-
-function restaurar() {
-  if (!hayAlmacen) { marcarGuardado("Este navegador no permite guardar", false); return false; }
-  var crudo;
-  try { crudo = window.localStorage.getItem(llaveDelBorrador()); } catch (e) { return false; }
-  if (!crudo) return false;
-
-  var d;
-  try { d = JSON.parse(crudo); } catch (e) { return false; }
+/* Vuelca un objeto de datos en el formulario. Lo usan los dos
+   caminos, el local y el de la cuenta, para que no puedan
+   desincronizarse. */
+function aplicarDatos(d) {
   if (!d || typeof d !== "object") return false;
 
   CAMPOS.forEach(function (id) {
@@ -2178,23 +2961,390 @@ function restaurar() {
     });
     refreshCheck();
   }
+  return true;
+}
 
+/* ── La copia de este navegador ──────────────────────────────── */
+function leerLocalDe(llave) {
+  if (!hayAlmacen) return null;
+  var crudo;
+  try { crudo = window.localStorage.getItem(llave); } catch (e) { return null; }
+  if (!crudo) return null;
+  try {
+    var d = JSON.parse(crudo);
+    return (d && typeof d === "object") ? d : null;
+  } catch (e) { return null; }
+}
+function leerLocal() { return leerLocalDe(llaveDelBorrador()); }
+
+function escribirLocal(d) {
+  if (!hayAlmacen) return false;
+  try { window.localStorage.setItem(llaveDelBorrador(), JSON.stringify(d)); return true; }
+  catch (e) { return false; }
+}
+
+/* ── Traducción entre las tablas y el formulario ─────────────── */
+function datosDesdeNube(r) {
+  var d = { campos: {}, proyectos: [], check: {} };
+  var cab = r.portafolio || {};
+
+  Object.keys(CABECERA).forEach(function (id) {
+    var v = cab[CABECERA[id]];
+    if (typeof v === "string") d.campos[id] = v;
+  });
+
+  (r.secciones || []).forEach(function (s) {
+    if (s.tipo === TIPO_CHECK) {
+      try { d.check = JSON.parse(s.contenido || "{}") || {}; } catch (e) { d.check = {}; }
+      return;
+    }
+    var id = CAMPO_DE_SECCION[s.tipo];
+    if (id) d.campos[id] = s.contenido || "";
+  });
+
+  (r.proyectos || []).forEach(function (p) {
+    var ficha = {};
+    Object.keys(COLUMNA_DE_FICHA).forEach(function (clave) {
+      ficha[clave] = p[COLUMNA_DE_FICHA[clave]] || "";
+    });
+    d.proyectos.push(ficha);
+  });
+
+  return d;
+}
+
+/* Se apuntan los identificadores de cada fila para poder
+   actualizarlas después una a una, en vez de borrar y reinsertar
+   el portafolio entero en cada guardado. */
+function indexarNube(r) {
+  Nube.portafolioId = (r.portafolio && r.portafolio.id) || "";
+  Nube.seccionIds = {};
+  pdfDescargado = false;
+  (r.secciones || []).forEach(function (s) {
+    Nube.seccionIds[s.tipo] = s.id;
+    if (s.tipo === TIPO_DESCARGADO && s.contenido) pdfDescargado = true;
+  });
+  Nube.proyectoIds = (r.proyectos || []).map(function (p) { return p.id; });
+}
+
+/* Lo que debería haber en el servidor según lo que hay ahora en
+   pantalla. Comparándolo con «Nube.enviado» sale exactamente qué
+   filas hay que tocar. */
+function instantanea() {
+  var d = serializar();
+
+  var cabecera = {};
+  Object.keys(CABECERA).forEach(function (id) { cabecera[CABECERA[id]] = d.campos[id] || ""; });
+
+  var secciones = {};
+  Object.keys(SECCION_DE_CAMPO).forEach(function (id) {
+    secciones[SECCION_DE_CAMPO[id]] = d.campos[id] || "";
+  });
+  secciones[TIPO_CHECK] = JSON.stringify(d.check || {});
+  var extra = seccionesDerivadas();
+  Object.keys(extra).forEach(function (k) { secciones[k] = extra[k]; });
+
+  var proyectos = d.proyectos.map(function (p) {
+    var fila = {};
+    Object.keys(COLUMNA_DE_FICHA).forEach(function (c) { fila[COLUMNA_DE_FICHA[c]] = p[c] || ""; });
+    return fila;
+  });
+
+  return { cabecera: cabecera, secciones: secciones, proyectos: proyectos };
+}
+
+function ahoraISO() { return new Date().toISOString(); }
+
+function tareasDeSecciones(ahora, antes) {
+  var tareas = [];
+  var tipos = Object.keys(SECCION_DE_CAMPO).map(function (id) { return SECCION_DE_CAMPO[id]; });
+  tipos.push(TIPO_CHECK);
+  Object.keys(seccionesDerivadas()).forEach(function (t) { tipos.push(t); });
+
+  tipos.forEach(function (tipo, i) {
+    var valor = ahora.secciones[tipo] || "";
+    if (antes && (antes.secciones[tipo] || "") === valor) return;
+
+    var id = Nube.seccionIds[tipo];
+    if (id) {
+      tareas.push(api("/portafolio/secciones/" + encodeURIComponent(id), "PATCH",
+        { contenido: valor, actualizado_en: ahoraISO() }));
+    } else if (valor) {
+      /* Una casilla vacía que nunca se escribió no merece fila. */
+      tareas.push(api("/portafolio/secciones", "POST", {
+        portafolio_id: Nube.portafolioId,
+        tipo: tipo,
+        contenido: valor,
+        orden: tipo === TIPO_CHECK ? ORDEN_CHECK : i
+      }).then(function (r) { if (r && r.fila) Nube.seccionIds[tipo] = r.fila.id; }));
+    }
+  });
+  return tareas;
+}
+
+/* Una ficha en la que no se escribió nada todavía. La herramienta
+   arranca con tres en blanco: crearles fila a todas llenaría la
+   tabla de filas vacías de gente que solo pasó por la hoja. */
+function fichaEnBlanco(fila) {
+  return Object.keys(fila).every(function (k) {
+    return !String(fila[k] || "").trim();
+  });
+}
+
+function tareasDeProyectos(ahora, antes) {
+  var tareas = [];
+  var nuevos = ahora.proyectos;
+  var viejos = (antes && antes.proyectos) || null;
+
+  nuevos.forEach(function (fila, i) {
+    var id = Nube.proyectoIds[i];
+    var cuerpo = Object.assign({}, fila, { orden: i });
+
+    if (!id && fichaEnBlanco(fila)) return;
+
+    if (id) {
+      var previo = viejos && viejos[i] ? viejos[i] : null;
+      if (previo && JSON.stringify(previo) === JSON.stringify(fila)) return;
+      tareas.push(api("/portafolio/proyectos/" + encodeURIComponent(id), "PATCH",
+        Object.assign({ actualizado_en: ahoraISO() }, cuerpo)));
+    } else {
+      tareas.push(api("/portafolio/proyectos", "POST",
+        Object.assign({ portafolio_id: Nube.portafolioId }, cuerpo))
+        .then(function (r) { if (r && r.fila) Nube.proyectoIds[i] = r.fila.id; }));
+    }
+  });
+
+  /* Fichas que la persona eliminó de la pantalla */
+  Nube.proyectoIds.slice(nuevos.length).forEach(function (id) {
+    if (id) tareas.push(api("/portafolio/proyectos/" + encodeURIComponent(id), "DELETE"));
+  });
+  Nube.proyectoIds = Nube.proyectoIds.slice(0, nuevos.length);
+
+  return tareas;
+}
+
+function sincronizar() {
+  /* Mientras se pregunta si quiere subir lo del navegador, no se
+     sube nada. Sin este freno, el primer temporizador pendiente
+     contestaba «sí» por ella. */
+  if (!hayNube() || Nube.cargando || migracionPendiente) return Promise.resolve();
+
+  /* Si ya hay un envío en marcha se anota que hace falta otro y se
+     sale: dos sincronizaciones simultáneas se pisarían los
+     identificadores de las filas recién creadas. */
+  if (Nube.ocupado) { Nube.pendiente = true; return Promise.resolve(); }
+
+  var ahora = instantanea();
+  var antes = Nube.enviado;
+  if (antes && JSON.stringify(ahora) === JSON.stringify(antes)) return Promise.resolve();
+
+  Nube.ocupado = true;
+  marcarGuardado("Guardando en tu cuenta…", true);
+
+  return Promise.resolve().then(function () {
+    /* La cabecera va primero: de ella sale el identificador del que
+       cuelgan las demás filas. */
+    if (Nube.portafolioId && antes &&
+        JSON.stringify(ahora.cabecera) === JSON.stringify(antes.cabecera)) return;
+    return api("/portafolio/cabecera", "PUT",
+      Object.assign({ actualizado_en: ahoraISO() }, ahora.cabecera)
+    ).then(function (r) {
+      if (r && r.portafolio && r.portafolio.id) Nube.portafolioId = r.portafolio.id;
+    });
+  }).then(function () {
+    if (!Nube.portafolioId) throw new Error("no se pudo crear el portafolio en tu cuenta");
+    return Promise.all(tareasDeSecciones(ahora, antes).concat(tareasDeProyectos(ahora, antes)));
+  }).then(function () {
+    Nube.enviado = ahora;
+    Nube.fallo = "";
+    pintarAvisoNube();
+    marcarGuardado("Guardado en tu cuenta", true);
+    setTimeout(function () { marcarGuardado("Guardado en tu cuenta", false); }, 1600);
+  }).catch(function (err) {
+    Nube.fallo = (err && err.message) || "sin detalle";
+    if (window.console) console.warn("No se pudo sincronizar el portafolio:", Nube.fallo);
+    pintarAvisoNube();
+    marcarGuardado("Guardado solo en este navegador", false);
+  }).then(function () {
+    Nube.ocupado = false;
+    if (Nube.pendiente) { Nube.pendiente = false; sincronizar(); }
+  });
+}
+
+function guardar() {
+  /* Local siempre y primero: es instantáneo y no puede fallar. */
+  if (hayAlmacen) {
+    clearTimeout(guardarTimer);
+    guardarTimer = setTimeout(function () {
+      var ok = escribirLocal(serializar());
+      if (!hayNube()) {
+        marcarGuardado(ok ? "Guardado en este navegador" : "No se pudo guardar en este navegador", ok);
+        if (ok) setTimeout(function () { marcarGuardado("Guardado en este navegador", false); }, 1600);
+      }
+    }, 500);
+  }
+
+  /* La nube va más despacio a propósito: escribir una frase dispara
+     decenas de guardados, y no tiene sentido que cada tecla sea una
+     petición. Lo pendiente se vacía al cambiar de hoja o al salir. */
+  if (hayNube()) {
+    clearTimeout(nubeTimer);
+    nubeTimer = setTimeout(sincronizar, 2500);
+  }
+}
+
+function vaciarCola() {
+  if (!hayNube()) return;
+  clearTimeout(nubeTimer);
+  sincronizar();
+}
+window.addEventListener("hashchange", vaciarCola);
+window.addEventListener("pagehide", vaciarCola);
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "hidden") vaciarCola();
+});
+
+function restaurar() {
+  if (!hayAlmacen) { marcarGuardado("Este navegador no permite guardar", false); return false; }
+  var d = leerLocal();
+  if (!d || !aplicarDatos(d)) return false;
   marcarGuardado("Borrador recuperado de este navegador", false);
   return true;
 }
 
 function borrarGuardado() {
-  /* Se cancela primero el guardado pendiente: si no, el temporizador
-     de 500 ms se dispara DESPUÉS de borrar y vuelve a escribir el
-     borrador que el usuario acaba de pedir eliminar. */
+  /* Se cancela primero lo pendiente: si no, el temporizador se
+     dispara DESPUÉS de borrar y vuelve a escribir lo que la persona
+     acaba de pedir eliminar. */
   clearTimeout(guardarTimer);
-  if (!hayAlmacen) return;
-  try { window.localStorage.removeItem(llaveDelBorrador()); } catch (e) { /* sin permisos */ }
+  clearTimeout(nubeTimer);
+  if (hayAlmacen) {
+    try { window.localStorage.removeItem(llaveDelBorrador()); } catch (e) { /* sin permisos */ }
+  }
+  Nube.portafolioId = "";
+  Nube.proyectoIds = [];
+  Nube.seccionIds = {};
+  Nube.enviado = null;
+  Nube.fallo = "";
+  pdfDescargado = false;
 }
 
-/* Un solo escuchador para todo lo que se escribe dentro del contenido */
+/* ═══════════════════════════════════════════════════════════════
+   MIGRACIÓN DESDE ESTE NAVEGADOR
+   ---------------------------------------------------------------
+   Mucha gente empezó su portafolio antes de que existiera el
+   guardado en la cuenta, o lo empezó sin haber entrado. Ese trabajo
+   no se sube a espaldas de nadie: se pregunta.
+
+   Solo se ofrece cuando la cuenta está vacía. Si ya hay portafolio
+   en el servidor, lo del navegador es una copia vieja y sobrescribir
+   con ella sería destruir lo bueno con lo caducado.
+   =============================================================== */
+
+/* Verdadero desde que se muestra la pregunta hasta que se contesta.
+   Congela la sincronización durante ese rato. */
+var migracionPendiente = false;
+
+/* El borrador que se está ofreciendo. Se guarda aparte y NO se
+   vuelca en el formulario hasta que la persona acepta.
+
+   Esto no es un detalle: en un computador compartido del campus,
+   alguien escribe sin haber entrado y se va; el siguiente entra con
+   su cuenta. Si el formulario mostrara ese texto, estaría leyendo el
+   portafolio a medio escribir de otra persona sin haberlo pedido.
+   Se describe lo que hay, no se enseña. */
+var migracionCandidato = null;
+
+/* ¿Hay algo escrito de verdad, o solo un formulario en blanco? */
+function borradorConTexto(llave) {
+  var d = leerLocalDe(llave);
+  if (!d) return null;
+  var algo = false;
+
+  CAMPOS.forEach(function (id) {
+    if (String((d.campos && d.campos[id]) || "").trim()) algo = true;
+  });
+  (d.proyectos || []).forEach(function (p) {
+    Object.keys(p || {}).forEach(function (k) {
+      if (String(p[k] || "").trim()) algo = true;
+    });
+  });
+
+  return algo ? d : null;
+}
+
+/* Quien ya dijo que no, no tiene que volver a decirlo cada vez que
+   abre la herramienta. La negativa se apunta por cuenta. */
+function llaveNegativa() { return llaveDelBorrador() + ":sin-migrar"; }
+
+function yaDijoQueNo() {
+  if (!hayAlmacen) return false;
+  try { return window.localStorage.getItem(llaveNegativa()) === "1"; }
+  catch (e) { return false; }
+}
+
+function apuntarQueDijoQueNo() {
+  if (!hayAlmacen) return;
+  try { window.localStorage.setItem(llaveNegativa(), "1"); } catch (e) { }
+}
+
+/* El cajón de la propia cuenta primero; después el de quien
+   trabajó sin haber entrado, que es el caso más común. */
+function borradorMigrable() {
+  if (yaDijoQueNo()) return null;
+  return borradorConTexto(llaveDelBorrador()) || borradorConTexto(LLAVE_BASE + ":anon");
+}
+
+/* Cuánto hay en el borrador que se ofrece, en una frase. */
+function resumenDelCandidato() {
+  var d = migracionCandidato;
+  if (!d) return "";
+  var campos = 0, fichas = 0;
+
+  /* Los desplegables arrancan con un valor puesto, así que contarlos
+     diría «cuatro campos escritos» a quien solo escribió uno. */
+  var AUTOMATICOS = ["f-etapa", "f-objetivo", "f-programa", "f-area-otro"];
+  CAMPOS.forEach(function (id) {
+    if (AUTOMATICOS.indexOf(id) > -1) return;
+    if (String((d.campos && d.campos[id]) || "").trim()) campos++;
+  });
+  (d.proyectos || []).forEach(function (p) {
+    var algo = Object.keys(p || {}).some(function (k) { return String(p[k] || "").trim(); });
+    if (algo) fichas++;
+  });
+
+  var partes = [];
+  if (campos) partes.push(campos === 1 ? "un campo escrito" : campos + " campos escritos");
+  if (fichas) partes.push(fichas === 1 ? "una ficha de proyecto" : fichas + " fichas de proyecto");
+  if (!partes.length) return "";
+  return "Tiene " + partes.join(" y ") + ".";
+}
+
+function migrarLocalStorageASupabase() {
+  if (!hayNube()) return Promise.resolve(false);
+
+  /* Sin instantánea previa, la sincronización sube todo en vez de
+     comparar contra un estado que no existe. */
+  Nube.enviado = null;
+  return sincronizar().then(function () {
+    if (Nube.fallo) return false;
+    /* El cajón sin cuenta ya cumplió: se retira para que no se
+       vuelva a ofrecer en cada visita. */
+    try { window.localStorage.removeItem(LLAVE_BASE + ":anon"); } catch (e) { }
+    escribirLocal(serializar());
+    return true;
+  });
+}
+
+/* Un solo escuchador para todo lo que se escribe dentro del contenido.
+   Las hojas de administración quedan fuera: escribir en el buscador
+   del consolidado no es escribir el portafolio, y disparaba un
+   guardado por cada tecla. */
 document.addEventListener("input", function (e) {
-  if (e.target.closest && e.target.closest("main")) { render(); guardar(); }
+  if (!e.target.closest) return;
+  if (!e.target.closest("main")) return;
+  if (e.target.closest(".hoja-admin")) return;
+  render(); guardar();
 });
 
 $("#f-programa").addEventListener("change", function () { syncPrograma(); adapt(); render(); guardar(); });
@@ -2205,6 +3355,7 @@ $("#f-objetivo").addEventListener("change", function () { render(); guardar(); }
 /* ═══════════════ 10 · ACCIONES Y ARRANQUE ═══════════════ */
 
 $("#dl-proy").addEventListener("click", function () {
+  pdfDescargado = true; guardar();
   descargarPDF("mis-proyectos.pdf", armarProyectos(), "Proyectos y evidencias", this);
 });
 $("#copy-proy").addEventListener("click", function () { copy(armarProyectos(), "Proyectos copiados", this); });
@@ -2212,21 +3363,23 @@ $("#copy-proy").addEventListener("click", function () { copy(armarProyectos(), "
 $("#dl-port-en").addEventListener("click", function () { descargarPortafolioIngles(this); });
 $("#copy-port").addEventListener("click", function () { copy(armar(), "Portafolio copiado", this); });
 $("#dl-port").addEventListener("click", function () {
+  pdfDescargado = true; guardar();
   descargarPDF("mi-portafolio.pdf", armar(), "Portafolio profesional", this);
-  registrarAvance({ descargado: true });
 });
 $("#dl-all").addEventListener("click", function () {
+  pdfDescargado = true; guardar();
   descargarPDF("mi-portafolio-y-checklist.pdf",
     armar() + "\n\n---\n\n" + checklistMd(), "Portafolio profesional", this);
-  registrarAvance({ descargado: true });
 });
 
 $("#reset").addEventListener("click", function () {
   if (!window.confirm("Se borrará todo lo que has escrito, también el borrador guardado en este navegador. ¿Continuar?")) return;
 
-  /* Si hay cuenta, también se retira el registro de avance del
-     servidor. Empezar de nuevo tiene que significar eso. */
-  if (hayRegistro()) { avanceUltimo = ""; api("/portafolio", "DELETE").catch(function () {}); }
+  /* Con cuenta se retira también el portafolio del servidor. Las
+     tablas hijas cuelgan de él con borrado en cascada, así que se
+     van proyectos, secciones y revisiones detrás. Empezar de nuevo
+     tiene que significar eso, no solo vaciar la pantalla. */
+  if (hayNube()) { api("/portafolio", "DELETE").catch(function () {}); }
 
   $$("main input[type='text'], main input[type='email'], main textarea").forEach(function (el) { el.value = ""; });
   $("#f-programa").value = "";
@@ -2267,7 +3420,6 @@ if (typeof alCambiarSesion === "function") {
        las del anterior. */
     revisionesFallo = "";
     cargarRevisiones();
-    if (sesion) registrarAvance();
   });
 }
 
@@ -2287,10 +3439,11 @@ $("#adm-excel").addEventListener("click", exportarConsolidado);
 /* El enlace del índice no lleva a una hoja del recorrido, así que
    se atiende aparte. */
 document.addEventListener("click", function (e) {
-  var a = e.target && e.target.closest ? e.target.closest('a[href="#admin"]') : null;
+  var a = e.target && e.target.closest
+    ? e.target.closest('a[href="#admin"], a[href="#usuarios"]') : null;
   if (!a) return;
   e.preventDefault();
-  irAlConsolidado();
+  irAHojaAdmin(a.getAttribute("href").slice(1));
 });
 
 /* Arranque */
@@ -2299,9 +3452,14 @@ adapt();
 
 migrarBorradorAntiguo();
 llaveActual = llaveDelBorrador();
-if (!restaurar()) {
-  addProyecto(); addProyecto(); addProyecto();
-  marcarGuardado("Se guarda solo mientras escribes", false);
+
+/* Si ya había sesión al cargar la página, auth.js no vuelve a
+   avisar: el portafolio de la cuenta hay que pedirlo aquí. */
+if (hayNube()) {
+  marcarGuardado("Abriendo tu portafolio…", true);
+  cargarDeNube();
+} else if (!restaurar()) {
+  arrancarVacio();
 }
 
 render();
@@ -2318,7 +3476,9 @@ pintarAvisoTraductor();
 pintarAvisoRevision();
 pintarAccesoAdmin();
 cargarRevisiones();
-if (window.location.hash === "#admin") { irAlConsolidado(); }
+if (HOJAS_ADMIN.indexOf(window.location.hash.slice(1)) > -1) {
+  irAHojaAdmin(window.location.hash.slice(1));
+}
 
 })();
 </script>
