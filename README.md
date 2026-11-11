@@ -13,11 +13,11 @@ Plataforma de la Universidad de La Sabana (TalentHub UniSabana) con dos herramie
 
 ```sh
 npm install
-cp .env.example .env.local     # completa la URL y la clave publicable de Supabase
+cp .env.example .env           # completa la URL y la clave publicable de Supabase
 npm run dev
 ```
 
-Base de datos y autenticación: ver [`docs/supabase-instalacion.md`](docs/supabase-instalacion.md).
+Base de datos y autenticación: [`docs/supabase-instalacion.md`](docs/supabase-instalacion.md). Publicar en Vercel: [`docs/despliegue.md`](docs/despliegue.md).
 
 ```sh
 npm run typecheck   # tipos

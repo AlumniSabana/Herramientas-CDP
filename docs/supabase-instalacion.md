@@ -9,7 +9,7 @@ En Supabase → **Project Settings → API** (o **API Keys**) copia:
 - **Project URL** → `VITE_SUPABASE_URL`
 - **Publishable key** (`sb_publishable_…`) → `VITE_SUPABASE_PUBLISHABLE_KEY`
 
-Ponlas en `.env.local` (hay una plantilla en `.env.example`).
+Ponlas en `.env` (hay una plantilla en `.env.example`).
 
 > **La clave `sb_secret_…` NO se usa en este proyecto.** Se salta todas las políticas de seguridad (RLS); si se pone en una variable `VITE_…` la descarga cualquier visitante de la página. Si ya la compartiste en algún chat o repositorio, regénerala en el panel.
 
@@ -50,7 +50,7 @@ Las observaciones del pitch, la revisión del portafolio y la traducción usan f
 
 | Síntoma | Causa habitual |
 |---|---|
-| «Falta configurar Supabase» en el registro | `.env.local` vacío o sin reiniciar `npm run dev` |
+| «Falta configurar Supabase» en el registro | `.env` vacío o sin reiniciar `npm run dev` |
 | «El correo debe terminar en @unisabana.edu.co» | Solo se admiten correos institucionales (trigger `validar_registro`) |
 | Llega un enlace en vez de un código | Falta cambiar la plantilla del paso 3 |
 | «Administración» no aparece | Falta el `update` del paso 4, o no se cerró y reabrió sesión |

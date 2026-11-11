@@ -31,7 +31,7 @@ function Marco({ titulo, subtitulo, children, pie }: { titulo: string; subtitulo
         {subtitulo && <p className="mt-3 text-slate-600">{subtitulo}</p>}
         {!supabaseConfigurado && (
           <Alert tono="warn" className="mt-6">
-            Falta configurar Supabase: copia <code>.env.example</code> a <code>.env.local</code> y completa la URL y la clave publicable.
+            Falta configurar Supabase: copia <code>.env.example</code> a <code>.env</code> y completa la URL y la clave publicable.
           </Alert>
         )}
         <Card className="mt-8">{children}</Card>
