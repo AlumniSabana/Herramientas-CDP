@@ -60,3 +60,6 @@ __pycache__/
 src/portada/herramientas-alumni-sabana.html
 src/pitch/estudio-de-pitch.html
 src/portafolio/portafolio-alumni-sabana.html
+
+dist/
+*.tsbuildinfo

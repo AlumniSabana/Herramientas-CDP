@@ -55,10 +55,9 @@ La tabla `revisiones_ia` ya existe, pero al crearse se quedó solo con la
 política de lectura: nadie podía escribir en ella, así que la revisión aparecía
 en pantalla y se perdía al recargar.
 
-**SQL Editor → New query.** Pega el contenido completo de
-`supabase/sql/portafolio-contenido.sql` y presiona **Run**. Entre otras cosas
-añade la política que faltaba, la de borrado, y la función `revisiones_admin()`
-que alimenta el consolidado.
+**SQL Editor → New query.** Si ya corriste `supabase/migrations/20261110000000_esquema_inicial.sql`
+(ver `supabase-instalacion.md`), esto ya está hecho: incluye la tabla `revisiones_ia`,
+sus políticas y la vista `revisiones_admin` que alimenta el consolidado.
 
 **Qué guarda y qué no.** Guarda la respuesta del modelo: el veredicto, la
 prioridad y las observaciones por ficha y por sección, todo en la columna
