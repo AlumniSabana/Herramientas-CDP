@@ -44,7 +44,7 @@ legacy/                         versión anterior en HTML, solo de referencia
 
 ## Claves y privacidad
 
-- En el navegador solo va la clave **publicable**. La `sb_secret_…` nunca se usa en este repositorio. Las claves de Anthropic y Gemini viven en los secretos de las Edge Functions.
+- En el navegador solo va la clave **publicable**. La `sb_secret_…` nunca se usa en este repositorio. La clave de Gemini (una sola, `GEMINI_API_KEY`) vive en los secretos de las Edge Functions.
 - La seguridad real son las políticas RLS: cada persona solo lee lo suyo. El borrador del portafolio no lo lee ni el administrador; el consolidado usa vistas que solo exponen cifras.
 - La sesión se guarda en `sessionStorage`: se cierra al cerrar la pestaña (equipos compartidos del campus).
 - El audio del pitch nunca sale del navegador.

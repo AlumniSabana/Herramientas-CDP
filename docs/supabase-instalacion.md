@@ -44,7 +44,7 @@ Cierra sesión y vuelve a entrar: aparece «Administración» en el menú.
 
 ## 5. Edge Functions (opcional)
 
-Las observaciones del pitch, la revisión del portafolio y la traducción usan funciones en `supabase/functions/`. Siguen igual que antes; ver `desplegar-observaciones.md` y `desplegar-traduccion-y-revision.md`.
+Las observaciones del pitch, la revisión del portafolio y la traducción usan funciones en `supabase/functions/`. Todas usan `GEMINI_API_KEY`; ver [`edge-functions.md`](edge-functions.md).
 
 ## Si algo falla
 

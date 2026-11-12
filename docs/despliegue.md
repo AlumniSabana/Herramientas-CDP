@@ -45,7 +45,7 @@ El correo integrado de Supabase está limitado a pocos mensajes por hora: para u
 
 ## 4 · Edge Functions (IA y traducción)
 
-Opcional, pero sin ellas fallan «Generar observaciones», «Revisar mi portafolio» y la traducción. Siguen las guías `desplegar-observaciones.md` y `desplegar-traduccion-y-revision.md`; hay que hacerlo **en el mismo proyecto de Supabase** que usa Vercel.
+Opcional, pero sin ellas fallan «Generar observaciones», «Revisar mi portafolio» y la traducción. Guía única, con una sola clave de Gemini: [`edge-functions.md`](edge-functions.md); hay que hacerlo **en el mismo proyecto de Supabase** que usa Vercel.
 
 ## 5 · Primer administrador
 

@@ -87,7 +87,7 @@ export default function Diagnostico() {
         poner("modelo", { estado: "espera", texto: "Listo para probar. La prueba real sí consume una llamada al proveedor." });
         setPuedeProbar(true);
       } else {
-        poner("clave", { estado: "mal", texto: "La función está desplegada pero no encuentra la clave del proveedor.", arreglo: <>En el panel: <strong>Edge Functions → Secrets</strong>, con nombre exacto {code("ANTHROPIC_API_KEY")} y tu clave. Después vuelve a desplegar la función.</> });
+        poner("clave", { estado: "mal", texto: "La función está desplegada pero no encuentra la clave del proveedor.", arreglo: <>En el panel: <strong>Edge Functions → Secrets</strong>, con nombre exacto {code("GEMINI_API_KEY")} y tu clave. Después vuelve a desplegar la función.</> });
         poner("modelo", { estado: "espera", texto: "No se puede probar sin la clave." });
       }
     } catch (e) {

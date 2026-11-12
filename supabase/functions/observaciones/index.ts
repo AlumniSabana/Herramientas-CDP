@@ -6,13 +6,14 @@
 // por el modelo. La clave de la API vive en los secretos del
 // proyecto: nunca llega al navegador.
 //
-// Desplegar:
-//   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+// Desplegar (la misma clave que usan «traducir» y «revisar-portafolio»):
+//   supabase secrets set GEMINI_API_KEY=...
 //   supabase functions deploy observaciones
 // ============================================================
 
-const MODELO = "claude-sonnet-4-5";
-const MAX_TOKENS = 1100;
+const MODELO = Deno.env.get("GEMINI_MODELO") ?? "gemini-3.7-flash";
+// Con margen: los modelos con razonamiento gastan parte del tope pensando.
+const MAX_TOKENS = 4096;
 const TIEMPO_LIMITE_MS = 25000;
 
 // Tope de observaciones por persona y por día. Cada llamada cuesta
@@ -112,6 +113,23 @@ async function usadasHoy(auth: string, usuario: string): Promise<number> {
   }
 }
 
+// La Interactions API devuelve el texto en steps[].content[]; se acepta
+// también la forma antigua de generateContent (igual que «traducir»).
+// deno-lint-ignore no-explicit-any
+function textoDeRespuesta(d: any): string {
+  if (Array.isArray(d?.steps)) {
+    const trozos: string[] = [];
+    for (const paso of d.steps) {
+      for (const c of paso?.content ?? []) {
+        if (c?.type === "text" && typeof c.text === "string") trozos.push(c.text);
+      }
+    }
+    if (trozos.length) return trozos.join("");
+  }
+  // deno-lint-ignore no-explicit-any
+  return d?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text ?? "").join("") ?? "";
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "Método no permitido." }, 405);
@@ -123,7 +141,7 @@ Deno.serve(async (req) => {
     return json({ error: "Requiere sesión iniciada." }, 401);
   }
 
-  const clave = Deno.env.get("ANTHROPIC_API_KEY");
+  const clave = Deno.env.get("GEMINI_API_KEY");
 
   let cuerpo: Record<string, unknown>;
   try {
@@ -196,19 +214,19 @@ Deno.serve(async (req) => {
   const temporizador = setTimeout(() => control.abort(), TIEMPO_LIMITE_MS);
 
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
+    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
       method: "POST",
       signal: control.signal,
       headers: {
-        "x-api-key": clave,
-        "anthropic-version": "2023-06-01",
+        "x-goog-api-key": clave,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: MODELO,
-        max_tokens: MAX_TOKENS,
-        system: INSTRUCCIONES,
-        messages: [{ role: "user", content: JSON.stringify(entrada) }],
+        input: JSON.stringify(entrada),
+        system_instruction: INSTRUCCIONES,
+        generation_config: { max_output_tokens: MAX_TOKENS },
+        store: false,
       }),
     });
 
@@ -220,11 +238,11 @@ Deno.serve(async (req) => {
     }
 
     const d = await r.json();
-    const texto = d?.content?.[0]?.text;
+    const texto = textoDeRespuesta(d).trim();
     if (!texto) return json({ error: "El servicio de IA devolvió una respuesta vacía." }, 502);
 
     // Útil para presupuestar consumo. No registramos la transcripción.
-    console.log("tokens", JSON.stringify(d?.usage ?? {}));
+    console.log("tokens", JSON.stringify(d?.usage ?? d?.usageMetadata ?? {}));
 
     return json({ texto });
   } catch (e) {
