@@ -11,9 +11,9 @@
 *.xlsx
 *.xls
 *.csv
-consolidado*
-export*
-historial*
+/consolidado*
+/export*
+/historial*
 
 # ── CLAVES ─────────────────────────────────────────────────────
 # Ninguna clave debería llegar a escribirse en un archivo, pero
@@ -37,7 +37,6 @@ final.mjs
 flujo.mjs
 _check*.js
 node_modules/
-package-lock.json
 
 # ── CAPTURAS Y BORRADORES ──────────────────────────────────────
 *.png
@@ -46,6 +45,8 @@ package-lock.json
 *.gif
 *.pptx
 !src/**/logos/*.png
+!src/assets/*.png
+!public/*.png
 
 # ── SISTEMA ────────────────────────────────────────────────────
 .DS_Store
