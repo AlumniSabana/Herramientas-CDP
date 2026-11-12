@@ -112,7 +112,7 @@ export type Consolidado = {
   falloPerfiles: string;
 };
 
-export async function cargarConsolidado(): Promise<Consolidado> {
+export async function cargarConsolidado(incluirCentro = false): Promise<Consolidado> {
   const r = await supabase.from("rondas_admin").select("*").order("creada_en", { ascending: false });
   if (r.error) throw r.error;
   let rondas = (r.data ?? []) as RondaAdmin[];
@@ -129,14 +129,14 @@ export async function cargarConsolidado(): Promise<Consolidado> {
     const todos = (u.data ?? []) as PerfilAdmin[];
     // Las cuentas de administración no son personas atendidas: se quitan de todas las listas.
     cuentasAdmin = todos.filter((x) => x.rol === "admin").length;
-    usuarios = todos.filter((x) => x.rol !== "admin");
+    usuarios = incluirCentro ? todos : todos.filter((x) => x.rol !== "admin");
     const permitidos = new Set(usuarios.map((x) => x.correo.toLowerCase()));
     if (permitidos.size) {
       const antes = rondas.length;
       rondas = rondas.filter((x) => permitidos.has(String(x.correo || "").toLowerCase()));
       rondasOcultas = antes - rondas.length;
     } else {
-      rondas = rondas.filter((x) => !x.es_admin);
+      rondas = incluirCentro ? rondas : rondas.filter((x) => !x.es_admin);
     }
   }
   return { rondas, usuarios, cuentasAdmin, rondasOcultas, falloPerfiles };

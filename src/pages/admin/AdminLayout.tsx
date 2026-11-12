@@ -11,7 +11,7 @@ export default function AdminLayout() {
   return (
     <Contenedor className="py-12">
       <PageHeader eyebrow="Administración" titulo="Consolidado del Centro" descripcion="Cifras de uso y avance de las personas que han ingresado. El texto del portafolio no es visible desde aquí." />
-      <nav aria-label="Secciones de administración" className="mb-8 flex gap-1 overflow-x-auto border-b border-slate-200">
+      <nav aria-label="Secciones de administración" className="mb-8 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-200">
         {TABS.map((t) => (
           <NavLink
             key={t.to}

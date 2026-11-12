@@ -25,6 +25,7 @@ const TRADUCCIONES: [RegExp, string][] = [
   [/password should be at least/i, "La contraseña debe tener al menos 8 caracteres."],
   [/same password|different from the old/i, "La contraseña nueva debe ser distinta de la anterior."],
   [/failed to fetch|networkerror|load failed/i, "No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo."],
+  [/failed to send a request to the edge function|edge function returned a non-2xx|functions?fetcherror/i, "El servicio de inteligencia artificial no está disponible en este momento. Inténtalo más tarde; lo que escribiste no se pierde."],
   [/compute resources|worker_limit/i, "El servicio está saturado. Espera un minuto e inténtalo de nuevo."],
 ];
 

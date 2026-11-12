@@ -12,7 +12,7 @@ const ENLACES = [
 
 const claseEnlace = ({ isActive }: { isActive: boolean }) =>
   cx(
-    "rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
+    "whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
     isActive ? "bg-brand-100 text-brand-900" : "text-slate-600 hover:bg-slate-100 hover:text-brand-900",
   );
 
@@ -31,7 +31,7 @@ function Cabecera() {
           <img src={logo} alt="TalentHub UniSabana" className="h-12 w-auto" />
         </Link>
 
-        <nav aria-label="Principal" className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Principal" className="hidden items-center gap-1 lg:flex">
           {enlaces.map((e) => (
             <NavLink key={e.to} to={e.to} end={e.fin} className={claseEnlace}>
               {e.texto}
@@ -39,7 +39,7 @@ function Cabecera() {
           ))}
         </nav>
 
-        <div className="ml-auto hidden items-center gap-3 md:flex">
+        <div className="ml-auto hidden items-center gap-3 lg:flex">
           {session ? (
             <>
               <div className="text-right leading-tight">
@@ -69,7 +69,7 @@ function Cabecera() {
         </div>
 
         <button
-          className="ml-auto inline-flex size-10 items-center justify-center rounded-lg text-brand-900 hover:bg-slate-100 md:hidden"
+          className="ml-auto inline-flex size-10 items-center justify-center rounded-lg text-brand-900 hover:bg-slate-100 lg:hidden"
           aria-label={abierto ? "Cerrar menú" : "Abrir menú"}
           aria-expanded={abierto}
           onClick={() => setAbierto((a) => !a)}
@@ -81,7 +81,7 @@ function Cabecera() {
       </Contenedor>
 
       {abierto && (
-        <div className="border-t border-slate-200 bg-white md:hidden">
+        <div className="border-t border-slate-200 bg-white lg:hidden">
           <Contenedor className="flex flex-col gap-1 py-4">
             {enlaces.map((e) => (
               <NavLink key={e.to} to={e.to} end={e.fin} onClick={cerrar} className={claseEnlace}>

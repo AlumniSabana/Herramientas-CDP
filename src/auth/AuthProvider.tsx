@@ -76,7 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (accesoMarcado.current !== s.user.id) {
           accesoMarcado.current = s.user.id;
           // El acuerdo autoriza registrar la recurrencia de acceso.
-          void supabase.from("perfiles").update({ ultimo_acceso: new Date().toISOString() }).eq("id", s.user.id);
+          // El constructor de consultas es perezoso: sin await/then la petición no se envía.
+          await supabase.from("perfiles").update({ ultimo_acceso: new Date().toISOString() }).eq("id", s.user.id);
         }
       }, 0);
     });

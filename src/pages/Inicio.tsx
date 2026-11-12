@@ -81,7 +81,7 @@ export default function Inicio() {
         </Contenedor>
       </section>
 
-      <Contenedor className="-mt-24 grid gap-6 lg:grid-cols-2">
+      <Contenedor className="relative z-10 -mt-24 grid gap-6 lg:grid-cols-2">
         {HERRAMIENTAS.map((h) => (
           <article key={h.to} className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-card transition duration-200 hover:-translate-y-1 hover:shadow-lift sm:p-10">
             <div className="flex items-center gap-4">

@@ -68,12 +68,13 @@ export default function AdminPitch() {
   const [fac, setFac] = useState("");
   const [prog, setProg] = useState("");
   const [aviso, setAviso] = useState("");
+  const [centro, setCentro] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
     setError("");
     try {
-      setDatos(await cargarConsolidado());
+      setDatos(await cargarConsolidado(centro));
       setFac("");
       setProg("");
     } catch (e) {
@@ -81,7 +82,7 @@ export default function AdminPitch() {
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [centro]);
   useEffect(() => void cargar(), [cargar]);
 
   const personas = useMemo(() => (datos ? armarPersonas(datos) : []), [datos]);
@@ -311,10 +312,14 @@ export default function AdminPitch() {
           <h2 className="mt-3 text-3xl">Consolidado del servicio</h2>
           <p className="mt-2 text-sm text-slate-600">
             Personas que han iniciado sesión al menos una vez, hayan practicado o no. Las cuentas creadas pero nunca usadas no aparecen aquí.
-            {datos.cuentasAdmin ? ` No se cuenta${datos.cuentasAdmin === 1 ? " la cuenta de administración." : ` las ${datos.cuentasAdmin} cuentas de administración.`}` : ""}
+            {datos.cuentasAdmin && !centro ? ` No se cuenta${datos.cuentasAdmin === 1 ? " la cuenta de administración." : ` las ${datos.cuentasAdmin} cuentas de administración.`}` : ""}
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" className="size-4 accent-brand-700" checked={centro} onChange={(e) => setCentro(e.target.checked)} />
+            Incluir cuentas del Centro
+          </label>
           <Button onClick={exportar}>Exportar todo (.csv)</Button>
           <Button variant="secondary" disabled={cargando} onClick={() => void cargar()}>{cargando ? "Actualizando…" : "Actualizar"}</Button>
         </div>
