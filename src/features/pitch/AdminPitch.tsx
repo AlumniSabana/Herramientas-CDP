@@ -143,7 +143,7 @@ export default function AdminPitch() {
         {persona.rondas.length === 0 ? (
           <Vacio titulo="Esta persona todavía no ha practicado." />
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card">
+          <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-card">
             <table className="w-full min-w-[40rem] text-left text-sm">
               <thead className="bg-brand-50 text-xs uppercase tracking-wider text-brand-800">
                 <tr>{["Fecha", "Escenario", "Objetivo", "Real", "Ppm", "Muletillas", "Puntaje", ""].map((h, i) => <th key={i} className="px-4 py-4 font-bold">{h}</th>)}</tr>
@@ -209,7 +209,7 @@ export default function AdminPitch() {
           {Filtro}
           {filtro.size > 0 && <p className="text-sm text-slate-500">Mostrando {dentro.length} de {todos.length} {todos.length === 1 ? "persona" : "personas"}</p>}
           <p className="text-sm text-slate-600">{dentro.length ? `${r.personas} ${r.personas === 1 ? "persona registrada" : "personas registradas"}, ${r.activas} con al menos una ronda.` : "Este programa aparece porque está en la lista de la Universidad, no porque tenga a alguien inscrito en la herramienta."}</p>
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card">
+          <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-card">
             <table className="w-full min-w-[36rem] text-left text-sm">
               <thead className="bg-brand-50 text-xs uppercase tracking-wider text-brand-800">
                 <tr>{["Persona", "Rondas", "Último puntaje", "Promedio", ""].map((h, i) => <th key={i} className="px-4 py-4 font-bold">{h}</th>)}</tr>
@@ -241,7 +241,7 @@ export default function AdminPitch() {
           <p className="text-sm text-slate-600">Pulsa un programa para ver quién está inscrito y abrir su reporte.</p>
           <div className="grid gap-8 xl:grid-cols-[26rem_1fr]">
             <Rosca titulo={"Personas por programa · " + fac} datos={programas.map((n) => ({ nombre: n, clave: n, valor: gente.filter((p) => igual(p.programa, n)).length }))} alElegir={setProg} />
-            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card">
+            <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-card">
               <table className="w-full min-w-[34rem] text-left text-sm">
                 <thead className="bg-brand-50 text-xs uppercase tracking-wider text-brand-800">
                   <tr>{["Programa", "Personas", "Con rondas", "Rondas", "Puntaje promedio"].map((h) => <th key={h} className="px-4 py-4 font-bold">{h}</th>)}</tr>
@@ -275,7 +275,7 @@ export default function AdminPitch() {
         <p className="text-sm text-slate-600">Están las {nombresFac.length} facultades, tengan actividad o no: {conAlguien} {conAlguien === 1 ? "tiene" : "tienen"} a alguien registrado. Pulsa una para ver sus programas.</p>
         <div className="grid gap-8 xl:grid-cols-[26rem_1fr]">
           <Rosca titulo="Personas por facultad" datos={nombresFac.map((n) => ({ nombre: n.replace(/^Facultad de /, "").replace(/^Escuela Internacional de /, "E. I. de "), clave: n, valor: gente.filter((p) => igual(p.facultad, n)).length }))} alElegir={(f) => { setFac(f); setProg(""); }} />
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card">
+          <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-card">
             <table className="w-full min-w-[34rem] text-left text-sm">
               <thead className="bg-brand-50 text-xs uppercase tracking-wider text-brand-800">
                 <tr>{["Facultad", "Programas", "Personas", "Con rondas", "Rondas", "Puntaje promedio"].map((h) => <th key={h} className="px-4 py-4 font-bold">{h}</th>)}</tr>
@@ -342,7 +342,7 @@ export default function AdminPitch() {
         ))}
       </dl>
 
-      <div role="tablist" aria-label="Vistas del consolidado" className="flex gap-2 border-b border-slate-200">
+      <div role="tablist" aria-label="Vistas del consolidado" className="flex gap-2 border-b border-line">
         {([["personas", "Personas"], ["programas", "Por programa"], ["diagnostico", "Diagnóstico de IA"]] as [Pestana, string][]).map(([k, t]) => (
           <button key={k} role="tab" aria-selected={pestana === k} onClick={() => setPestana(k)} className={cx("-mb-px border-b-2 px-5 py-3 text-sm font-semibold transition-colors", pestana === k ? "border-brand-900 text-brand-900" : "border-transparent text-slate-500 hover:text-brand-700")}>{t}</button>
         ))}
@@ -352,7 +352,7 @@ export default function AdminPitch() {
         <div className="space-y-6">
           {Filtro}
           {filtro.size > 0 && <p className="text-sm text-slate-500">Mostrando {visibles.length} de {personas.length} {personas.length === 1 ? "persona" : "personas"}</p>}
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card">
+          <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-card">
             <table className="w-full min-w-[44rem] text-left text-sm">
               <thead className="bg-brand-50 text-xs uppercase tracking-wider text-brand-800">
                 <tr>{["Persona", "Facultad", "Programa", "Rondas", "Último", "Promedio", ""].map((h, i) => <th key={i} className="px-4 py-4 font-bold">{h}</th>)}</tr>

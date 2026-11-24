@@ -9,7 +9,7 @@ const csv = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 
 function Kpi({ n, t }: { n: string | number; t: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+    <div className="rounded-2xl border border-line bg-white p-5 shadow-card">
       <p className="text-3xl font-semibold text-brand-900">{n}</p>
       <p className="mt-1 text-sm text-slate-500">{t}</p>
     </div>
@@ -138,7 +138,7 @@ export default function AdminPortafolios() {
       {n === 0 ? (
         <Vacio titulo="Nadie ha empezado un portafolio todavía">Cuando alguien abra su portafolio con la sesión iniciada, aparecerá aquí su avance.</Vacio>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card">
+        <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-card">
           <table className="w-full min-w-[960px] text-left text-sm">
             <thead className="bg-brand-50 text-brand-900">
               <tr>
@@ -206,7 +206,7 @@ export default function AdminPortafolios() {
 
       <section className="space-y-4">
         <h3 className="text-2xl">Por programa</h3>
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card">
+        <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-card">
           <table className="w-full text-left text-sm">
             <thead className="bg-brand-50 text-brand-900">
               <tr>

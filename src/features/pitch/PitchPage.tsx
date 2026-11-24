@@ -18,7 +18,7 @@ export default function PitchPage() {
     <PitchProvider>
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 text-white">
         <div aria-hidden className="absolute -right-24 -top-24 size-96 rounded-full bg-brand-500/30 blur-3xl" />
-        <Contenedor className="relative grid gap-10 py-14 sm:py-20 lg:grid-cols-[1.5fr_1fr] lg:items-center">
+        <Contenedor className="relative grid gap-10 py-14 sm:py-20 xl:grid-cols-[1.5fr_1fr] xl:items-center">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-300">Estudio digital de producción de pitch con inteligencia artificial</p>
             <h1 className="mt-4 text-4xl text-white sm:text-5xl">
@@ -28,7 +28,7 @@ export default function PitchPage() {
               Aprende qué es un pitch y cómo se construye, ensáyalo con cronómetro y guía de ritmo, y recibe un reporte que te dice qué funcionó y qué ajustar antes de la conversación que importa.
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
             {[
               ["6", "escenarios: elevator, comercial, emprendimiento, empleo, proyecto académico y presentación final"],
               ["1 · 3 · 5 · 10", "formatos de duración, cada uno con su propia estructura"],
@@ -42,7 +42,7 @@ export default function PitchPage() {
         </Contenedor>
       </section>
 
-      <nav aria-label="Etapas del entrenamiento" className="sticky top-[72px] z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+      <nav aria-label="Etapas del entrenamiento" className="sticky top-[72px] z-30 border-b border-line bg-white/95 backdrop-blur">
         <Contenedor className="flex gap-2 overflow-x-auto py-3">
           {ETAPAS.map((e) => (
             <NavLink

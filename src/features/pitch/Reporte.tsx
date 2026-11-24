@@ -24,7 +24,7 @@ function FilaDimension({ d }: { d: Dimension }) {
   }
   const n = nivel(d.pct);
   return (
-    <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-card sm:grid-cols-[1fr_9rem] sm:gap-8">
+    <div className="grid gap-4 rounded-2xl border border-line bg-white p-6 shadow-card sm:grid-cols-[1fr_9rem] sm:gap-8">
       <div>
         <div className="flex flex-wrap items-center gap-3"><h4 className="text-base">{d.n}</h4><Chip pct={d.pct} /></div>
         <p className="mt-2 text-sm text-slate-600">{d.txt}</p>
@@ -135,7 +135,7 @@ export default function Reporte() {
       {!perfil && <Alert>Estás practicando sin cuenta: este reporte no se guardó en ninguna parte y desaparecerá al cerrar o recargar la pestaña. <Link to="/registro" className="font-semibold underline">Crea una cuenta</Link> para conservar tu historial.</Alert>}
 
       {/* Marcador */}
-      <div className="grid gap-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-card sm:p-8 md:grid-cols-[13rem_1fr]">
+      <div className="grid gap-8 rounded-2xl border border-line bg-white p-6 shadow-card sm:p-8 md:grid-cols-[13rem_1fr]">
         <div className="flex flex-col items-center justify-center rounded-2xl bg-brand-50 p-6 text-center">
           <p className={cx("text-7xl font-semibold tabular-nums", TONO_TEXTO[n])}>{res.puntaje}</p>
           <p className="text-sm text-slate-500">de 100</p>
@@ -302,7 +302,7 @@ function Historial() {
           <Link to="/pitch/practica" className={botonClase("primary", "md", "mt-6")}>Practicar ahora →</Link>
         </Vacio>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card">
+        <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-card">
           <table className="w-full min-w-[44rem] text-left text-sm">
             <thead className="bg-brand-50 text-xs uppercase tracking-wider text-brand-800">
               <tr>{["#", "Fecha", "Escenario", "Objetivo", "Real", "Ppm", "Muletillas", "Puntaje", "", ""].map((h, i) => <th key={i} className="px-4 py-4 font-bold">{h}</th>)}</tr>

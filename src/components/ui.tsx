@@ -7,8 +7,8 @@ type Variante = "primary" | "secondary" | "ghost" | "danger" | "onDark";
 type Tam = "sm" | "md" | "lg";
 
 const VARIANTES: Record<Variante, string> = {
-  primary: "bg-brand-900 text-white shadow-sm hover:bg-brand-700 focus-visible:outline-brand-600",
-  secondary: "border border-brand-200 bg-white text-brand-900 hover:border-brand-400 hover:bg-brand-50",
+  primary: "bg-brand-900 text-white hover:bg-brand-950 focus-visible:outline-brand-600",
+  secondary: "border border-line bg-white text-brand-900 hover:border-brand-700 hover:bg-brand-50",
   ghost: "text-brand-800 hover:bg-brand-100",
   danger: "bg-rose-700 text-white hover:bg-rose-800",
   onDark: "bg-white text-brand-900 hover:bg-brand-100",
@@ -39,7 +39,7 @@ export function Contenedor({ className, children }: { className?: string; childr
 }
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cx("rounded-2xl border border-slate-200 bg-white p-6 shadow-card sm:p-8", className)}>{children}</div>;
+  return <div className={cx("rounded-xl border border-line bg-white p-6 shadow-card sm:p-7", className)}>{children}</div>;
 }
 
 export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {
@@ -93,7 +93,7 @@ export function Cargando({ texto = "Cargando…" }: { texto?: string }) {
 
 export function Vacio({ titulo, children }: { titulo: string; children?: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+    <div className="rounded-xl border border-dashed border-brand-300 bg-white px-6 py-14 text-center">
       <p className="font-semibold text-brand-900">{titulo}</p>
       {children && <div className="mx-auto mt-2 max-w-md text-sm text-slate-600">{children}</div>}
     </div>

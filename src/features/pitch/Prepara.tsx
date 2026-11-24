@@ -7,7 +7,7 @@ import { usePitch } from "./PitchContext";
 const OPCION = (activa: boolean) =>
   cx(
     "rounded-xl border p-4 text-left transition-colors",
-    activa ? "border-brand-900 bg-brand-900 text-white shadow-card" : "border-slate-200 bg-white hover:border-brand-400 hover:bg-brand-50",
+    activa ? "border-brand-900 bg-brand-900 text-white shadow-card" : "border-line bg-white hover:border-brand-400 hover:bg-brand-50",
   );
 
 export default function Prepara() {

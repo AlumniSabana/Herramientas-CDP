@@ -6,6 +6,7 @@ import { RequireAdmin, RequireAuth } from "@/auth/guards";
 import Inicio from "@/pages/Inicio";
 import { Ingresar, Recuperar, Registro } from "@/pages/Cuenta";
 import NoEncontrada from "@/pages/NoEncontrada";
+import MiCuenta from "@/pages/MiCuenta";
 
 // Cada herramienta se carga cuando se abre: el analizador de cámara y el generador de PDF pesan.
 const PitchPage = lazy(() => import("@/features/pitch/PitchPage"));
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="pitch/*" element={<PitchPage />} />
 
           <Route element={<RequireAuth />}>
+            <Route path="cuenta" element={<MiCuenta />} />
             <Route path="portafolio/*" element={<PortafolioPage />} />
           </Route>
 

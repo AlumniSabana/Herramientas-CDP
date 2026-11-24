@@ -369,9 +369,9 @@ export default function Practica() {
         </Alert>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[22rem_1fr]">
+      <div className="grid gap-8 xl:grid-cols-[22rem_1fr]">
         {/* ───── Consola ───── */}
-        <div className="h-fit rounded-2xl bg-gradient-to-b from-brand-900 to-brand-950 p-6 text-white shadow-lift sm:p-8 lg:sticky lg:top-40">
+        <div className="h-fit rounded-2xl bg-gradient-to-b from-brand-900 to-brand-950 p-6 text-white shadow-lift sm:p-8 xl:sticky xl:top-40">
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-sm font-semibold">{t.corto}</span>
             <span className="text-sm tabular-nums text-brand-300">{mmss(duracion)}</span>

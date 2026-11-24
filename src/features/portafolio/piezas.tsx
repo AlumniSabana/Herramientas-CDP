@@ -22,7 +22,7 @@ export const Prosa = ({ children, className }: { children: ReactNode; className?
 /** Recuadro de sugerencia adaptada al programa. */
 export function Nota({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
-    <div className="rounded-xl border-l-4 border-brand-600 bg-brand-50 px-5 py-4 text-sm leading-relaxed text-slate-700">
+    <div className="rounded-xl border border-brand-200 bg-brand-50 px-5 py-4 text-sm leading-relaxed text-slate-700">
       <p className="mb-1 font-semibold text-brand-900">{titulo}</p>
       {children}
     </div>
@@ -40,7 +40,7 @@ export function Aviso({ children, titulo }: { children: ReactNode; titulo?: stri
 
 export function Tabla({ cabeza, filas }: { cabeza: string[]; filas: ReactNode[][] }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200">
+    <div className="overflow-x-auto rounded-xl border border-line">
       <table className="w-full text-left text-sm">
         <thead className="bg-brand-50 text-brand-900">
           <tr>
@@ -96,7 +96,7 @@ function Bloque({ titulo, estado, observaciones }: { titulo: string; estado?: st
   const e = estadoValido(estado);
   const lista = (observaciones ?? []).filter((t) => String(t ?? "").trim());
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="rounded-xl border border-line bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="text-base">{titulo}</h4>
         <span className={cx("rounded-full border px-2.5 py-0.5 text-xs font-semibold", TONO_ESTADO[e])}>{ESTADOS[e]}</span>
@@ -118,7 +118,7 @@ export function RevisionVista({ d, tuyo = true }: { d: Revision; tuyo?: boolean 
   return (
     <div className="space-y-6">
       {d.veredicto && (
-        <p className={cx("rounded-xl border-l-4 px-5 py-4 font-medium", d.listo ? "border-emerald-500 bg-emerald-50 text-emerald-900" : "border-brand-600 bg-brand-50 text-brand-900")}>{d.veredicto}</p>
+        <p className={cx("rounded-xl border px-5 py-4 font-medium", d.listo ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-brand-200 bg-brand-50 text-brand-900")}>{d.veredicto}</p>
       )}
       {!!d.proyectos?.length && (
         <section className="space-y-3">

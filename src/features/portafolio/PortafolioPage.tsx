@@ -131,14 +131,14 @@ function Contenido() {
 
   return (
     <Contenedor className="py-10 sm:py-14">
-      <div className="grid gap-8 lg:grid-cols-[300px_1fr] lg:gap-12">
-        <aside className="lg:sticky lg:top-24 lg:self-start">
-          <div className="mb-4 lg:hidden">
+      <div className="grid gap-8 xl:grid-cols-[300px_1fr] xl:gap-12">
+        <aside className="xl:sticky xl:top-24 xl:self-start">
+          <div className="mb-4 xl:hidden">
             <Button variant="secondary" className="w-full" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
               {menu ? "Cerrar el índice" : `Índice de hojas · ${PASOS[actual]?.titulo ?? ""}`}
             </Button>
           </div>
-          <div className={cx("rounded-2xl border border-slate-200 bg-white p-5 shadow-card", !menu && "hidden lg:block")}>
+          <div className={cx("rounded-xl border border-line bg-white p-5 shadow-card", !menu && "hidden xl:block")}>
             <Link to="/" className="mb-5 block text-sm font-medium text-brand-600 hover:underline">
               ← Herramientas del CDP
             </Link>
@@ -156,7 +156,7 @@ function Contenido() {
               <Route path="*" element={<Navigate to="/portafolio/que-es" replace />} />
             </Routes>
             {actual >= 0 && (
-              <div className="mt-12 flex items-center justify-between gap-4 border-t border-slate-200 pt-6">
+              <div className="mt-12 flex items-center justify-between gap-4 border-t border-line pt-6">
                 {ant ? (
                   <Link to={`/portafolio/${ant.ruta}`} className={botonClase("secondary")}>
                     ← {ant.titulo}

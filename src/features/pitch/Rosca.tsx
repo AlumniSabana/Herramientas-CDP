@@ -48,7 +48,7 @@ export function Rosca({ titulo, datos, unidad = "personas", alElegir }: { titulo
     : "Sin datos que representar.";
 
   return (
-    <figure className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card sm:p-8">
+    <figure className="rounded-2xl border border-line bg-white p-6 shadow-card sm:p-8">
       <figcaption className="text-xs font-bold uppercase tracking-[0.14em] text-brand-600">{titulo}</figcaption>
       <div className="mt-5 grid items-center gap-8 sm:grid-cols-[11rem_1fr]">
         <div className="relative mx-auto size-44">

@@ -103,7 +103,7 @@ function FichaForm({ f, n, ph, onChange, onDelete }: { f: Ficha; n: number; ph: 
     );
   };
   return (
-    <fieldset className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-card sm:p-8">
+    <fieldset className="space-y-6 rounded-2xl border border-line bg-white p-6 shadow-card sm:p-8">
       <legend className="rounded-full bg-brand-900 px-4 py-1 text-sm font-semibold text-white">Proyecto {n}</legend>
       {campo("titulo", "input", REGLAS_FICHA.titulo.etiqueta, ph)}
       <div className="grid gap-6 sm:grid-cols-2">
@@ -176,7 +176,7 @@ export function Proyectos() {
               <h4 className="mt-1 text-lg">{esEst ? "Como estudiante" : "Con trayectoria"}</h4>
               <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">{(esEst ? a.estudiante : a.graduado).map((x) => <li key={x}>{x}</li>)}</ul>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+            <div className="rounded-2xl border border-line bg-white p-6">
               <Eyebrow className="!text-slate-500">{esEst ? "Si ya tienes experiencia laboral" : "También cuenta tu etapa formativa"}</Eyebrow>
               <h4 className="mt-1 text-lg">Evidencia complementaria</h4>
               <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-600">{(esEst ? a.graduado : a.estudiante).map((x) => <li key={x}>{x}</li>)}</ul>
@@ -253,7 +253,7 @@ export function Proyectos() {
           </span>
         </div>
         <Alert tono={abierta ? "ok" : "info"}>{textoPuerta(c.proyectos, esAdmin)}</Alert>
-        <div className="flex flex-wrap items-center gap-3 border-t border-slate-200 pt-5">
+        <div className="flex flex-wrap items-center gap-3 border-t border-line pt-5">
           <Button disabled={!hay} onClick={descargar}>
             Descargar proyectos (PDF)
           </Button>

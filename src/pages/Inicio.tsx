@@ -42,7 +42,8 @@ export default function Inicio() {
 
   return (
     <>
-      <section className="relative isolate overflow-hidden bg-brand-900 text-white">
+      <Contenedor className="pt-8">
+      <section className="relative isolate overflow-hidden rounded-2xl bg-brand-900 text-white shadow-card">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(60rem_30rem_at_85%_-10%,var(--color-brand-600),transparent_60%),radial-gradient(40rem_24rem_at_0%_110%,var(--color-brand-700),transparent_60%)]" />
         <svg aria-hidden className="absolute right-0 top-10 -z-10 hidden w-[34rem] opacity-25 lg:block" viewBox="0 0 400 200" fill="none">
           <path d="M20 60h250" stroke="var(--color-brand-300)" strokeWidth="6" strokeLinecap="round" />
@@ -50,9 +51,9 @@ export default function Inicio() {
           <path d="M100 12L360 4" stroke="var(--color-brand-200)" strokeWidth="6" strokeLinecap="round" />
         </svg>
 
-        <Contenedor className="pb-36 pt-20 sm:pt-28">
+        <div className="px-7 py-12 sm:px-12 sm:py-16">
           <Eyebrow className="!text-brand-300">Centro de Desarrollo Profesional · Alumni</Eyebrow>
-          <h1 className="mt-5 max-w-3xl text-4xl leading-[1.1] text-white sm:text-6xl">
+          <h1 className="mt-5 max-w-3xl text-4xl leading-[1.15] text-white sm:text-5xl">
             {session && nombre ? (
               <>Hola, {nombre}. Sigue construyendo tu perfil profesional.</>
             ) : (
@@ -78,12 +79,13 @@ export default function Inicio() {
               </>
             )}
           </div>
-        </Contenedor>
+        </div>
       </section>
+      </Contenedor>
 
-      <Contenedor className="relative z-10 -mt-24 grid gap-6 lg:grid-cols-2">
+      <Contenedor className="mt-8 grid gap-6 xl:grid-cols-2">
         {HERRAMIENTAS.map((h) => (
-          <article key={h.to} className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-card transition duration-200 hover:-translate-y-1 hover:shadow-lift sm:p-10">
+          <article key={h.to} className="group flex flex-col rounded-xl border border-line bg-white p-7 shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-lift sm:p-8">
             <div className="flex items-center gap-4">
               <span className="flex size-12 items-center justify-center rounded-xl bg-brand-900 text-white">
                 <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -114,14 +116,14 @@ export default function Inicio() {
         ))}
       </Contenedor>
 
-      <Contenedor className="mt-28">
+      <Contenedor className="mt-16">
         <div className="max-w-2xl">
           <Eyebrow>Cómo funciona</Eyebrow>
           <h2 className="mt-3 text-3xl sm:text-4xl">Tres pasos, una sola cuenta</h2>
         </div>
         <ol className="mt-10 grid gap-6 md:grid-cols-3">
           {PASOS.map((p) => (
-            <li key={p.n} className="rounded-2xl border border-slate-200 bg-white p-7">
+            <li key={p.n} className="rounded-xl border border-line bg-white p-7">
               <span className="flex size-10 items-center justify-center rounded-full bg-brand-100 text-base font-bold text-brand-800">{p.n}</span>
               <h3 className="mt-5 text-lg">{p.t}</h3>
               <p className="mt-2 text-sm text-slate-600">{p.d}</p>
@@ -130,7 +132,7 @@ export default function Inicio() {
         </ol>
       </Contenedor>
 
-      <Contenedor className="mt-20">
+      <Contenedor className="mt-12 pb-12">
         <div className="rounded-2xl bg-brand-50 px-8 py-10 sm:px-12">
           <h2 className="text-2xl">Tu información es tuya</h2>
           <p className="mt-3 max-w-3xl text-slate-700">

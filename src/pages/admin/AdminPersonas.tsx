@@ -50,7 +50,7 @@ export default function AdminPersonas() {
       {lista.length === 0 ? (
         <Vacio titulo="Sin resultados">Ninguna persona coincide con la búsqueda.</Vacio>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card">
+        <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-card">
           <table className="w-full min-w-[56rem] text-left text-sm">
             <thead className="bg-brand-50 text-xs uppercase tracking-wider text-brand-800">
               <tr>

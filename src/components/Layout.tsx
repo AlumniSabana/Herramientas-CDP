@@ -1,168 +1,203 @@
-import { useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthProvider";
-import { botonClase, Contenedor, cx } from "@/components/ui";
-import logo from "@/assets/logo-talenthub.png";
+import { botonClase, cx } from "@/components/ui";
+import logoBlanco from "@/assets/logo-talenthub-blanco.png";
 
-const ENLACES = [
-  { to: "/", texto: "Inicio", fin: true },
-  { to: "/portafolio", texto: "Portafolio" },
-  { to: "/pitch", texto: "Estudio de Pitch" },
+/* Estructura tomada de AlumniCV: barra azul arriba, menú lateral con tarjetas y contenido sobre fondo azul pálido. */
+
+const ICONOS: Record<string, ReactNode> = {
+  inicio: <path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-8z" />,
+  portafolio: <path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" />,
+  pitch: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+    </>
+  ),
+  cuenta: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
+    </>
+  ),
+  admin: <path d="M12 3l8 3v6c0 4.5-3.3 8-8 9-4.7-1-8-4.5-8-9V6l8-3z" />,
+};
+
+function Icono({ nombre }: { nombre: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className="size-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {ICONOS[nombre]}
+    </svg>
+  );
+}
+
+type Enlace = { to: string; texto: string; icono: string; fin?: boolean };
+
+const PUBLICOS: Enlace[] = [
+  { to: "/", texto: "Inicio", icono: "inicio", fin: true },
+  { to: "/portafolio", texto: "Portafolio", icono: "portafolio" },
+  { to: "/pitch", texto: "Estudio de Pitch", icono: "pitch" },
 ];
 
-const claseEnlace = ({ isActive }: { isActive: boolean }) =>
-  cx(
-    "whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
-    isActive ? "bg-brand-100 text-brand-900" : "text-slate-600 hover:bg-slate-100 hover:text-brand-900",
-  );
+const iniciales = (nombre: string, correo: string) =>
+  (nombre.trim() ? nombre.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join("") : correo.slice(0, 2)).toUpperCase();
 
-function Cabecera() {
-  const { session, perfil, esAdmin, salir } = useAuth();
-  const [abierto, setAbierto] = useState(false);
-  const navegar = useNavigate();
-  const cerrar = () => setAbierto(false);
-
-  const enlaces = esAdmin ? [...ENLACES, { to: "/admin", texto: "Administración" }] : ENLACES;
+function Menu({ onNavegar }: { onNavegar?: () => void }) {
+  const { session, perfil, esAdmin } = useAuth();
+  const enlaces: Enlace[] = [...PUBLICOS];
+  if (session) enlaces.push({ to: "/cuenta", texto: "Mi cuenta", icono: "cuenta" });
+  if (esAdmin) enlaces.push({ to: "/admin", texto: "Administración", icono: "admin" });
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <Contenedor className="flex h-[72px] items-center gap-6">
-        <Link to="/" onClick={cerrar} aria-label="TalentHub UniSabana, inicio" className="shrink-0">
-          <img src={logo} alt="TalentHub UniSabana" className="h-12 w-auto" />
-        </Link>
-
-        <nav aria-label="Principal" className="hidden items-center gap-1 lg:flex">
-          {enlaces.map((e) => (
-            <NavLink key={e.to} to={e.to} end={e.fin} className={claseEnlace}>
+    <nav aria-label="Principal" className="flex flex-col gap-4">
+      {session && perfil && (
+        <div className="flex items-center gap-3 border-b border-line pb-4">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-brand-300 bg-brand-50 font-display text-sm italic text-brand-900">
+            {iniciales(perfil.nombre, perfil.correo)}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-brand-900">{perfil.nombre || "Mi cuenta"}</p>
+            <p className="truncate text-[11px] uppercase tracking-wide text-gray-500">{perfil.correo}</p>
+          </div>
+        </div>
+      )}
+      <ul className="flex flex-col gap-2.5">
+        {enlaces.map((e) => (
+          <li key={e.to}>
+            <NavLink
+              to={e.to}
+              end={e.fin}
+              onClick={onNavegar}
+              className={({ isActive }) =>
+                cx(
+                  "flex items-center gap-3 rounded-lg border px-3.5 py-3 text-[13.6px] font-semibold transition-colors",
+                  isActive ? "border-brand-700 bg-brand-100 text-brand-900" : "border-line bg-white text-gray-700 hover:border-brand-300 hover:bg-brand-50",
+                )
+              }
+            >
+              <Icono nombre={e.icono} />
               {e.texto}
             </NavLink>
-          ))}
-        </nav>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
 
-        <div className="ml-auto hidden items-center gap-3 lg:flex">
+function Barra({ onMenu, menuAbierto }: { onMenu: () => void; menuAbierto: boolean }) {
+  const { session, perfil, salir } = useAuth();
+  const navegar = useNavigate();
+
+  return (
+    <header className="sticky top-0 z-40 bg-brand-900 shadow-[0_2px_12px_rgb(0_0_0/0.25)]">
+      <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
+        <Link to="/" aria-label="TalentHub UniSabana, inicio" className="flex items-center gap-4">
+          <img src={logoBlanco} alt="TalentHub UniSabana" className="h-10 w-auto" />
+          <span aria-hidden className="hidden h-8 w-px bg-white/25 sm:block" />
+          <span className="hidden font-display text-xl italic text-white sm:block">Herramientas CDP</span>
+        </Link>
+
+        <div className="ml-auto flex items-center gap-3">
           {session ? (
             <>
-              <div className="text-right leading-tight">
-                <p className="max-w-48 truncate text-sm font-semibold text-brand-900">{perfil?.nombre || perfil?.correo}</p>
-                <p className="max-w-48 truncate text-xs text-slate-500">{perfil?.programa}</p>
-              </div>
+              <span className="hidden max-w-60 truncate text-sm font-medium text-white md:block">{perfil?.correo}</span>
               <button
                 onClick={async () => {
                   await salir();
                   navegar("/");
                 }}
-                className={botonClase("secondary", "sm")}
+                className="rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[13.6px] font-medium text-white transition-colors hover:bg-white/20"
               >
-                Salir
+                Cerrar sesión
               </button>
             </>
           ) : (
             <>
-              <Link to="/ingresar" className={botonClase("ghost", "sm")}>
+              <Link to="/ingresar" className="hidden rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[13.6px] font-medium text-white transition-colors hover:bg-white/20 sm:block">
                 Ingresar
               </Link>
-              <Link to="/registro" className={botonClase("primary", "sm")}>
+              <Link to="/registro" className={botonClase("onDark", "sm", "hidden sm:inline-flex")}>
                 Crear cuenta
               </Link>
             </>
           )}
+          <button
+            className="inline-flex size-10 items-center justify-center rounded-lg text-white hover:bg-white/10 lg:hidden"
+            aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={menuAbierto}
+            onClick={onMenu}
+          >
+            <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              {menuAbierto ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+            </svg>
+          </button>
         </div>
-
-        <button
-          className="ml-auto inline-flex size-10 items-center justify-center rounded-lg text-brand-900 hover:bg-slate-100 lg:hidden"
-          aria-label={abierto ? "Cerrar menú" : "Abrir menú"}
-          aria-expanded={abierto}
-          onClick={() => setAbierto((a) => !a)}
-        >
-          <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            {abierto ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-          </svg>
-        </button>
-      </Contenedor>
-
-      {abierto && (
-        <div className="border-t border-slate-200 bg-white lg:hidden">
-          <Contenedor className="flex flex-col gap-1 py-4">
-            {enlaces.map((e) => (
-              <NavLink key={e.to} to={e.to} end={e.fin} onClick={cerrar} className={claseEnlace}>
-                {e.texto}
-              </NavLink>
-            ))}
-            <div className="mt-3 flex flex-wrap gap-3 border-t border-slate-100 pt-4">
-              {session ? (
-                <button
-                  onClick={async () => {
-                    cerrar();
-                    await salir();
-                    navegar("/");
-                  }}
-                  className={botonClase("secondary", "md", "w-full")}
-                >
-                  Salir ({perfil?.nombre || perfil?.correo})
-                </button>
-              ) : (
-                <>
-                  <Link to="/ingresar" onClick={cerrar} className={botonClase("secondary", "md", "flex-1")}>
-                    Ingresar
-                  </Link>
-                  <Link to="/registro" onClick={cerrar} className={botonClase("primary", "md", "flex-1")}>
-                    Crear cuenta
-                  </Link>
-                </>
-              )}
-            </div>
-          </Contenedor>
-        </div>
-      )}
+      </div>
     </header>
   );
 }
 
 function Pie() {
   return (
-    <footer className="mt-24 bg-brand-950 text-brand-200">
-      <Contenedor className="grid gap-8 py-12 sm:grid-cols-[1.4fr_1fr_1fr]">
-        <div>
-          <p className="text-lg font-semibold text-white">Centro de Desarrollo Profesional</p>
-          <p className="mt-2 max-w-sm text-sm leading-relaxed text-brand-300">
-            Universidad de La Sabana · Alumni. Herramientas de acceso abierto para quienes quieren contar mejor lo que han hecho.
-          </p>
-        </div>
-        <div className="text-sm">
-          <p className="mb-3 font-semibold text-white">Herramientas</p>
-          <ul className="space-y-2">
-            <li><Link className="hover:text-white" to="/portafolio">Construye tu portafolio</Link></li>
-            <li><Link className="hover:text-white" to="/pitch">Estudio de Pitch</Link></li>
-          </ul>
-        </div>
-        <div className="text-sm">
-          <p className="mb-3 font-semibold text-white">Tu información</p>
-          <ul className="space-y-2">
-            <li>El audio nunca se almacena.</li>
-            <li>
-              <a className="hover:text-white" target="_blank" rel="noopener noreferrer" href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos">
-                Política de datos personales
-              </a>
-            </li>
-          </ul>
-        </div>
-      </Contenedor>
-      <div className="border-t border-white/10 py-5 text-center text-xs text-brand-300">© {new Date().getFullYear()} Universidad de La Sabana</div>
+    <footer className="border-t border-line px-4 py-5 text-xs text-gray-500 sm:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+        <p>© {new Date().getFullYear()} Universidad de La Sabana · Centro de Desarrollo Profesional</p>
+        <p className="flex flex-wrap gap-x-5 gap-y-1">
+          <span>El audio nunca se almacena.</span>
+          <a className="text-brand-700 hover:underline" target="_blank" rel="noopener noreferrer" href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos">
+            Política de datos personales
+          </a>
+        </p>
+      </div>
     </footer>
   );
 }
 
 export function Layout() {
+  const { session } = useAuth();
+  const [menu, setMenu] = useState(false);
+  const { pathname } = useLocation();
+
+  useEffect(() => setMenu(false), [pathname]);
+
   return (
     <div className="flex min-h-screen flex-col">
       <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-brand-900 focus:px-4 focus:py-2 focus:text-white">
         Saltar al contenido
       </a>
-      <Cabecera />
-      <main id="contenido" className="flex-1">
-        <Outlet />
-      </main>
-      <Pie />
+      <Barra onMenu={() => setMenu((m) => !m)} menuAbierto={menu} />
+
+      <div className="flex flex-1">
+        {/* Menú fijo en escritorio; con sesión o sin ella, para no cambiar el esqueleto de la página. */}
+        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-line bg-white px-4 py-6 lg:block">
+          <Menu />
+        </aside>
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <main id="contenido" className="flex-1">
+            <Outlet />
+          </main>
+          <Pie />
+        </div>
+      </div>
+
+      {menu && (
+        <div className="fixed inset-x-0 bottom-0 top-16 z-30 overflow-y-auto bg-white px-4 py-6 lg:hidden">
+          <Menu onNavegar={() => setMenu(false)} />
+          {!session && (
+            <div className="mt-6 flex flex-col gap-2.5 border-t border-line pt-5">
+              <Link to="/ingresar" className={botonClase("secondary", "md", "w-full")}>
+                Ingresar
+              </Link>
+              <Link to="/registro" className={botonClase("primary", "md", "w-full")}>
+                Crear cuenta
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

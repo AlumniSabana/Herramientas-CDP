@@ -1,23 +1,30 @@
 @import "tailwindcss";
-@import "@fontsource-variable/inter";
+@import "@fontsource-variable/libre-franklin";
+@import "@fontsource-variable/playfair-display/wght-italic.css";
 
+/* Misma familia visual que AlumniCV (Govlab · Universidad de La Sabana):
+   azul institucional, fondo azul pálido, titulares en serif cursiva y texto en Libre Franklin. */
 @theme {
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Libre Franklin Variable", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Playfair Display Variable", Georgia, serif;
 
-  --color-brand-50: #f1f5fc;
-  --color-brand-100: #e0e8f7;
-  --color-brand-200: #c2d2ef;
-  --color-brand-300: #8faedd;
-  --color-brand-400: #5c86ca;
+  --color-brand-50: #eef2f8;
+  --color-brand-100: #d9e1ef;
+  --color-brand-200: #b9c9e0;
+  --color-brand-300: #93aac9;
+  --color-brand-400: #5c7fae;
   --color-brand-500: #2f5db3;
   --color-brand-600: #0b4db8;
-  --color-brand-700: #0a3a8c;
-  --color-brand-800: #06236b;
-  --color-brand-900: #001459;
-  --color-brand-950: #000b3a;
+  --color-brand-700: #00387d;
+  --color-brand-800: #001e75;
+  --color-brand-900: #00135b;
+  --color-brand-950: #000e42;
 
-  --shadow-card: 0 1px 2px rgb(0 20 89 / 0.05), 0 10px 30px -12px rgb(0 20 89 / 0.16);
-  --shadow-lift: 0 2px 6px rgb(0 20 89 / 0.08), 0 24px 48px -20px rgb(0 20 89 / 0.32);
+  --color-paper: #eef2f8;
+  --color-line: #d9e1ef;
+
+  --shadow-card: 0 2px 8px rgb(0 19 91 / 0.1);
+  --shadow-lift: 0 8px 24px rgb(0 19 91 / 0.18);
 }
 
 @layer base {
@@ -25,10 +32,13 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-slate-50 font-sans text-base leading-relaxed text-slate-800 antialiased;
+    @apply bg-paper font-sans text-base leading-relaxed text-gray-700 antialiased;
   }
+  /* Titulares de página: serif cursiva, como en AlumniCV. El resto, sans seminegrita. */
   h1,
-  h2,
+  h2 {
+    @apply font-display font-normal italic tracking-normal text-brand-900 text-balance;
+  }
   h3,
   h4 {
     @apply font-semibold tracking-tight text-brand-900 text-balance;

@@ -12,8 +12,8 @@ function Marco({ titulo, subtitulo, children, pie }: { titulo: string; subtitulo
   if (session) return <Navigate to={(loc.state as { desde?: string } | null)?.desde ?? "/"} replace />;
 
   return (
-    <Contenedor className="grid gap-10 py-12 lg:grid-cols-[1fr_1.15fr] lg:py-20">
-      <aside className="relative hidden overflow-hidden rounded-3xl bg-brand-900 p-10 text-white lg:flex lg:flex-col lg:justify-end">
+    <Contenedor className="grid gap-10 py-12 xl:grid-cols-[1fr_1.15fr] xl:py-20">
+      <aside className="relative hidden overflow-hidden rounded-3xl bg-brand-900 p-10 text-white xl:flex xl:flex-col xl:justify-end">
         <div className="absolute inset-0 bg-[radial-gradient(30rem_24rem_at_100%_0%,var(--color-brand-600),transparent_65%)]" />
         <svg aria-hidden className="absolute left-8 top-10 w-64 opacity-30" viewBox="0 0 300 80" fill="none">
           <path d="M10 50h190" stroke="var(--color-brand-300)" strokeWidth="5" strokeLinecap="round" />

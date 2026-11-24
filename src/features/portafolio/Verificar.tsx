@@ -26,9 +26,10 @@ function Checklist() {
       </div>
       <div className="grid gap-3">
         {items.map((i) => (
-          <label key={i.t} className={cx("flex cursor-pointer items-start gap-3 rounded-xl border bg-white p-4 text-sm text-slate-700 hover:border-brand-300", i.esp ? "border-l-4 border-slate-200 border-l-brand-600" : "border-slate-200")}>
+          <label key={i.t} className={cx("flex cursor-pointer items-start gap-3 rounded-xl border bg-white p-4 text-sm text-slate-700 hover:border-brand-300", i.esp ? "border-brand-300" : "border-line")}>
             <input type="checkbox" className="mt-0.5 size-4 accent-brand-900" checked={Boolean(c.check[i.t])} onChange={(e) => set((x) => ({ check: { ...x.check, [i.t]: e.target.checked } }))} />
-            <span>{i.t}</span>
+            <span className="flex-1">{i.t}</span>
+            {i.esp && <Badge>De tu programa</Badge>}
           </label>
         ))}
       </div>
@@ -143,7 +144,7 @@ function Revisiones() {
               const r = revisionDesdeFila(f);
               const n = Number(r.fichas) || 0;
               return (
-                <li key={f.id} className={cx("flex flex-wrap items-center gap-3 rounded-xl border bg-white px-4 py-3 text-sm", activa === f.id ? "border-brand-600" : "border-slate-200")}>
+                <li key={f.id} className={cx("flex flex-wrap items-center gap-3 rounded-xl border bg-white px-4 py-3 text-sm", activa === f.id ? "border-brand-600" : "border-line")}>
                   <b className="text-brand-900">{fechaCorta(f.creado_en)}</b>
                   <span className="text-slate-600">
                     {r.listo ? "Lista para publicar" : "Con observaciones"} · {n} {n === 1 ? "ficha" : "fichas"}
@@ -193,7 +194,7 @@ export function Verificar() {
   return (
     <div className="space-y-8">
       <Encabezado paso="Validación final" titulo="Antes de publicar" />
-      <Prosa>Recorre esta lista con tu portafolio abierto al lado. Los puntos marcados con una línea azul a la izquierda son propios de tu programa.</Prosa>
+      <Prosa>Recorre esta lista con tu portafolio abierto al lado. Los puntos con la etiqueta «De tu programa» son propios de tu carrera.</Prosa>
       <Checklist />
       <Revisiones />
       <div className="flex flex-wrap items-center gap-3">

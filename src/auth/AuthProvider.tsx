@@ -26,6 +26,8 @@ type Ctx = {
   pedirRecuperacion(correo: string): Promise<void>;
   restablecer(correo: string, codigo: string, clave: string): Promise<void>;
   salir(): Promise<void>;
+  guardarPerfil(d: { nombre: string; facultad: string; programa: string }): Promise<void>;
+  cambiarClave(actual: string, nueva: string): Promise<void>;
 };
 
 const AuthCtx = createContext<Ctx | null>(null);
@@ -128,6 +130,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }, []);
 
+  const guardarPerfil = useCallback(
+    async (d: { nombre: string; facultad: string; programa: string }) => {
+      if (!perfil) return;
+      const nuevo = { nombre: d.nombre.trim(), facultad: d.facultad, programa: d.programa };
+      fallar((await supabase.from("perfiles").update(nuevo).eq("id", perfil.id)).error);
+      setPerfil({ ...perfil, ...nuevo });
+    },
+    [perfil],
+  );
+
+  // Se pide la contraseña actual: una sesión abierta y olvidada no basta para cambiarla.
+  const cambiarClave = useCallback(
+    async (actual: string, nueva: string) => {
+      if (!perfil) return;
+      const { error } = await supabase.auth.signInWithPassword({ email: perfil.correo, password: actual });
+      if (error) throw new Error("La contraseña actual no es correcta.");
+      fallar((await supabase.auth.updateUser({ password: nueva })).error);
+    },
+    [perfil],
+  );
+
   const valor = useMemo<Ctx>(
     () => ({
       cargando,
@@ -141,8 +164,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       pedirRecuperacion,
       restablecer,
       salir,
+      guardarPerfil,
+      cambiarClave,
     }),
-    [cargando, session, perfil, ingresar, registrar, verificarRegistro, reenviarCodigo, pedirRecuperacion, restablecer, salir],
+    [cargando, session, perfil, ingresar, registrar, verificarRegistro, reenviarCodigo, pedirRecuperacion, restablecer, salir, guardarPerfil, cambiarClave],
   );
 
   return <AuthCtx.Provider value={valor}>{children}</AuthCtx.Provider>;

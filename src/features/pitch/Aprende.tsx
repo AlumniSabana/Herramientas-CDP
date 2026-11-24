@@ -62,7 +62,7 @@ export default function Aprende() {
         <Alert tono="info" className="mb-10">
           <strong>Puedes practicar sin cuenta, y entonces no se guarda absolutamente nada:</strong> ni el audio, ni la transcripción, ni el reporte quedan en este navegador ni en ningún servidor. Todo existe solo mientras la pestaña está abierta y desaparece al cerrarla. Si quieres conservar tu historial y ver tu progreso entre rondas, crea una cuenta con tu correo institucional.
         </Alert>
-        <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+        <div className="grid gap-8 xl:grid-cols-[1.4fr_1fr]">
           <Card className="space-y-5">
             <p className="text-xl font-semibold leading-snug text-brand-900">
               No estás resumiendo información. Estás construyendo, en voz alta y contra el reloj, una razón para que alguien te dedique más tiempo.
@@ -133,7 +133,7 @@ export default function Aprende() {
         <Encabezado eyebrow="Taxonomía" titulo="Los ocho tipos que reconoce la literatura">
           Sabaj y colegas (2020) clasifican el pitch según cuatro criterios: <strong>duración</strong>, <strong>audiencia</strong>, <strong>objetivo</strong> y <strong>formato</strong>. De ahí salen ocho tipos que conviene distinguir, porque confundirlos es la causa más común de un pitch que no encaja con la sala.
         </Encabezado>
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card">
+        <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-card">
           <table className="w-full min-w-[56rem] text-left text-sm">
             <thead className="bg-brand-50 text-xs uppercase tracking-wider text-brand-800">
               <tr>

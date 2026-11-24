@@ -17,7 +17,7 @@ export function Intro() {
         Un portafolio profesional es una colección organizada de trabajos, proyectos, experiencias, productos y resultados que muestra de forma directa tus habilidades, tu experiencia y tus logros. No reemplaza la hoja de vida: la complementa, porque demuestra con evidencias aquello que la hoja de vida solo enuncia.
       </Prosa>
       <div className="grid gap-5 sm:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+        <div className="rounded-2xl border border-line bg-slate-50 p-6">
           <Eyebrow className="!text-slate-500">La hoja de vida</Eyebrow>
           <h3 className="mt-1 text-xl">Resume</h3>
           <ul className="mt-4 list-disc space-y-1.5 pl-5 text-slate-600">
@@ -116,7 +116,7 @@ export function Programa() {
       <Prosa>
         Lo que cuenta como evidencia no es igual en Derecho que en Ingeniería o en Enfermería. Elige tu programa y el resto de las hojas se ajusta: los tipos de evidencia sugeridos, los ejemplos de proyecto, las advertencias de confidencialidad, la plataforma recomendada y la lista de verificación final.
       </Prosa>
-      <div className="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:grid-cols-2 sm:p-8">
+      <div className="grid gap-6 rounded-2xl border border-line bg-slate-50 p-6 sm:grid-cols-2 sm:p-8">
         <Select
           className="sm:col-span-2"
           label="Tu programa académico"
@@ -284,7 +284,7 @@ export function Plataformas() {
           const p = PLAT[k];
           const rec = a && i === 0;
           return (
-            <div key={k} className={cx("flex flex-col rounded-2xl border bg-white p-6", rec ? "border-2 border-brand-600 shadow-card" : "border-slate-200")}>
+            <div key={k} className={cx("flex flex-col rounded-2xl border bg-white p-6", rec ? "border-2 border-brand-600 shadow-card" : "border-line")}>
               {rec && <span className="mb-3 w-fit rounded-full bg-brand-900 px-2.5 py-0.5 text-xs font-semibold text-white">Recomendada para tu área</span>}
               <h3 className="text-lg">
                 <a href={p.url} target="_blank" rel="noopener noreferrer" className="hover:text-brand-600 hover:underline">
