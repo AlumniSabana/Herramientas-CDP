@@ -89,7 +89,7 @@ export default function AdminPortafolios() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Administración · CDP"
+        eyebrow="Administración"
         titulo="Consolidado del portafolio"
         descripcion="Personas que han abierto un portafolio con la sesión iniciada. Del portafolio se registra el avance, nunca el texto. De las segundas opiniones sí se ve el contenido: pulsa «Ver» en la fila de cada quien."
         acciones={

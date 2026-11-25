@@ -89,7 +89,7 @@ export function Intro() {
           </Card>
         </div>
         <Aviso titulo="Tu portafolio se guarda solo.">
-          Lo que escribas queda en tu cuenta de la Universidad, así que puedes cerrar el computador y seguir desde otro sin perder nada. Solo tú lo ves: ni siquiera el Centro de Desarrollo Profesional puede leer tu borrador.
+          Lo que escribas queda en tu cuenta de la Universidad, así que puedes cerrar el computador y seguir desde otro sin perder nada. Solo tú lo ves: ni siquiera TalentHub UniSabana puede leer tu borrador.
         </Aviso>
       </section>
     </div>

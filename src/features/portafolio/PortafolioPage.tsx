@@ -140,7 +140,7 @@ function Contenido() {
           </div>
           <div className={cx("rounded-xl border border-line bg-white p-5 shadow-card", !menu && "hidden xl:block")}>
             <Link to="/" className="mb-5 block text-sm font-medium text-brand-600 hover:underline">
-              ← Herramientas del CDP
+              ← Herramientas
             </Link>
             <Indice abierta={abierta} onNavegar={() => setMenu(false)} />
           </div>

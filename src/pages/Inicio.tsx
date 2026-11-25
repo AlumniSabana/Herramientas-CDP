@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "@/auth/AuthProvider";
 import { botonClase, Contenedor, Eyebrow } from "@/components/ui";
+import estudiantes from "@/assets/hero-estudiantes.webp";
 
 const HERRAMIENTAS = [
   {
@@ -43,21 +44,21 @@ export default function Inicio() {
   return (
     <>
       <Contenedor className="pt-8">
-      <section className="relative isolate overflow-hidden rounded-2xl bg-brand-900 text-white shadow-card">
+      <section className="relative isolate overflow-hidden rounded-2xl bg-brand-900 text-white shadow-card lg:min-h-[28rem]">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(60rem_30rem_at_85%_-10%,var(--color-brand-600),transparent_60%),radial-gradient(40rem_24rem_at_0%_110%,var(--color-brand-700),transparent_60%)]" />
-        <svg aria-hidden className="absolute right-0 top-10 -z-10 hidden w-[34rem] opacity-25 lg:block" viewBox="0 0 400 200" fill="none">
-          <path d="M20 60h250" stroke="var(--color-brand-300)" strokeWidth="6" strokeLinecap="round" />
-          <path d="M60 36l260-12" stroke="var(--color-brand-400)" strokeWidth="6" strokeLinecap="round" />
-          <path d="M100 12L360 4" stroke="var(--color-brand-200)" strokeWidth="6" strokeLinecap="round" />
-        </svg>
+        <img
+          src={estudiantes}
+          alt="Dos estudiantes de La Sabana revisando una tablet"
+          className="pointer-events-none absolute bottom-0 right-4 hidden h-[88%] w-auto select-none lg:block"
+        />
 
-        <div className="px-7 py-12 sm:px-12 sm:py-16">
-          <Eyebrow className="!text-brand-300">Centro de Desarrollo Profesional · Alumni</Eyebrow>
+        <div className="px-7 py-12 sm:px-12 sm:py-16 lg:max-w-[52%] lg:py-20">
+          <Eyebrow className="!text-brand-300">TalentHub UniSabana · Alumni</Eyebrow>
           <h1 className="mt-5 max-w-3xl text-4xl leading-[1.15] text-white sm:text-5xl">
             {session && nombre ? (
               <>Hola, {nombre}. Sigue construyendo tu perfil profesional.</>
             ) : (
-              <>Prepárate con las herramientas del Centro de Desarrollo Profesional.</>
+              <>Prepárate con las herramientas de TalentHub UniSabana.</>
             )}
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-brand-100">

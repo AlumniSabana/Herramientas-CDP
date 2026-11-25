@@ -23,11 +23,9 @@ type Ctx = {
   registrar(d: DatosRegistro): Promise<void>;
   verificarRegistro(correo: string, codigo: string): Promise<void>;
   reenviarCodigo(correo: string): Promise<void>;
-  pedirRecuperacion(correo: string): Promise<void>;
-  restablecer(correo: string, codigo: string, clave: string): Promise<void>;
   salir(): Promise<void>;
   guardarPerfil(d: { nombre: string; facultad: string; programa: string }): Promise<void>;
-  cambiarClave(actual: string, nueva: string): Promise<void>;
+  cambiarClave(nueva: string): Promise<void>;
 };
 
 const AuthCtx = createContext<Ctx | null>(null);
@@ -117,15 +115,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fallar((await supabase.auth.resend({ type: "signup", email: correo.trim().toLowerCase() })).error);
   }, []);
 
-  const pedirRecuperacion = useCallback(async (correo: string) => {
-    fallar((await supabase.auth.resetPasswordForEmail(correo.trim().toLowerCase())).error);
-  }, []);
-
-  const restablecer = useCallback(async (correo: string, codigo: string, clave: string) => {
-    fallar((await supabase.auth.verifyOtp({ email: correo.trim().toLowerCase(), token: codigo.trim(), type: "recovery" })).error);
-    fallar((await supabase.auth.updateUser({ password: clave })).error);
-  }, []);
-
   const salir = useCallback(async () => {
     await supabase.auth.signOut();
   }, []);
@@ -140,16 +129,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [perfil],
   );
 
-  // Se pide la contraseña actual: una sesión abierta y olvidada no basta para cambiarla.
-  const cambiarClave = useCallback(
-    async (actual: string, nueva: string) => {
-      if (!perfil) return;
-      const { error } = await supabase.auth.signInWithPassword({ email: perfil.correo, password: actual });
-      if (error) throw new Error("La contraseña actual no es correcta.");
-      fallar((await supabase.auth.updateUser({ password: nueva })).error);
-    },
-    [perfil],
-  );
+  const cambiarClave = useCallback(async (nueva: string) => {
+    fallar((await supabase.auth.updateUser({ password: nueva })).error);
+  }, []);
 
   const valor = useMemo<Ctx>(
     () => ({
@@ -161,13 +143,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       registrar,
       verificarRegistro,
       reenviarCodigo,
-      pedirRecuperacion,
-      restablecer,
       salir,
       guardarPerfil,
       cambiarClave,
     }),
-    [cargando, session, perfil, ingresar, registrar, verificarRegistro, reenviarCodigo, pedirRecuperacion, restablecer, salir, guardarPerfil, cambiarClave],
+    [cargando, session, perfil, ingresar, registrar, verificarRegistro, reenviarCodigo, salir, guardarPerfil, cambiarClave],
   );
 
   return <AuthCtx.Provider value={valor}>{children}</AuthCtx.Provider>;

@@ -126,7 +126,7 @@ export function armarProyectos(c: Contenido): string {
   if (firma) o.push(`*${firma}*`, "");
   bloqueProyectos(o, c);
   o.push("---", "");
-  o.push("*Fichas redactadas con la herramienta de portafolios del Centro de Desarrollo Profesional, Universidad de La Sabana. Revisa cada marcador entre corchetes antes de publicarlas.*");
+  o.push("*Fichas redactadas con la herramienta de portafolios de TalentHub UniSabana, Universidad de La Sabana. Revisa cada marcador entre corchetes antes de publicarlas.*");
   return o.join("\n");
 }
 
@@ -177,7 +177,7 @@ export function armar(c: Contenido): string {
   ctx.push(`Objetivo: ${OBJETIVOS[c.objetivo] || c.objetivo}`);
   if (c.audiencia.trim()) ctx.push(`Audiencia: ${c.audiencia.trim()}`);
   o.push(`*${ctx.join(" · ")}*`, "");
-  o.push("*Estructura construida con la herramienta de portafolios del Centro de Desarrollo Profesional, Universidad de La Sabana. Revisa cada marcador entre corchetes antes de publicar.*");
+  o.push("*Estructura construida con la herramienta de portafolios de TalentHub UniSabana, Universidad de La Sabana. Revisa cada marcador entre corchetes antes de publicar.*");
   return o.join("\n");
 }
 

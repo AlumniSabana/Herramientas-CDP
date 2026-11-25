@@ -113,7 +113,7 @@ export default function Diagnostico() {
           creada_en: new Date().toISOString(), tipo: "elevator", tipo_nombre: "Prueba de conexión", duracion_objetivo: 60, duracion_real: 58, modo: "manual",
           puntaje: 70, palabras: 60, ppm: 120, muletillas_total: 1, muletillas_top: [], secciones_cubiertas: 3, secciones_total: 4, dimensiones: [],
           ejercicio: { titulo: "", texto: "", pasos: [] }, visual: { medida: false },
-          transcripcion: "Esta es una prueba de conexión del Centro de Desarrollo Profesional. Buenos días, soy estudiante de la Universidad de La Sabana y quiero verificar que el servicio de observaciones está funcionando correctamente. Gracias.",
+          transcripcion: "Esta es una prueba de conexión de TalentHub UniSabana. Buenos días, soy estudiante de la Universidad de La Sabana y quiero verificar que el servicio de observaciones está funcionando correctamente. Gracias.",
         },
         persona: { nombre: "Prueba", facultad: "—", programa: "—" },
         previas: [],

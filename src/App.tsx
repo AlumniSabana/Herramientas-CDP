@@ -4,7 +4,7 @@ import { Layout } from "@/components/Layout";
 import { Cargando } from "@/components/ui";
 import { RequireAdmin, RequireAuth } from "@/auth/guards";
 import Inicio from "@/pages/Inicio";
-import { Ingresar, Recuperar, Registro } from "@/pages/Cuenta";
+import { Ingresar, Registro } from "@/pages/Cuenta";
 import NoEncontrada from "@/pages/NoEncontrada";
 import MiCuenta from "@/pages/MiCuenta";
 
@@ -24,7 +24,6 @@ export default function App() {
           <Route index element={<Inicio />} />
           <Route path="ingresar" element={<Ingresar />} />
           <Route path="registro" element={<Registro />} />
-          <Route path="recuperar" element={<Recuperar />} />
 
           {/* El pitch se puede practicar sin cuenta; con cuenta, además, se guarda el historial. */}
           <Route path="pitch/*" element={<PitchPage />} />

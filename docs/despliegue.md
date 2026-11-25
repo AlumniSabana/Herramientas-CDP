@@ -32,7 +32,7 @@ Local: van en `.env` (ya ignorado por git; plantilla en `.env.example`). En Verc
 
 ## 2 · Decirle a Supabase cuál es la URL final
 
-Sin esto los correos (confirmación y recuperación) apuntan a `localhost`.
+Sin esto el correo de confirmación apunta a `localhost`.
 
 Supabase → **Authentication → URL Configuration**:
 - **Site URL:** `https://TU-DOMINIO.vercel.app`
@@ -40,7 +40,7 @@ Supabase → **Authentication → URL Configuration**:
 
 ## 3 · Correos
 
-Authentication → **Email Templates** (Confirm signup y Reset password) deben mostrar `{{ .Token }}`.
+Authentication → **Email Templates → Confirm signup** debe mostrar `{{ .Token }}`.
 El correo integrado de Supabase está limitado a pocos mensajes por hora: para uso real configura un SMTP propio en **Authentication → SMTP Settings**.
 
 ## 4 · Edge Functions (IA y traducción)

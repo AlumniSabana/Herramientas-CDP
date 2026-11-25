@@ -72,7 +72,7 @@ function Bloque({ titulo, items, marca, tono }: { titulo: string; items: string[
 export function ObservacionesVista({ d }: { d: Obs }) {
   const aviso = d.cortado && (
     <div role="alert" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-      <strong>La respuesta llegó incompleta.</strong> El servicio de IA se quedó sin espacio y cortó el texto antes de terminar. Presiona «Volver a generar» para pedirlo de nuevo. Si vuelve a pasar, avísale al CDP: hay que subir el límite de salida en la función del servidor.
+      <strong>La respuesta llegó incompleta.</strong> El servicio de IA se quedó sin espacio y cortó el texto antes de terminar. Presiona «Volver a generar» para pedirlo de nuevo. Si vuelve a pasar, avísale al TalentHub UniSabana: hay que subir el límite de salida en la función del servidor.
     </div>
   );
   if (!d.estructurado) {

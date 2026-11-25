@@ -144,7 +144,7 @@ export function RevisionVista({ d, tuyo = true }: { d: Revision; tuyo?: boolean 
       )}
       <p className="text-xs leading-relaxed text-slate-500">
         {tuyo
-          ? "Esta segunda opinión la generó un modelo de inteligencia artificial (Gemini) que no conoce tu trabajo ni habló contigo: son observaciones, no correcciones, y puede equivocarse. Tú decides cuáles aplicas. Para una revisión hecha por una persona, escribe al Centro de Desarrollo Profesional desde la hoja «Hablar con un asesor»."
+          ? "Esta segunda opinión la generó un modelo de inteligencia artificial (Gemini) que no conoce tu trabajo ni habló contigo: son observaciones, no correcciones, y puede equivocarse. Tú decides cuáles aplicas. Para una revisión hecha por una persona, escribe a TalentHub UniSabana desde la hoja «Hablar con un asesor»."
           : "La generó un modelo de inteligencia artificial (Gemini) que no conoce su trabajo ni habló con esta persona. Son observaciones automáticas, no un diagnóstico del Centro: léelas como un punto de partida para la asesoría, no como una evaluación."}
       </p>
     </div>

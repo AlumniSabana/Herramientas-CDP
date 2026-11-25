@@ -60,7 +60,7 @@ async function quienLlama(req: Request): Promise<string | null> {
   }
 }
 
-const INSTRUCCION = `Eres asesor de empleabilidad del Centro de Desarrollo Profesional de la Universidad de La Sabana. Revisas el portafolio de un estudiante o egresado antes de que lo publique.
+const INSTRUCCION = `Eres asesor de empleabilidad de TalentHub UniSabana de la Universidad de La Sabana. Revisas el portafolio de un estudiante o egresado antes de que lo publique.
 
 QUÉ DEVUELVES
 Observaciones y preguntas concretas. NUNCA texto redactado para que lo copie.

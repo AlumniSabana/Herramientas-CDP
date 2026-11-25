@@ -93,7 +93,7 @@ export async function descargarReportePDF(res: Resultado, perfil: Perfil | null,
   doc.text("Estudio de Pitch", M, 33);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text("Centro de Desarrollo Profesional  ·  Alumni  ·  Universidad de La Sabana", M, 52);
+  doc.text("TalentHub UniSabana  ·  Alumni  ·  Universidad de La Sabana", M, 52);
   y = 96;
 
   const d = new Date();
@@ -152,7 +152,7 @@ export async function descargarReportePDF(res: Resultado, perfil: Perfil | null,
   espacio(18);
   regla();
   texto(
-    "Este reporte se calculó en tu navegador a partir de señales medibles de tu entrega. No evalúa la calidad de tus argumentos ni sustituye una asesoría personalizada del Centro de Desarrollo Profesional. La grabación de audio nunca se almacena.",
+    "Este reporte se calculó en tu navegador a partir de señales medibles de tu entrega. No evalúa la calidad de tus argumentos ni sustituye una asesoría personalizada de TalentHub UniSabana. La grabación de audio nunca se almacena.",
     { tam: 8.5, color: CLARO },
   );
 

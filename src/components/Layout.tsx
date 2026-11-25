@@ -92,11 +92,21 @@ function Barra({ onMenu, menuAbierto }: { onMenu: () => void; menuAbierto: boole
 
   return (
     <header className="sticky top-0 z-40 bg-brand-900 shadow-[0_2px_12px_rgb(0_0_0/0.25)]">
-      <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
+        <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
+        <button
+          className="inline-flex size-10 items-center justify-center rounded-lg text-white hover:bg-white/10"
+          aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={menuAbierto}
+          onClick={onMenu}
+        >
+          <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            {menuAbierto ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+          </svg>
+      </button>
         <Link to="/" aria-label="TalentHub UniSabana, inicio" className="flex items-center gap-4">
           <img src={logoBlanco} alt="TalentHub UniSabana" className="h-10 w-auto" />
           <span aria-hidden className="hidden h-8 w-px bg-white/25 sm:block" />
-          <span className="hidden font-display text-xl italic text-white sm:block">Herramientas CDP</span>
+          <span className="hidden font-display text-xl italic text-white sm:block">Herramientas de empleabilidad</span>
         </Link>
 
         <div className="ml-auto flex items-center gap-3">
@@ -123,16 +133,6 @@ function Barra({ onMenu, menuAbierto }: { onMenu: () => void; menuAbierto: boole
               </Link>
             </>
           )}
-          <button
-            className="inline-flex size-10 items-center justify-center rounded-lg text-white hover:bg-white/10 lg:hidden"
-            aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
-            aria-expanded={menuAbierto}
-            onClick={onMenu}
-          >
-            <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              {menuAbierto ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-            </svg>
-          </button>
         </div>
       </div>
     </header>
@@ -143,7 +143,7 @@ function Pie() {
   return (
     <footer className="border-t border-line px-4 py-5 text-xs text-gray-500 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-        <p>© {new Date().getFullYear()} Universidad de La Sabana · Centro de Desarrollo Profesional</p>
+        <p>© {new Date().getFullYear()} Universidad de La Sabana · TalentHub UniSabana</p>
         <p className="flex flex-wrap gap-x-5 gap-y-1">
           <span>El audio nunca se almacena.</span>
           <a className="text-brand-700 hover:underline" target="_blank" rel="noopener noreferrer" href="https://www.unisabana.edu.co/politica-de-proteccion-de-datos">
@@ -161,6 +161,11 @@ export function Layout() {
   const { pathname } = useLocation();
 
   useEffect(() => setMenu(false), [pathname]);
+  useEffect(() => {
+    const cerrar = (e: KeyboardEvent) => e.key === "Escape" && setMenu(false);
+    window.addEventListener("keydown", cerrar);
+    return () => window.removeEventListener("keydown", cerrar);
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -169,34 +174,31 @@ export function Layout() {
       </a>
       <Barra onMenu={() => setMenu((m) => !m)} menuAbierto={menu} />
 
-      <div className="flex flex-1">
-        {/* Menú fijo en escritorio; con sesión o sin ella, para no cambiar el esqueleto de la página. */}
-        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-line bg-white px-4 py-6 lg:block">
-          <Menu />
-        </aside>
-
-        <div className="flex min-w-0 flex-1 flex-col">
-          <main id="contenido" className="flex-1">
-            <Outlet />
-          </main>
-          <Pie />
-        </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <main id="contenido" className="flex-1">
+          <Outlet />
+        </main>
+        <Pie />
       </div>
 
+      {/* Menú lateral opcional: se abre con el botón de la barra y se cierra solo al navegar. */}
       {menu && (
-        <div className="fixed inset-x-0 bottom-0 top-16 z-30 overflow-y-auto bg-white px-4 py-6 lg:hidden">
-          <Menu onNavegar={() => setMenu(false)} />
-          {!session && (
-            <div className="mt-6 flex flex-col gap-2.5 border-t border-line pt-5">
-              <Link to="/ingresar" className={botonClase("secondary", "md", "w-full")}>
-                Ingresar
-              </Link>
-              <Link to="/registro" className={botonClase("primary", "md", "w-full")}>
-                Crear cuenta
-              </Link>
-            </div>
-          )}
-        </div>
+        <>
+          <div aria-hidden onClick={() => setMenu(false)} className="fixed inset-x-0 bottom-0 top-16 z-20 bg-brand-950/40" />
+          <div className="fixed bottom-0 left-0 top-16 z-30 w-72 max-w-[85vw] overflow-y-auto border-r border-line bg-white px-4 py-6 shadow-lift">
+            <Menu onNavegar={() => setMenu(false)} />
+            {!session && (
+              <div className="mt-6 flex flex-col gap-2.5 border-t border-line pt-5">
+                <Link to="/ingresar" className={botonClase("secondary", "md", "w-full")}>
+                  Ingresar
+                </Link>
+                <Link to="/registro" className={botonClase("primary", "md", "w-full")}>
+                  Crear cuenta
+                </Link>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

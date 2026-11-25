@@ -21,7 +21,7 @@ const TIEMPO_LIMITE_MS = 25000;
 // Ponlo en 0 para quitar el tope.
 const TOPE_DIARIO = 20;
 
-const CRITERIOS = `CRITERIOS DE EVALUACIÓN (metodología SENA 2018 y literatura del CDP)
+const CRITERIOS = `CRITERIOS DE EVALUACIÓN (metodología SENA 2018 y literatura de TalentHub UniSabana)
 
 Qué dice — contenido:
 1. Claridad del problema: ¿identifica con precisión la necesidad o el dolor, y deja evidente por qué importa?
@@ -40,7 +40,7 @@ Cómo lo dice — forma:
 12. Capacidad de respuesta: no se puede evaluar aquí; omitir.
 13. Uso de recursos de apoyo: no se puede evaluar aquí; omitir.`;
 
-const INSTRUCCIONES = `Eres asesor del Centro de Desarrollo Profesional de la Universidad de La Sabana.
+const INSTRUCCIONES = `Eres asesor de TalentHub UniSabana de la Universidad de La Sabana.
 
 Recibes: las métricas medidas de una ronda de práctica de pitch, la transcripción literal de lo que la persona dijo, su programa académico, el escenario del pitch y el historial de sus rondas anteriores si las tiene.
 

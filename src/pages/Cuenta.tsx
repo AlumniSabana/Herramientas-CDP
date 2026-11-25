@@ -93,11 +93,6 @@ export function Ingresar() {
         <Button type="submit" size="lg" className="w-full" disabled={ocupado}>
           {ocupado ? "Ingresando…" : "Ingresar"}
         </Button>
-        <p className="text-center text-sm">
-          <Link to="/recuperar" className={enlace}>
-            Olvidé mi contraseña
-          </Link>
-        </p>
       </form>
     </Marco>
   );
@@ -197,7 +192,7 @@ export function Registro() {
           <input type="checkbox" className="mt-1 size-4 shrink-0 accent-brand-700" checked={f.acuerdo} onChange={(e) => set("acuerdo", e.target.checked)} />
           <span className="space-y-2">
             <span className="block">
-              Autorizo a la Universidad de La Sabana, a través del <strong>Centro de Desarrollo Profesional</strong>, a almacenar y tratar mis datos de uso, la recurrencia de acceso, las transcripciones de mis prácticas, las retroalimentaciones ofrecidas y las cifras de mis reportes, con el fin de mostrarme mi progreso y elaborar estadísticas agregadas del servicio.
+              Autorizo a la Universidad de La Sabana, a través de <strong>TalentHub UniSabana</strong>, a almacenar y tratar mis datos de uso, la recurrencia de acceso, las transcripciones de mis prácticas, las retroalimentaciones ofrecidas y las cifras de mis reportes, con el fin de mostrarme mi progreso y elaborar estadísticas agregadas del servicio.
             </span>
             <span className="block">
               Entiendo que el audio no se almacena ni se envía a servidores; que las observaciones con inteligencia artificial se generan únicamente cuando las solicito; que la información es <strong>confidencial</strong> y no se comparte con docentes, empleadores ni terceros, salvo obligación legal; y que puedo consultar, corregir o solicitar la eliminación de mis datos conforme a la{" "}
@@ -212,58 +207,6 @@ export function Registro() {
         {error && <Alert tono="error">{error}</Alert>}
         <Button type="submit" size="lg" className="w-full" disabled={ocupado}>
           {ocupado ? "Creando cuenta…" : "Crear cuenta"}
-        </Button>
-      </form>
-    </Marco>
-  );
-}
-
-/* ───────── Recuperar contraseña ───────── */
-export function Recuperar() {
-  const { pedirRecuperacion, restablecer } = useAuth();
-  const navegar = useNavigate();
-  const [paso, setPaso] = useState<"correo" | "codigo">("correo");
-  const [correo, setCorreo] = useState("");
-  const [codigo, setCodigo] = useState("");
-  const [clave, setClave] = useState("");
-  const { error, ocupado, enviar } = useEnvio();
-
-  return (
-    <Marco
-      titulo="Recupera tu contraseña"
-      subtitulo={paso === "correo" ? "Te enviaremos un código a tu correo institucional." : `Escribe el código que enviamos a ${correo} y tu nueva contraseña.`}
-      pie={
-        <Link to="/ingresar" className={enlace}>
-          Volver a ingresar
-        </Link>
-      }
-    >
-      <form
-        className="space-y-5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void enviar(async () => {
-            if (paso === "correo") {
-              await pedirRecuperacion(correo);
-              setPaso("codigo");
-            } else {
-              await restablecer(correo, codigo, clave);
-              navegar("/", { replace: true });
-            }
-          });
-        }}
-      >
-        {paso === "correo" ? (
-          <Input label="Correo institucional" type="email" autoComplete="email" required value={correo} onChange={(e) => setCorreo(e.target.value)} />
-        ) : (
-          <>
-            <Input label="Código" inputMode="numeric" autoComplete="one-time-code" required value={codigo} onChange={(e) => setCodigo(e.target.value)} />
-            <Input label="Nueva contraseña" type="password" autoComplete="new-password" required minLength={8} ayuda="Mínimo 8 caracteres." value={clave} onChange={(e) => setClave(e.target.value)} />
-          </>
-        )}
-        {error && <Alert tono="error">{error}</Alert>}
-        <Button type="submit" size="lg" className="w-full" disabled={ocupado}>
-          {ocupado ? "Enviando…" : paso === "correo" ? "Enviar código" : "Cambiar contraseña"}
         </Button>
       </form>
     </Marco>

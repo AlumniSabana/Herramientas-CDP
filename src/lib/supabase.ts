@@ -19,7 +19,7 @@ export const supabase = createClient(url ?? "http://localhost", key ?? "sin-conf
 const TRADUCCIONES: [RegExp, string][] = [
   [/invalid login credentials/i, "Correo o contraseña incorrectos."],
   [/email not confirmed/i, "Debes confirmar tu correo institucional antes de ingresar. Revisa tu bandeja de entrada."],
-  [/user already registered/i, "Ya existe una cuenta con ese correo. Inicia sesión o recupera tu contraseña."],
+  [/user already registered/i, "Ya existe una cuenta con ese correo. Inicia sesión."],
   [/token has expired|otp.*expired|invalid.*token|otp_expired/i, "El código es incorrecto o venció. Pide uno nuevo."],
   [/rate limit|too many requests|over_email_send_rate_limit/i, "Hiciste demasiados intentos. Espera unos minutos."],
   [/password should be at least/i, "La contraseña debe tener al menos 8 caracteres."],

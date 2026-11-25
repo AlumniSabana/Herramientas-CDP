@@ -1,4 +1,4 @@
-# Herramientas del Centro de Desarrollo Profesional
+# Herramientas de TalentHub UniSabana
 
 Plataforma de la Universidad de La Sabana (TalentHub UniSabana) con dos herramientas:
 

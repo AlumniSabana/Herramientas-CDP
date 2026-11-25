@@ -62,7 +62,7 @@ function Datos() {
 
 function Clave() {
   const { cambiarClave } = useAuth();
-  const [f, setF] = useState({ actual: "", nueva: "", repetir: "" });
+  const [f, setF] = useState({ nueva: "", repetir: "" });
   const [aviso, setAviso] = useState<Aviso>(null);
   const [ocupado, setOcupado] = useState(false);
 
@@ -73,8 +73,8 @@ function Clave() {
     if (f.nueva !== f.repetir) return setAviso({ tono: "error", texto: "Las contraseñas nuevas no coinciden." });
     setOcupado(true);
     try {
-      await cambiarClave(f.actual, f.nueva);
-      setF({ actual: "", nueva: "", repetir: "" });
+      await cambiarClave(f.nueva);
+      setF({ nueva: "", repetir: "" });
       setAviso({ tono: "ok", texto: "Contraseña cambiada." });
     } catch (err) {
       setAviso({ tono: "error", texto: mensajeDeError(err) });
@@ -87,7 +87,6 @@ function Clave() {
     <Card>
       <h2 className="text-xl">Cambiar contraseña</h2>
       <form onSubmit={enviar} className="mt-6 space-y-5">
-        <Input label="Contraseña actual" type="password" autoComplete="current-password" required value={f.actual} onChange={(e) => setF({ ...f, actual: e.target.value })} />
         <div className="grid gap-5 sm:grid-cols-2">
           <Input label="Contraseña nueva" type="password" autoComplete="new-password" required minLength={8} ayuda="Mínimo 8 caracteres." value={f.nueva} onChange={(e) => setF({ ...f, nueva: e.target.value })} />
           <Input label="Repite la nueva" type="password" autoComplete="new-password" required value={f.repetir} onChange={(e) => setF({ ...f, repetir: e.target.value })} />

@@ -115,7 +115,7 @@ export default function AdminPitch() {
     const d = new Date();
     const p = (n: number) => String(n).padStart(2, "0");
     exportarCSV(datos.rondas, null, `estudio-de-pitch-consolidado-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.csv`);
-    setAviso(`Archivo generado con ${datos.rondas.length} rondas. Contiene datos personales: guárdalo en la carpeta restringida del CDP y no lo reenvíes por correo.`);
+    setAviso(`Archivo generado con ${datos.rondas.length} rondas. Contiene datos personales: guárdalo en la carpeta restringida de TalentHub UniSabana y no lo reenvíes por correo.`);
   };
 
   const Filtro = (

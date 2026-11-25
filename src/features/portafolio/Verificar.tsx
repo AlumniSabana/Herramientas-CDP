@@ -125,10 +125,10 @@ function Revisiones() {
         <b>La escribe una máquina, no una persona del Centro.</b> Es un modelo de inteligencia artificial que lee tu texto y responde en segundos: sirve para detectar lo obvio antes de que lo vea alguien más, pero no conoce tu trabajo y se equivoca. Léela como una opinión más, no como una calificación. Cuando quieras que la revise un asesor de verdad, tienes la hoja «Hablar con un asesor».
       </Prosa>
       <Prosa>
-        <b>Quién la puede leer.</b> La revisión queda guardada en tu cuenta y el Centro de Desarrollo Profesional también puede consultarla: así, si pides una asesoría, quien te atienda llega sabiendo por dónde va tu portafolio. Tu portafolio en sí no lo ve nadie más que tú. Si prefieres que una revisión no quede, bórrala en la lista de aquí abajo.
+        <b>Quién la puede leer.</b> La revisión queda guardada en tu cuenta y TalentHub UniSabana también puede consultarla: así, si pides una asesoría, quien te atienda llega sabiendo por dónde va tu portafolio. Tu portafolio en sí no lo ve nadie más que tú. Si prefieres que una revisión no quede, bórrala en la lista de aquí abajo.
       </Prosa>
       <Alert tono={nota.tono === "warn" ? "warn" : "info"}>
-        {nota.t || "La escribe un modelo de inteligencia artificial. Se le envía solo el texto de tu portafolio, no tu nombre ni tu correo, y él no guarda nada. La revisión que te devuelva queda guardada en tu cuenta y el Centro de Desarrollo Profesional puede consultarla para atenderte mejor; puedes borrarla cuando quieras."}
+        {nota.t || "La escribe un modelo de inteligencia artificial. Se le envía solo el texto de tu portafolio, no tu nombre ni tu correo, y él no guarda nada. La revisión que te devuelva queda guardada en tu cuenta y TalentHub UniSabana puede consultarla para atenderte mejor; puedes borrarla cuando quieras."}
       </Alert>
       {actual && <RevisionVista d={actual} />}
       {fallo && !guardadas.length && (
@@ -169,7 +169,7 @@ function Revisiones() {
               );
             })}
           </ul>
-          <p className="text-xs text-slate-500">Se guardan las diez últimas. Las ves tú y el Centro de Desarrollo Profesional, que las usa para preparar tu asesoría. Borra la que no quieras que quede.</p>
+          <p className="text-xs text-slate-500">Se guardan las diez últimas. Las ves tú y TalentHub UniSabana, que las usa para preparar tu asesoría. Borra la que no quieras que quede.</p>
         </div>
       )}
     </Card>

@@ -22,7 +22,7 @@ Crea tablas, políticas, triggers de registro y las vistas del administrador. Se
 
 **Authentication → Sign In / Providers → Email**: deja activado **Confirm email**.
 
-**Authentication → Email Templates → Confirm signup** y **Reset password**: reemplaza el enlace por el código para que el formulario funcione:
+**Authentication → Email Templates → Confirm signup**: reemplaza el enlace por el código para que el formulario funcione:
 
 ```html
 <h2>Tu código</h2>

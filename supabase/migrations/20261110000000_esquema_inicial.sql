@@ -1,6 +1,6 @@
 -- ══════════════════════════════════════════════════════════════
 --  HERRAMIENTAS DEL CDP · ESQUEMA COMPLETO (instalación desde cero)
---  Centro de Desarrollo Profesional · Universidad de La Sabana
+--  TalentHub UniSabana · Universidad de La Sabana
 --
 --  Reemplaza a todos los scripts sueltos anteriores (portafolios.sql,
 --  revisiones.sql, portafolio-contenido.sql, panel-funciones.sql,

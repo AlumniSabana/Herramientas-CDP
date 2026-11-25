@@ -215,12 +215,12 @@ async function logoComoDataUrl(): Promise<string | null> {
 }
 
 /** Genera y descarga el PDF. Lanza si el navegador no puede. */
-export async function descargarPDF(md: string, archivo: string, titulo: string, nota = "Centro de Desarrollo Profesional · Universidad de La Sabana") {
+export async function descargarPDF(md: string, archivo: string, titulo: string, nota = "TalentHub UniSabana · Universidad de La Sabana") {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
-  doc.setProperties({ title: titulo, subject: "Portafolio profesional", creator: "Centro de Desarrollo Profesional · Universidad de La Sabana" });
+  doc.setProperties({ title: titulo, subject: "Portafolio profesional", creator: "TalentHub UniSabana · Universidad de La Sabana" });
   const l = new Lienzo(doc, titulo);
-  l.cabecera("Universidad de La Sabana · Centro de Desarrollo Profesional", await logoComoDataUrl());
+  l.cabecera("Universidad de La Sabana · TalentHub UniSabana", await logoComoDataUrl());
   componer(l, md);
   const total = doc.getNumberOfPages();
   const y = ALTO_PAG - 14;
